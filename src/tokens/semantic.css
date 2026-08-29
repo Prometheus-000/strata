@@ -1,0 +1,104 @@
+/* ============================================================
+   STRATA · TIER 2 — SEMANTIC ROLES · GENERATED FILE
+   Do not edit. This file is a projection of src/theme/generateTheme.ts
+   compiled from the Obsidian (dark) and Gallery (light) seed sets.
+   Regenerate with: npm run tokens
+   ============================================================ */
+
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+  --surface-page: oklch(0.170 0.006 200.0);
+  --surface-sunken: oklch(0.140 0.005 200.0);
+  --surface-raised: oklch(0.210 0.007 200.0);
+  --surface-overlay: oklch(0.240 0.007 200.0);
+  --surface-veil: oklch(0.100 0.006 200.0 / 0.62);
+  --ink: oklch(0.940 0.008 200.0);
+  --ink-muted: oklch(0.720 0.012 200.0);
+  --ink-faint: oklch(0.540 0.012 200.0);
+  --ink-inverse: oklch(0.160 0.010 200.0);
+  --accent: oklch(0.803 0.155 168.0);
+  --accent-strong: oklch(0.863 0.171 168.0);
+  --accent-ink: oklch(0.160 0.054 168.0);
+  --accent-soft: oklch(0.803 0.155 168.0 / 0.14);
+  --accent-line: oklch(0.803 0.155 168.0 / 0.45);
+  --line: oklch(0.940 0.008 200.0 / 0.12);
+  --line-strong: oklch(0.940 0.008 200.0 / 0.24);
+  --focus-ring: oklch(0.803 0.155 168.0 / 0.70);
+  --positive: oklch(0.780 0.160 150.0);
+  --warning: oklch(0.820 0.150 80.0);
+  --danger: oklch(0.680 0.190 22.0);
+  --positive-soft: oklch(0.780 0.160 150.0 / 0.15);
+  --warning-soft: oklch(0.820 0.150 80.0 / 0.15);
+  --danger-soft: oklch(0.680 0.190 22.0 / 0.15);
+  --shadow-color: oklch(0.050 0.010 200.0 / 0.50);
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  --surface-page: oklch(0.970 0.011 163.3);
+  --surface-sunken: oklch(0.940 0.012 163.3);
+  --surface-raised: oklch(0.995 0.005 163.3);
+  --surface-overlay: oklch(1.000 0.000 0.0);
+  --surface-veil: oklch(0.300 0.010 163.3 / 0.40);
+  --ink: oklch(0.240 0.015 163.3);
+  --ink-muted: oklch(0.450 0.015 163.3);
+  --ink-faint: oklch(0.600 0.012 163.3);
+  --ink-inverse: oklch(0.970 0.005 163.3);
+  --accent: oklch(0.548 0.117 168.0);
+  --accent-strong: oklch(0.468 0.117 168.0);
+  --accent-ink: oklch(0.980 0.010 168.0);
+  --accent-soft: oklch(0.548 0.117 168.0 / 0.12);
+  --accent-line: oklch(0.548 0.117 168.0 / 0.40);
+  --line: oklch(0.240 0.015 163.3 / 0.13);
+  --line-strong: oklch(0.240 0.015 163.3 / 0.28);
+  --focus-ring: oklch(0.548 0.117 168.0 / 0.65);
+  --positive: oklch(0.600 0.150 150.0);
+  --warning: oklch(0.660 0.140 75.0);
+  --danger: oklch(0.550 0.190 22.0);
+  --positive-soft: oklch(0.600 0.150 150.0 / 0.13);
+  --warning-soft: oklch(0.660 0.140 75.0 / 0.15);
+  --danger-soft: oklch(0.550 0.190 22.0 / 0.12);
+  --shadow-color: oklch(0.300 0.020 163.3 / 0.18);
+}
+
+:root {
+  /* ---- Engine-derived rhythm, motion, shape (Obsidian defaults) ---- */
+  --motion-instant: 86ms;
+  --motion-fast: 172ms;
+  --motion-base: 280ms;
+  --motion-slow: 516ms;
+  --motion-ease: var(--strata-ease-out);
+  --motion-ease-emphasis: var(--strata-ease-spring);
+  --density: 1.000;
+  --radius-interactive: 0.563rem;
+  --radius-surface: 0.844rem;
+  --radius-overlay: 1.350rem;
+
+  /* ---- Static roles (not seed-derived) ---- */
+  --radius-pill: var(--strata-radius-round);
+
+  --control-h-sm: calc(2rem * var(--density));
+  --control-h-md: calc(2.5rem * var(--density));
+  --control-h-lg: calc(3rem * var(--density));
+  --control-pad-x: calc(var(--strata-space-4) * var(--density));
+  --surface-pad: calc(var(--strata-space-5) * var(--density));
+  --stack-gap: calc(var(--strata-space-4) * var(--density));
+
+  --font-display: var(--strata-font-display);
+  --font-body: var(--strata-font-body);
+  --font-mono: var(--strata-font-mono);
+
+  --shadow-raised: var(--strata-shadow-1) var(--shadow-color);
+  --shadow-floating: var(--strata-shadow-2) var(--shadow-color);
+  --shadow-overlay: var(--strata-shadow-3) var(--shadow-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-instant: 0ms;
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --motion-slow: 0ms;
+  }
+}

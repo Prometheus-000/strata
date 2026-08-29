@@ -1,0 +1,28 @@
+{
+  "name": "strata",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Strata \u2014 an adaptive, AI-native design system. Themes are data; components are instruments.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "tokens": "tsx scripts/emit-tokens.ts",
+    "validate": "node scripts/validate-tokens.mjs",
+    "build": "npm run tokens && npm run validate && tsc -b && vite build",
+    "build:pz": "vite build --config vite.pz.config.ts",
+    "preview": "vite preview",
+    "bundle": "node scripts/bundle.mjs"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tsx": "^4.23.12",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3"
+  }
+}

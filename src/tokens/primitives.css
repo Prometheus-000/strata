@@ -1,0 +1,88 @@
+/* ============================================================
+   STRATA · TIER 1 — PRIMITIVES
+   Raw, context-free scales. Never reference these in components;
+   components speak only the semantic tier (semantic.css).
+   Color primitives live in OKLCH — perceptually uniform, so
+   generated themes stay coherent at any hue.
+   ============================================================ */
+
+:root {
+  /* ---- Type families ---- */
+  --strata-font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --strata-font-body: 'Instrument Sans', 'Helvetica Neue', Arial, sans-serif;
+  --strata-font-mono: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+
+  /* ---- Fluid type scale (minor third → perfect fourth as viewport grows) ---- */
+  --strata-text-xs: clamp(0.694rem, 0.66rem + 0.17vw, 0.79rem);
+  --strata-text-sm: clamp(0.833rem, 0.79rem + 0.21vw, 0.95rem);
+  --strata-text-md: clamp(1rem, 0.95rem + 0.25vw, 1.14rem);
+  --strata-text-lg: clamp(1.2rem, 1.13rem + 0.34vw, 1.42rem);
+  --strata-text-xl: clamp(1.44rem, 1.34rem + 0.48vw, 1.77rem);
+  --strata-text-2xl: clamp(1.728rem, 1.58rem + 0.72vw, 2.22rem);
+  --strata-text-3xl: clamp(2.074rem, 1.85rem + 1.1vw, 2.77rem);
+  --strata-text-4xl: clamp(2.488rem, 2.14rem + 1.72vw, 3.46rem);
+  --strata-text-5xl: clamp(2.986rem, 2.4rem + 2.9vw, 4.62rem);
+  --strata-text-6xl: clamp(3.583rem, 2.6rem + 4.9vw, 6.3rem);
+
+  --strata-leading-tight: 1.1;
+  --strata-leading-snug: 1.3;
+  --strata-leading-normal: 1.55;
+  --strata-leading-loose: 1.75;
+
+  --strata-tracking-tight: -0.02em;
+  --strata-tracking-normal: 0;
+  --strata-tracking-wide: 0.08em;
+  --strata-tracking-caps: 0.14em;
+
+  /* ---- Space scale (4px base, geometric-ish) ---- */
+  --strata-space-1: 0.25rem;
+  --strata-space-2: 0.5rem;
+  --strata-space-3: 0.75rem;
+  --strata-space-4: 1rem;
+  --strata-space-5: 1.5rem;
+  --strata-space-6: 2rem;
+  --strata-space-7: 3rem;
+  --strata-space-8: 4rem;
+  --strata-space-9: 6rem;
+  --strata-space-10: 8rem;
+
+  /* ---- Radii ---- */
+  --strata-radius-0: 0;
+  --strata-radius-1: 0.25rem;
+  --strata-radius-2: 0.5rem;
+  --strata-radius-3: 0.75rem;
+  --strata-radius-4: 1.25rem;
+  --strata-radius-round: 999px;
+
+  /* ---- Borders ---- */
+  --strata-border-hair: 1px;
+  --strata-border-thick: 2px;
+
+  /* ---- Elevation (shadow recipes; color mixed in semantic tier) ---- */
+  --strata-shadow-1: 0 1px 2px;
+  --strata-shadow-2: 0 4px 12px -2px;
+  --strata-shadow-3: 0 16px 40px -8px;
+
+  /* ---- Motion ---- */
+  --strata-duration-instant: 80ms;
+  --strata-duration-fast: 160ms;
+  --strata-duration-base: 260ms;
+  --strata-duration-slow: 480ms;
+  --strata-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --strata-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --strata-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---- Z ---- */
+  --strata-z-raised: 10;
+  --strata-z-overlay: 100;
+  --strata-z-toast: 200;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --strata-duration-instant: 0ms;
+    --strata-duration-fast: 0ms;
+    --strata-duration-base: 0ms;
+    --strata-duration-slow: 0ms;
+  }
+}
