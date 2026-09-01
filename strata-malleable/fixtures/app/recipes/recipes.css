@@ -1,0 +1,118 @@
+/* ============================================================
+   LAYER 2 — RECIPE STYLES. Every declaration speaks the semantic
+   tier. `npm run ship` writes promoted component-scope overrides
+   back into this file; nothing else edits it.
+   ============================================================ */
+
+.st-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--strata-space-3);
+  background: var(--surface-raised);
+  border: var(--strata-border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  padding: var(--surface-pad);
+  box-shadow: var(--shadow-raised);
+  transition:
+    border-color var(--motion-base) var(--motion-ease),
+    box-shadow var(--motion-base) var(--motion-ease),
+    border-radius var(--motion-fast) var(--motion-ease),
+    padding var(--motion-fast) var(--motion-ease);
+}
+.st-card--interactive {
+  cursor: pointer;
+}
+.st-card--interactive:hover {
+  border-color: var(--accent-line);
+  box-shadow: var(--shadow-floating);
+}
+.st-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--strata-space-3);
+}
+.st-card__title {
+  font-family: var(--font-display);
+  font-size: var(--strata-text-lg);
+  font-weight: 560;
+  color: var(--ink);
+  margin: 0;
+}
+.st-card__meta {
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  color: var(--ink-faint);
+}
+.st-card__body {
+  font-size: var(--strata-text-sm);
+  line-height: var(--strata-leading-normal);
+  color: var(--ink-muted);
+  margin: 0;
+}
+.st-card__footer {
+  display: flex;
+  gap: var(--strata-space-2);
+  align-items: center;
+}
+
+.st-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--strata-space-2);
+  height: var(--control-h-md);
+  padding: 0 var(--control-pad-x);
+  border-radius: var(--radius-interactive);
+  border: var(--strata-border-hair) solid transparent;
+  font-family: var(--font-body);
+  font-size: var(--strata-text-sm);
+  font-weight: 600;
+  color: var(--ink);
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease),
+    border-radius var(--motion-fast) var(--motion-ease);
+}
+.st-button--primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.st-button--secondary {
+  background: var(--surface-raised);
+  border-color: var(--line-strong);
+}
+.st-button--ghost {
+  color: var(--ink-muted);
+}
+.st-button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.st-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--strata-space-1);
+  padding: var(--strata-space-1) var(--strata-space-3);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  border: var(--strata-border-hair) solid transparent;
+}
+.st-badge--neutral {
+  background: var(--surface-sunken);
+  color: var(--ink-muted);
+}
+.st-badge--accent {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent-line);
+}
+.st-badge--positive {
+  background: var(--positive-soft);
+  color: var(--positive);
+}

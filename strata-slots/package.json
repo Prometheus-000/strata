@@ -1,0 +1,46 @@
+{
+  "name": "strata-slots",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The slot layer \u2014 move a feature to where it belongs, spatially, without prompting anyone.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "test": "node --import tsx/esm --test test/*.test.ts",
+    "id": "./bin/slots id",
+    "manifest": "./bin/slots manifest",
+    "slots": "./bin/slots slots",
+    "layout": "./bin/slots layout",
+    "resolve": "./bin/slots resolve",
+    "build": "npm run id && npm test && npm run lint && tsc -b && vite build",
+    "diff": "./bin/slots diff",
+    "check": "npm run id && npm test",
+    "open": "./bin/slots open",
+    "lint": "./bin/slots lint",
+    "preview": "./bin/slots preview",
+    "grammar": "./bin/slots grammar"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tsx": "^4.23.12",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3"
+  },
+  "bin": {
+    "slots": "bin/slots"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "PROJECT.md",
+    "integrations"
+  ]
+}

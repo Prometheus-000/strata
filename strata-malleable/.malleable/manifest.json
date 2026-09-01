@@ -1,0 +1,337 @@
+{
+  "version": 1,
+  "generatedFrom": [
+    "fixtures/app/recipes/Badge.tsx",
+    "fixtures/app/recipes/Button.tsx",
+    "fixtures/app/recipes/Card.tsx",
+    "fixtures/app/views/Gallery.tsx",
+    "fixtures/app/views/Settings.tsx",
+    "fixtures/app/recipes/recipes.css",
+    "fixtures/app/views/views.css"
+  ],
+  "nodes": [
+    {
+      "nodeId": "Badge.span.st-badge",
+      "file": "fixtures/app/recipes/Badge.tsx",
+      "component": "Badge",
+      "layer": "recipe",
+      "tag": "span",
+      "classes": [
+        "st-badge",
+        "st-badge--"
+      ],
+      "base": {
+        "radius": {
+          "token": "--radius-pill"
+        },
+        "gap": {
+          "token": "--strata-space-1"
+        }
+      },
+      "baseFrom": {
+        "radius": {
+          "selector": ".st-badge",
+          "file": "fixtures/app/recipes/recipes.css"
+        },
+        "gap": {
+          "selector": ".st-badge",
+          "file": "fixtures/app/recipes/recipes.css"
+        }
+      }
+    },
+    {
+      "nodeId": "Button.button.st-button",
+      "file": "fixtures/app/recipes/Button.tsx",
+      "component": "Button",
+      "layer": "recipe",
+      "tag": "button",
+      "classes": [
+        "st-button",
+        "st-button--"
+      ],
+      "base": {
+        "radius": {
+          "token": "--radius-interactive"
+        },
+        "gap": {
+          "token": "--strata-space-2"
+        }
+      },
+      "baseFrom": {
+        "radius": {
+          "selector": ".st-button",
+          "file": "fixtures/app/recipes/recipes.css"
+        },
+        "gap": {
+          "selector": ".st-button",
+          "file": "fixtures/app/recipes/recipes.css"
+        }
+      }
+    },
+    {
+      "nodeId": "Card.div.st-card",
+      "file": "fixtures/app/recipes/Card.tsx",
+      "component": "Card",
+      "layer": "recipe",
+      "tag": "div",
+      "classes": [
+        "st-card"
+      ],
+      "base": {
+        "radius": {
+          "token": "--radius-surface"
+        },
+        "padding": {
+          "token": "--surface-pad"
+        },
+        "gap": {
+          "token": "--strata-space-3"
+        }
+      },
+      "baseFrom": {
+        "radius": {
+          "selector": ".st-card",
+          "file": "fixtures/app/recipes/recipes.css"
+        },
+        "padding": {
+          "selector": ".st-card",
+          "file": "fixtures/app/recipes/recipes.css"
+        },
+        "gap": {
+          "selector": ".st-card",
+          "file": "fixtures/app/recipes/recipes.css"
+        }
+      }
+    },
+    {
+      "nodeId": "Card.div.st-card__head",
+      "file": "fixtures/app/recipes/Card.tsx",
+      "component": "Card",
+      "layer": "recipe",
+      "tag": "div",
+      "classes": [
+        "st-card__head"
+      ],
+      "base": {
+        "gap": {
+          "token": "--strata-space-3"
+        }
+      },
+      "baseFrom": {
+        "gap": {
+          "selector": ".st-card__head",
+          "file": "fixtures/app/recipes/recipes.css"
+        }
+      }
+    },
+    {
+      "nodeId": "Card.h3.st-card__title",
+      "file": "fixtures/app/recipes/Card.tsx",
+      "component": "Card",
+      "layer": "recipe",
+      "tag": "h3",
+      "classes": [
+        "st-card__title"
+      ],
+      "base": {},
+      "baseFrom": {}
+    },
+    {
+      "nodeId": "Card.span.st-card__meta",
+      "file": "fixtures/app/recipes/Card.tsx",
+      "component": "Card",
+      "layer": "recipe",
+      "tag": "span",
+      "classes": [
+        "st-card__meta"
+      ],
+      "base": {},
+      "baseFrom": {}
+    },
+    {
+      "nodeId": "Card.p.st-card__body",
+      "file": "fixtures/app/recipes/Card.tsx",
+      "component": "Card",
+      "layer": "recipe",
+      "tag": "p",
+      "classes": [
+        "st-card__body"
+      ],
+      "base": {},
+      "baseFrom": {}
+    },
+    {
+      "nodeId": "Card.div.st-card__footer",
+      "file": "fixtures/app/recipes/Card.tsx",
+      "component": "Card",
+      "layer": "recipe",
+      "tag": "div",
+      "classes": [
+        "st-card__footer"
+      ],
+      "base": {
+        "gap": {
+          "token": "--strata-space-2"
+        }
+      },
+      "baseFrom": {
+        "gap": {
+          "selector": ".st-card__footer",
+          "file": "fixtures/app/recipes/recipes.css"
+        }
+      }
+    },
+    {
+      "nodeId": "Gallery.section.gallery",
+      "file": "fixtures/app/views/Gallery.tsx",
+      "component": "Gallery",
+      "layer": "local",
+      "tag": "section",
+      "classes": [
+        "gallery"
+      ],
+      "viewId": "gallery",
+      "base": {
+        "gap": {
+          "token": "--stack-gap"
+        }
+      },
+      "baseFrom": {
+        "gap": {
+          "selector": ".gallery",
+          "file": "fixtures/app/views/views.css"
+        }
+      }
+    },
+    {
+      "nodeId": "Gallery.header.gallery__head",
+      "file": "fixtures/app/views/Gallery.tsx",
+      "component": "Gallery",
+      "layer": "local",
+      "tag": "header",
+      "classes": [
+        "gallery__head"
+      ],
+      "base": {
+        "gap": {
+          "token": "--strata-space-3"
+        }
+      },
+      "baseFrom": {
+        "gap": {
+          "selector": ".gallery__head",
+          "file": "fixtures/app/views/views.css"
+        }
+      }
+    },
+    {
+      "nodeId": "Gallery.h2.gallery__title",
+      "file": "fixtures/app/views/Gallery.tsx",
+      "component": "Gallery",
+      "layer": "local",
+      "tag": "h2",
+      "classes": [
+        "gallery__title"
+      ],
+      "base": {},
+      "baseFrom": {}
+    },
+    {
+      "nodeId": "Gallery.div.gallery__grid",
+      "file": "fixtures/app/views/Gallery.tsx",
+      "component": "Gallery",
+      "layer": "local",
+      "tag": "div",
+      "classes": [
+        "gallery__grid"
+      ],
+      "base": {
+        "gap": {
+          "token": "--stack-gap"
+        }
+      },
+      "baseFrom": {
+        "gap": {
+          "selector": ".gallery__grid",
+          "file": "fixtures/app/views/views.css"
+        }
+      }
+    },
+    {
+      "nodeId": "Settings.section.settings",
+      "file": "fixtures/app/views/Settings.tsx",
+      "component": "Settings",
+      "layer": "local",
+      "tag": "section",
+      "classes": [
+        "settings"
+      ],
+      "viewId": "settings",
+      "base": {
+        "gap": {
+          "token": "--stack-gap"
+        }
+      },
+      "baseFrom": {
+        "gap": {
+          "selector": ".settings",
+          "file": "fixtures/app/views/views.css"
+        }
+      }
+    },
+    {
+      "nodeId": "Settings.header.settings__head",
+      "file": "fixtures/app/views/Settings.tsx",
+      "component": "Settings",
+      "layer": "local",
+      "tag": "header",
+      "classes": [
+        "settings__head"
+      ],
+      "base": {
+        "gap": {
+          "token": "--strata-space-3"
+        }
+      },
+      "baseFrom": {
+        "gap": {
+          "selector": ".settings__head",
+          "file": "fixtures/app/views/views.css"
+        }
+      }
+    },
+    {
+      "nodeId": "Settings.h2.settings__title",
+      "file": "fixtures/app/views/Settings.tsx",
+      "component": "Settings",
+      "layer": "local",
+      "tag": "h2",
+      "classes": [
+        "settings__title"
+      ],
+      "base": {},
+      "baseFrom": {}
+    },
+    {
+      "nodeId": "Settings.div.settings__stack",
+      "file": "fixtures/app/views/Settings.tsx",
+      "component": "Settings",
+      "layer": "local",
+      "tag": "div",
+      "classes": [
+        "settings__stack"
+      ],
+      "base": {
+        "gap": {
+          "token": "--stack-gap"
+        }
+      },
+      "baseFrom": {
+        "gap": {
+          "selector": ".settings__stack",
+          "file": "fixtures/app/views/views.css"
+        }
+      }
+    }
+  ]
+}

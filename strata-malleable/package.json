@@ -1,0 +1,30 @@
+{
+  "name": "strata-malleable",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The malleable layer — change one thing, decide later where it belongs.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "test": "node --import tsx/esm --test test/*.test.ts",
+    "id": "node --import tsx/esm bin/malleable.mjs id",
+    "manifest": "node --import tsx/esm bin/malleable.mjs manifest",
+    "resolve": "node --import tsx/esm bin/malleable.mjs resolve",
+    "drift": "node --import tsx/esm bin/malleable.mjs drift",
+    "ship": "node --import tsx/esm bin/malleable.mjs ship",
+    "build": "npm run id && npm test && tsc -b && vite build"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tsx": "^4.23.12",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3"
+  }
+}

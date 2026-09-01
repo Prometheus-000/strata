@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "seeds": {
+    "hue": 168,
+    "chroma": 0.155,
+    "warmth": 0,
+    "energy": 0.5,
+    "density": 1,
+    "appearance": "dark"
+  },
+  "overrides": []
+}

@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+# The `slots` binary.
+#
+# It resolves its own TypeScript loader from the package it lives in, not from
+# whatever directory it was invoked in. Without this, running `slots lint` in a
+# project that has never heard of tsx fails on an import the user did not write
+# and cannot fix — which is the difference between a tool you can hand someone
+# and a tool you have to install into their build first.
+set -e
+DIR=$(cd "$(dirname "$0")/.." && pwd)
+exec node --import "file://$DIR/node_modules/tsx/dist/esm/index.mjs" "$DIR/bin/slots.mjs" "$@"

@@ -1,0 +1,452 @@
+/* ============================================================
+   THE HARNESS + THE MANIPULATION SURFACE
+
+   Built out of the same semantic tier it edits — no hex, no raw
+   size. A tool for a design system that cannot itself be themed
+   by that system is a tool making a claim it does not believe.
+   ============================================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-page);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--strata-text-sm);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- chrome ---------- */
+
+.hx__chrome {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: var(--strata-space-6);
+  flex-wrap: wrap;
+  padding: var(--strata-space-3) var(--strata-space-6);
+  background: color-mix(in oklch, var(--surface-sunken) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: var(--strata-border-hair) solid var(--line);
+}
+.hx__brand {
+  display: flex;
+  align-items: baseline;
+  gap: var(--strata-space-2);
+  margin-right: auto;
+}
+.hx__mark {
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  letter-spacing: var(--strata-tracking-wide);
+  color: var(--accent);
+}
+.hx__sub {
+  font-family: var(--font-display);
+  font-size: var(--strata-text-sm);
+  color: var(--ink-muted);
+}
+
+.hx__counts,
+.hx__seeds {
+  display: flex;
+  gap: var(--strata-space-4);
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  color: var(--ink-faint);
+}
+.hx__count b,
+.hx__seeds b {
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+.hx__count.is-live b {
+  color: var(--accent);
+}
+.hx__count--dead b {
+  color: var(--warning);
+}
+.hx__seeds .is-moved b {
+  color: var(--accent);
+}
+
+.hx__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--strata-space-3);
+}
+.hx__btn {
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  color: var(--ink-faint);
+  background: none;
+  border: var(--strata-border-hair) solid var(--line);
+  border-radius: var(--radius-interactive);
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  transition: color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
+}
+.hx__btn:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+.hx__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--strata-space-2);
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.hx__toggle input {
+  accent-color: var(--accent);
+}
+
+.hx__stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--strata-space-8);
+  padding: var(--strata-space-8) var(--strata-space-6) 14rem;
+  max-width: 74rem;
+  margin: 0 auto;
+}
+
+/* ---------- manipulation surface ---------- */
+
+.mv {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.mv__box {
+  position: fixed;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.mv__box--hover {
+  outline: var(--strata-border-hair) solid var(--accent-line);
+  outline-offset: 2px;
+}
+.mv__box--selected {
+  outline: var(--strata-border-hair) solid var(--accent);
+  outline-offset: 2px;
+}
+.mv__label {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  transform: translateY(-6px);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--accent-ink);
+  background: var(--accent);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--strata-radius-1);
+}
+.mv__box--hover .mv__label {
+  color: var(--ink-muted);
+  background: var(--surface-overlay);
+  border: var(--strata-border-hair) solid var(--line);
+}
+.mv__label em {
+  font-style: normal;
+  opacity: 0.65;
+}
+
+/* Handles sit on the geometry they change, and are the only thing here
+   that takes a pointer. */
+.mv__handle {
+  position: absolute;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin: -0.375rem 0 0 -0.375rem;
+  padding: 0;
+  border: var(--strata-border-thick, 2px) solid var(--accent);
+  background: var(--surface-page);
+  border-radius: var(--strata-radius-round);
+  pointer-events: auto;
+  cursor: grab;
+  transition: transform var(--motion-fast) var(--motion-ease), background var(--motion-fast) var(--motion-ease);
+}
+.mv__handle:hover,
+.mv__handle.is-active {
+  background: var(--accent);
+  transform: scale(1.25);
+}
+.mv__handle:active {
+  cursor: grabbing;
+}
+.mv__handle:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.mv__handle--corner {
+  cursor: nwse-resize;
+}
+.mv__handle--inset {
+  cursor: ew-resize;
+}
+.mv__handle--gap {
+  cursor: ns-resize;
+}
+
+/* ---------- the ruler, visible only mid-drag ---------- */
+
+.mv__ruler {
+  position: fixed;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--ink-muted);
+}
+.mv__ruler-track {
+  position: relative;
+  height: 0.75rem;
+  border-bottom: var(--strata-border-hair) solid var(--line-strong);
+  margin-bottom: 0.35rem;
+}
+.mv__tick {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  height: 0.4rem;
+  background: var(--line-strong);
+}
+.mv__tick.is-snapped {
+  height: 0.75rem;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.mv__cursor {
+  position: absolute;
+  bottom: -0.15rem;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-left: -0.2rem;
+  border-radius: var(--strata-radius-round);
+  background: var(--accent);
+}
+.mv__ruler-value strong {
+  color: var(--accent);
+  font-weight: 500;
+}
+.mv__ruler-value em {
+  font-style: normal;
+  color: var(--ink-faint);
+}
+
+/* ---------- promotion: four words, no panel ---------- */
+
+.mv__promote {
+  position: fixed;
+  pointer-events: auto;
+  z-index: 70;
+  background: var(--surface-overlay);
+  border: var(--strata-border-hair) solid var(--line-strong);
+  border-radius: var(--radius-interactive);
+  box-shadow: var(--shadow-overlay);
+  padding: var(--strata-space-2);
+  max-width: 26rem;
+}
+.mv__promote-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.mv__promote-lede {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--ink-muted);
+  padding-right: var(--strata-space-2);
+  white-space: nowrap;
+}
+.mv__promote-lede em {
+  font-style: normal;
+  color: var(--ink-faint);
+}
+.mv__seg {
+  font-family: var(--font-body);
+  font-size: var(--strata-text-xs);
+  color: var(--ink-muted);
+  background: none;
+  border: var(--strata-border-hair) solid transparent;
+  border-radius: calc(var(--radius-interactive) * 0.7);
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--motion-fast) var(--motion-ease), background var(--motion-fast) var(--motion-ease);
+}
+.mv__seg:hover {
+  color: var(--ink);
+  background: var(--accent-soft);
+}
+.mv__seg.is-current {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+.mv__seg.is-armed {
+  color: var(--accent);
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+.mv__seg--quiet {
+  color: var(--ink-faint);
+  padding-left: 0;
+}
+.mv__promote-note {
+  margin: var(--strata-space-2) 0 0;
+  font-size: var(--strata-text-xs);
+  color: var(--warning);
+  line-height: var(--strata-leading-normal);
+}
+
+.mv__proposal {
+  margin-top: var(--strata-space-2);
+  padding-top: var(--strata-space-2);
+  border-top: var(--strata-border-hair) solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--ink-faint);
+}
+.mv__proposal-head {
+  margin: 0 0 0.35rem;
+  color: var(--ink-muted);
+}
+.mv__proposal-head strong {
+  color: var(--accent);
+  font-weight: 500;
+}
+.mv__proposal-head em {
+  display: block;
+  font-style: normal;
+  color: var(--warning);
+}
+.mv__proposal-cost {
+  margin: 0 0 0.25rem;
+}
+.mv__proposal-list {
+  list-style: none;
+  margin: 0 0 0.35rem;
+  padding: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+.mv__proposal-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--strata-space-4);
+}
+.mv__proposal-list code {
+  color: var(--ink-muted);
+}
+.mv__proposal-more {
+  color: var(--ink-faint);
+  opacity: 0.7;
+}
+
+/* ---------- the readout: why this value is this value ---------- */
+
+.mv__readout {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: auto;
+  background: color-mix(in oklch, var(--surface-sunken) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border-top: var(--strata-border-hair) solid var(--line);
+  padding: var(--strata-space-3) var(--strata-space-6);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}
+.mv__readout-head {
+  display: flex;
+  align-items: center;
+  gap: var(--strata-space-4);
+  margin-bottom: var(--strata-space-2);
+}
+.mv__readout-node {
+  color: var(--ink);
+}
+.mv__readout-node em {
+  font-style: normal;
+  color: var(--accent);
+}
+.mv__readout-props {
+  display: flex;
+  gap: 0.25rem;
+}
+.mv__chip {
+  font-family: inherit;
+  font-size: 0.66rem;
+  color: var(--ink-faint);
+  background: none;
+  border: var(--strata-border-hair) solid var(--line);
+  border-radius: var(--strata-radius-1);
+  padding: 0.1rem 0.4rem;
+  cursor: pointer;
+}
+.mv__chip.is-current {
+  color: var(--accent);
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+.mv__readout-value {
+  margin-left: auto;
+  color: var(--accent);
+}
+.mv__readout-value em {
+  font-style: normal;
+  color: var(--ink-faint);
+}
+.mv__chain {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.1rem;
+}
+.mv__step {
+  display: grid;
+  grid-template-columns: 6rem 14rem 1fr;
+  gap: var(--strata-space-4);
+  color: var(--ink-faint);
+}
+.mv__step.is-applied {
+  color: var(--ink);
+}
+.mv__step.is-applied .mv__step-scope::before {
+  content: '● ';
+  color: var(--accent);
+}
+.mv__step.is-shadowed .mv__step-scope::before {
+  content: '○ ';
+}
+.mv__step.is-no-match {
+  opacity: 0.45;
+}
+.mv__step.is-no-match .mv__step-scope::before {
+  content: '· ';
+}
+.mv__step-note {
+  color: var(--ink-faint);
+}
+
+@media (max-width: 48rem) {
+  .mv__step {
+    grid-template-columns: 5rem 1fr;
+  }
+  .mv__step-note {
+    display: none;
+  }
+}

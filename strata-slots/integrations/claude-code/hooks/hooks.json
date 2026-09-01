@@ -1,0 +1,17 @@
+{
+  "description": "Keep feature identity stamped and surface assignments that stopped resolving, after Claude edits a view.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/slots-check.sh\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

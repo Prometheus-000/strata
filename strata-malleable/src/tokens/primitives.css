@@ -1,0 +1,61 @@
+/* ============================================================
+   STRATA · TIER 1 — PRIMITIVES (vendored)
+   Raw, context-free scales. The seed engine writes the semantic
+   tier over these at runtime via applyTheme().
+   ============================================================ */
+:root {
+  --strata-font-display: 'Iowan Old Style', Georgia, serif;
+  --strata-font-body: 'Instrument Sans', 'Helvetica Neue', Arial, sans-serif;
+  --strata-font-mono: 'SF Mono', 'IBM Plex Mono', Menlo, monospace;
+
+  --strata-text-xs: clamp(0.694rem, 0.66rem + 0.17vw, 0.79rem);
+  --strata-text-sm: clamp(0.833rem, 0.79rem + 0.21vw, 0.95rem);
+  --strata-text-md: clamp(1rem, 0.95rem + 0.25vw, 1.14rem);
+  --strata-text-lg: clamp(1.2rem, 1.13rem + 0.34vw, 1.42rem);
+  --strata-text-xl: clamp(1.44rem, 1.34rem + 0.48vw, 1.77rem);
+  --strata-text-2xl: clamp(1.728rem, 1.58rem + 0.72vw, 2.22rem);
+  --strata-leading-normal: 1.55;
+  --strata-tracking-wide: 0.08em;
+
+  --strata-space-1: 0.25rem;
+  --strata-space-2: 0.5rem;
+  --strata-space-3: 0.75rem;
+  --strata-space-4: 1rem;
+  --strata-space-5: 1.5rem;
+  --strata-space-6: 2rem;
+  --strata-space-7: 3rem;
+  --strata-space-8: 4rem;
+
+  --strata-radius-0: 0;
+  --strata-radius-1: 0.25rem;
+  --strata-radius-2: 0.5rem;
+  --strata-radius-3: 0.75rem;
+  --strata-radius-4: 1.25rem;
+  --strata-radius-round: 999px;
+  --radius-pill: var(--strata-radius-round);
+
+  --strata-border-hair: 1px;
+  --strata-shadow-1: 0 1px 2px;
+  --strata-shadow-2: 0 4px 12px -2px;
+  --strata-shadow-3: 0 16px 40px -8px;
+
+  --strata-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --strata-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --strata-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --font-display: var(--strata-font-display);
+  --font-body: var(--strata-font-body);
+  --font-mono: var(--strata-font-mono);
+  --shadow-raised: var(--strata-shadow-1) var(--shadow-color);
+  --shadow-floating: var(--strata-shadow-2) var(--shadow-color);
+  --shadow-overlay: var(--strata-shadow-3) var(--shadow-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-instant: 0ms;
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --motion-slow: 0ms;
+  }
+}
