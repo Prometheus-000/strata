@@ -49,6 +49,9 @@ function Reveal({ children, delay = 0 }: { children: ReactNode; delay?: number }
   )
 }
 
+/* Links between pages follow the deploy base, so the same build serves at / and at /<repo>/. */
+const BASE = import.meta.env.BASE_URL
+
 /* ---------- Top bar ---------- */
 function TopBar() {
   const { seeds, setSeeds } = useTheme()
@@ -64,6 +67,8 @@ function TopBar() {
           <a className="topbar__link" href="#console">Console</a>
           <a className="topbar__link" href="#grammar">Grammar</a>
           <a className="topbar__link" href="#components">Reference</a>
+          <a className="topbar__link" href={`${BASE}slots.html`}>Slots</a>
+          <a className="topbar__link" href={`${BASE}malleable.html`}>Malleable</a>
           <Switch
             checked={seeds.appearance === 'dark'}
             onChange={(dark) =>
@@ -163,6 +168,57 @@ function Section({
         {children}
       </div>
     </section>
+  )
+}
+
+/* ---------- Surfaces — every instrument in the repo, reachable from here ---------- */
+const SURFACES = [
+  {
+    tag: 'THEME LAB',
+    what: 'Six dials, a phrase, or a dropped image. The whole page recompiles on every drag, and every compiled word shows its receipt.',
+    href: '#lab',
+    cta: 'on this page',
+  },
+  {
+    tag: 'PERSONALIZE',
+    what: 'The same engine scaled down to the two controls an end user actually wants: say a mood, or pick one.',
+    href: `${BASE}personalize.html`,
+    cta: 'open',
+  },
+  {
+    tag: 'SLOT LAYER',
+    what: 'Press a feature and its legal positions appear. Every slot is priced before the drag begins; the drop lands anyway and the cost travels into source.',
+    href: `${BASE}slots.html`,
+    cta: 'open',
+  },
+  {
+    tag: 'MALLEABLE LAYER',
+    what: 'Drag a padding or a radius on a live node, then answer one question — how far does this go — in four words. Un-promoted drift is the finding, and it is counted.',
+    href: `${BASE}malleable.html`,
+    cta: 'open',
+  },
+]
+
+function Surfaces() {
+  return (
+    <Section
+      kicker="Surfaces"
+      title="Four instruments. One record."
+      sub="Each surface is a host for one library, and each library is provable without a browser. This page is the one place they are all reachable from."
+      id="surfaces"
+    >
+      <Reveal>
+        <div className="ledger">
+          {SURFACES.map((s) => (
+            <a className="ledger__row ledger__row--link" key={s.tag} href={s.href}>
+              <span className="ledger__tag">{s.tag}</span>
+              <p className="ledger__what">{s.what}</p>
+              <span className="ledger__rule">{s.cta} →</span>
+            </a>
+          ))}
+        </div>
+      </Reveal>
+    </Section>
   )
 }
 
@@ -531,6 +587,7 @@ export default function App() {
       <TopBar />
       <main>
         <Hero />
+        <Surfaces />
         <Section
           kicker="Theme Lab"
           title="Six seeds in. A design system out."

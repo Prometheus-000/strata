@@ -9,7 +9,6 @@
     "tokens": "tsx scripts/emit-tokens.ts",
     "validate": "node scripts/validate-tokens.mjs",
     "build": "npm run tokens && npm run validate && tsc -b && vite build",
-    "build:pz": "vite build --config vite.pz.config.ts",
     "preview": "vite preview",
     "bundle": "node scripts/bundle.mjs"
   },

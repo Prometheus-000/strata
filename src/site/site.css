@@ -1036,3 +1036,16 @@ body {
     transform: none;
   }
 }
+
+/* A ledger row that is a link keeps the ledger's shape; only the affordance changes. */
+.ledger__row--link {
+  color: inherit;
+  text-decoration: none;
+  transition: background var(--motion-fast) var(--motion-ease);
+}
+.ledger__row--link:hover {
+  background: var(--accent-soft);
+}
+.ledger__row--link:hover .ledger__rule {
+  color: var(--accent);
+}

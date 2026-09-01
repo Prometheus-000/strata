@@ -16,6 +16,14 @@ numbers; every change carries its author; and nothing, anywhere, is blocked.
 
 > The record is what people decided. Everything else is a receipt.
 
+**See it:** [prometheus-000.github.io/strata](https://prometheus-000.github.io/strata/)
+is the hub — the showcase and Theme Lab, with the
+[personalizer](https://prometheus-000.github.io/strata/personalize.html), the
+[slot layer](https://prometheus-000.github.io/strata/slots.html) and the
+[malleable layer](https://prometheus-000.github.io/strata/malleable.html) one
+click away. The static site cannot write back to source; the two harnesses fall
+back to your browser's storage there, and write through only on the dev server.
+
 ## What it gives back
 
 **Creativity, to the designer.** Nothing here refuses. A drag lands where it
@@ -180,8 +188,9 @@ src/theme/         the engine, the prose compiler, the image sampler, a React pr
 src/tokens/        GENERATED projections — semantic.css, tokens.json; never edited
 src/behavior/      Layer 1 — useTabs, useDialog
 src/components/    Layer 2 — twelve recipes and strata.css
-src/site/          the showcase and the Theme Lab
+src/site/          the showcase, the Theme Lab, and the hub every surface is reached from
 src/personalize/   the same engine, scaled down to the two controls an end user wants
+*.html             the four entry pages of one Vite build
 scripts/           emit-tokens · validate-tokens · bundle
 GRAMMAR.md         every rule, with the incident that earned it
 
@@ -203,13 +212,24 @@ seeds and the incidents.
 
 ```bash
 npm install
-npm run dev            # the showcase and Theme Lab
+npm run dev            # one server, four pages: /, /personalize.html, /slots.html, /malleable.html
 npm run tokens         # regenerate the Layer 0 projections
 npm run validate       # fail undeclared literals; log declared deviations
+npm run build          # all four pages into dist/; BASE_PATH=/strata/ for a sub-path host
+```
 
+The root dev server mounts both libraries' write-through plugins, so a drag on
+`/slots.html` lands in `strata-slots/fixtures/app` and a promotion on
+`/malleable.html` lands in `strata-malleable/.malleable/overrides.json` — the
+same files each library's CLI reads. Each library still runs alone:
+
+```bash
 cd strata-slots && npm install && npm test && npm run dev
 cd strata-malleable && npm install && npm test && npm run dev
 ```
+
+Every push to `main` rebuilds the site and publishes it to GitHub Pages
+(`.github/workflows/pages.yml`).
 
 ## For agents
 
