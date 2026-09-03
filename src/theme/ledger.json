@@ -440,8 +440,8 @@
         "kind": "agent",
         "actor": "claude-code"
       },
-      "reason": "Two radii, not three: a control and a panel. The engine gave overlays 2.4× the control radius, which at calm energy is a 19px dialog — the one soft shape on an otherwise architectural page. An overlay is a panel; it rounds like one.",
-      "id": "d0mtlvzac0-ed0m"
+      "reason": "Do not design multiple ways to do the same thing.",
+      "id": "d0mtm5yycf-q08i"
     },
     "--control-h-sm": {
       "status": "proposed"
@@ -465,7 +465,17 @@
       "status": "proposed"
     },
     "--font-display": {
-      "status": "proposed"
+      "status": "kept",
+      "decided": {
+        "kind": "agent",
+        "actor": "claude-code"
+      },
+      "written": {
+        "kind": "agent",
+        "actor": "claude-code"
+      },
+      "reason": "The role names a job — display type — and the ledger should hold it even while its value coincides with the body face. One family constrains what this role may be set to, not whether it exists; cutting it would erase the intent at ten call sites and force a re-mint the day the house wants a second face for headings.",
+      "id": "d0mtm5z44t-ifap"
     },
     "--font-body": {
       "status": "proposed"

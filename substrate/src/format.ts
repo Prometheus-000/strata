@@ -127,7 +127,7 @@ export function formatHandoff(changes: readonly Decision[], ready: Decision | nu
   out.push('')
   const chosen = changes.filter((d) => d.decided.kind === 'agent')
   if (chosen.length) {
-    out.push(`${chosen.length} of these were decided by an agent, not written by one — a person reviews these before they are committed:`)
+    out.push(`${chosen.length} ${chosen.length === 1 ? 'line was' : 'lines were'} decided by an agent, not merely written by one — a person reviews ${chosen.length === 1 ? 'it' : 'these'} before ${chosen.length === 1 ? 'it is' : 'they are'} committed:`)
     for (const d of chosen) out.push(`  ${d.id}  ${describe(d)}`)
     out.push('')
   }

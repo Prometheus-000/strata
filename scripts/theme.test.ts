@@ -91,7 +91,10 @@ test('the ledger imports onto the record once and rebuilds from it byte for byte
   // recorded a channel, and a channel is not a judgement.
   const hands = { decided: { kind: 'human' as const, actor: 'prometheus-000' }, written: { kind: 'agent' as const, actor: 'claude-code' } }
   const { imported, skipped } = importAll(dir, hands)
-  assert.equal(imported.length, 34, 'every decided token')
+  // Every decided token in the ledger this world copied — the count follows
+  // the repo rather than a number written down here and left behind.
+  const decidedInLedger = Object.values(readLedger(dir).tokens).filter((d) => d.status !== 'proposed').length
+  assert.equal(imported.length, decidedInLedger, 'every decided token')
   assert.deepEqual(skipped, [])
   assert.ok(imported.every((d) => d.kind === 'token' && d.via === LEDGER_PATH.replace(/^/, 'import:')))
   assert.ok(imported.every((d) => d.decided.actor === 'prometheus-000' && d.written.actor === 'claude-code'))
@@ -106,7 +109,7 @@ test('the ledger imports onto the record once and rebuilds from it byte for byte
   // engine holds against a primitive arrived unreviewed, so they are proposals
   // with no decision to point at, which is what a proposal is.
   const decided = Object.values(ledger.tokens).filter((l) => l.status !== 'proposed')
-  assert.equal(decided.length, 34)
+  assert.equal(decided.length, decidedInLedger)
   assert.ok(decided.every((l) => l.id && imported.some((d) => d.id === l.id)))
   assert.deepEqual(rebuild(dir, { dryRun: true }).changed, [])
   assert.equal(fs.readFileSync(path.join(dir, SEMANTIC_PATH), 'utf8'), fs.readFileSync(path.join(REPO, SEMANTIC_PATH), 'utf8'), 'the same record projects the same stylesheet')
