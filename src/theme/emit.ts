@@ -37,8 +37,12 @@ export interface EmitResult {
   written: string[]
 }
 
-/** Project the engine through the ledger. `dryRun` computes everything and writes nothing. */
-export function emitTokens(root: string, opts: { dryRun?: boolean } = {}): EmitResult {
+/**
+ * Project the engine through the ledger. `dryRun` computes everything and
+ * writes nothing; `ledger` projects a ledger that is not on disk yet — the
+ * one the record says — instead of reading the file.
+ */
+export function emitTokens(root: string, opts: { dryRun?: boolean; ledger?: Ledger } = {}): EmitResult {
 
   const DARK = OBSIDIAN
   const LIGHT = PRESETS.Gallery
@@ -48,7 +52,7 @@ export function emitTokens(root: string, opts: { dryRun?: boolean } = {}): EmitR
 
   /* ---- the ledger: reconcile, never edit a decision ---- */
   const engineTokens = Object.keys(generateTheme(DARK))
-  const { ledger, added, stale } = reconcileLedger(engineTokens, readLedger(root))
+  const { ledger, added, stale } = reconcileLedger(engineTokens, opts.ledger ?? readLedger(root))
 
   const dark = applyLedger(generateTheme(DARK), ledger)
   const light = applyLedger(generateTheme(LIGHT), ledger)
@@ -199,11 +203,9 @@ ${block(dark.tokens, (p) => !isColor(p))}
     },
   }
 
-  const files = { [SEMANTIC_PATH]: css, [TOKENS_PATH]: JSON.stringify(json, null, 2) + '\n' }
+  const files = { [LEDGER_PATH]: JSON.stringify(ledger, null, 2) + '\n', [SEMANTIC_PATH]: css, [TOKENS_PATH]: JSON.stringify(json, null, 2) + '\n' }
   const written: string[] = []
   if (!opts.dryRun) {
-    writeLedger(root, ledger)
-    written.push(LEDGER_PATH)
     for (const [file, text] of Object.entries(files)) {
       writeFileSync(join(root, file), text)
       written.push(file)

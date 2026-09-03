@@ -4,6 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import { decide, resetHandlers } from '@strata/substrate/decide'
+import { importAll, rebuild, resetProjections } from '@strata/substrate/projection'
 import { readAll } from '@strata/substrate/log'
 import { registerTheme } from '../src/theme/handlers'
 import { readLedger, LEDGER_PATH, SEMANTIC_PATH, TOKENS_PATH } from '../src/theme/emit'
@@ -14,6 +15,7 @@ const REPO = path.join(path.dirname(new URL(import.meta.url).pathname), '..')
 /** A product root with the real ledger and empty projections. */
 function world() {
   resetHandlers()
+  resetProjections()
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'strata-theme-'))
   fs.mkdirSync(path.join(dir, 'src/theme'), { recursive: true })
   fs.mkdirSync(path.join(dir, 'src/tokens'), { recursive: true })
@@ -78,4 +80,27 @@ test('the token CLI is a thin layer over decide and prints who decided', () => {
   assert.match(out.join('\n'), /✂ --accent-strong\s+cut\s+→ --accent · agent · one filled action/)
   assert.equal(runTheme(['cut', 'accent'], { root: dir }, {}, io), 1)
   assert.equal(runTheme(['cut', '--accent', '--by', 'robot'], { root: dir }, {}, io), 1)
+})
+
+test('the ledger imports onto the record once and rebuilds from it byte for byte, every line pointing at its decision', () => {
+  const { dir } = world()
+  const { imported, skipped } = importAll(dir)
+  assert.equal(imported.length, 34, 'every decided token')
+  assert.deepEqual(skipped, [])
+  assert.ok(imported.every((d) => d.kind === 'token' && d.via === LEDGER_PATH.replace(/^/, 'import:') && d.by === 'agent'))
+  assert.equal(imported.filter((d) => d.kind === 'token' && d.action === 'cut').length, 3)
+  assert.deepEqual(importAll(dir).skipped, [LEDGER_PATH])
+
+  const check = rebuild(dir, { dryRun: true })
+  assert.deepEqual(check.changed, [LEDGER_PATH, SEMANTIC_PATH, TOKENS_PATH], 'the ledger gains ids; the projections did not exist yet')
+  rebuild(dir)
+  const ledger = readLedger(dir)
+  assert.ok(Object.values(ledger.tokens).every((l) => l.id && imported.some((d) => d.id === l.id)))
+  assert.deepEqual(rebuild(dir, { dryRun: true }).changed, [])
+  assert.equal(fs.readFileSync(path.join(dir, SEMANTIC_PATH), 'utf8'), fs.readFileSync(path.join(REPO, SEMANTIC_PATH), 'utf8'), 'the same record projects the same stylesheet')
+
+  decide({ kind: 'token', token: '--accent-strong', action: 'cut', reason: 'one filled action per surface' }, { root: dir, by: 'human', via: 'test' })
+  assert.deepEqual(rebuild(dir, { dryRun: true }).changed, [], 'a decision through decide() leaves the projections already rebuilt')
+  fs.appendFileSync(path.join(dir, SEMANTIC_PATH), '/* by hand */\n')
+  assert.deepEqual(rebuild(dir, { dryRun: true }).changed, [SEMANTIC_PATH], 'a hand edit is drift from the record')
 })

@@ -13,7 +13,9 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { runSubstrate, SUBSTRATE_COMMANDS } from '../substrate/src/cli.ts'
 import { runTheme, THEME_COMMANDS } from '../src/theme/cli.ts'
+import { registerTheme } from '../src/theme/handlers.ts'
 import { runMalleable, MALLEABLE_COMMANDS } from '../strata-malleable/src/cli.ts'
+import { registerMalleable } from '../strata-malleable/src/decide/index.ts'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const argv = process.argv.slice(2)
@@ -29,6 +31,11 @@ const MALLEABLE_HOME = {
   source: flag('root') ?? process.env.MALLEABLE_ROOT ?? 'fixtures/app',
 }
 
+// Every projection this product has, registered before any command runs, so
+// `import`, `rebuild` and the checks see all of them.
+registerTheme({ root: ROOT })
+registerMalleable({ root: MALLEABLE_HOME.root, source: MALLEABLE_HOME.source })
+
 const help = () => {
   console.log(`strata — the record of what this product decided, and the one way to change it
 
@@ -37,6 +44,8 @@ const help = () => {
     history <targetKey>         every decision on one target, as glass boxes
     show <id>                   one decision
     ready [--why …]             hand off what changed since the last ready
+    import                      bring the old ledger and store onto the record, once
+    rebuild [--check]           write every projection from the record; --check only says which differ
 
   tokens (Layer 0)
     list · cut · keep · propose --<token> [--why …]

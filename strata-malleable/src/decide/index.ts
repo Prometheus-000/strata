@@ -12,9 +12,13 @@
  * tree live at the library's. In this repo they differ; in a project that
  * installs the library they are the same directory.
  */
+import fs from 'node:fs'
+import path from 'node:path'
 import { registerHandler, type Applied, type Refused, type Request, type ResolvedContext } from '@strata/substrate/decide'
-import type { Consequence, DecisionBody, Scope, Value } from '@strata/substrate/decision'
-import type { MoveRequest, NodeAddress, PropRequest, ThemeSeeds } from '../schema'
+import type { Consequence, Decision, DecisionBody, Scope, Value } from '@strata/substrate/decision'
+import { registerProjection, type Imported } from '@strata/substrate/projection'
+import type { MoveRequest, NodeAddress, Override, PropRequest, Store, ThemeSeeds } from '../schema'
+import { OBSIDIAN } from '../engine/generateTheme'
 import { readManifest, readStore, writeStore, STORE_PATH } from '../store/persist'
 import { addressOf, put, remove, setScope } from '../store/store'
 import { resolve } from '../resolve/resolve'
@@ -67,6 +71,70 @@ export function registerMalleable(home: MalleableHome): void {
   registerHandler<PropDecisionRequest>('prop', (req, ctx) => propHandler(req, ctx, home))
   registerHandler<SeedRequest>('seed', (req, ctx) => seedHandler(req, ctx, home))
   registerHandler<ShipRequest>('ship', (_req, ctx) => shipHandler(ctx, home))
+  registerProjection({
+    name: path.join(path.relative(process.cwd(), home.root) || '.', STORE_PATH).replace(/^\.\//, ''),
+    import: () => importStore(home),
+    project: (_root, log) => ({ [path.join(path.relative(_root, home.root) || '.', STORE_PATH).replace(/^\.\//, '')]: projectStore(log) }),
+  })
+}
+
+/* ---------------- the store as a projection ---------------- */
+
+const nodeOf = (o: Override) => (o.target.scope === 'system' ? {} : whereOf(o.target.scope, addressOf(o, o.target.selector.split('::').pop() ?? o.target.selector)))
+
+/** Every row in the old store as the decision that wrote it; the seeds too, when someone moved them. */
+function importStore(home: MalleableHome): Imported[] {
+  const file = path.join(home.root, STORE_PATH)
+  if (!fs.existsSync(file)) return []
+  const store = readStore(home.root)
+  const rows: Imported[] = store.overrides.map((o) => ({
+    kind: 'override' as const,
+    action: 'set' as const,
+    scope: o.target.scope,
+    selector: o.target.selector,
+    property: o.property,
+    value: o.value,
+    ...nodeOf(o),
+    by: o.author,
+    at: new Date(o.ts).toISOString(),
+  }))
+  if (JSON.stringify(store.seeds) !== JSON.stringify(OBSIDIAN))
+    rows.push({ kind: 'seed', seeds: store.seeds, by: 'human', at: fs.statSync(file).mtime.toISOString() })
+  return rows
+}
+
+/**
+ * The store the record says. A fold, in order: a set or a rescope upserts its
+ * row and drops what it absorbed; a remove drops its row; a ship drops what it
+ * collapsed and moves the seeds; a retheme moves the seeds. The same order of
+ * operations the handlers ran, so the text is the same text.
+ */
+export function projectStore(log: readonly Decision[], initialSeeds: ThemeSeeds = OBSIDIAN): string {
+  let seeds = initialSeeds
+  let overrides: Override[] = []
+  const drop = (ids: readonly string[] | undefined) => {
+    if (ids?.length) overrides = overrides.filter((o) => !ids.includes(o.id))
+  }
+  for (const d of log) {
+    if (d.consequence.refused) continue
+    if (d.kind === 'override') {
+      const id = `${d.scope}:${d.selector}:${d.property}`
+      if (d.action === 'remove') {
+        drop([id])
+        continue
+      }
+      if (!d.value) continue
+      overrides = overrides.filter((o) => o.id !== id)
+      overrides.push({ id, target: { scope: d.scope, selector: d.selector }, property: d.property, value: d.value, author: d.by, ts: Date.parse(d.at) })
+      drop(d.consequence.absorbed)
+    } else if (d.kind === 'seed') seeds = d.seeds
+    else if (d.kind === 'ship') {
+      drop(d.consequence.absorbed)
+      if (d.seeds) seeds = d.seeds
+    }
+  }
+  const store: Store = { version: 1, seeds, overrides }
+  return JSON.stringify(store, null, 2) + '\n'
 }
 
 function overrideHandler(req: OverrideRequest, ctx: ResolvedContext, home: MalleableHome): Applied | Refused {
@@ -113,7 +181,7 @@ function overrideHandler(req: OverrideRequest, ctx: ResolvedContext, home: Malle
     let body = bodyFor(scope, selector, req.value)
     if (scope === 'instance' && prior && sameValue(prior.value, req.value)) return { body, unchanged: true }
     if (scope !== 'instance') {
-      const change = setScope(next, manifest, address, property, scope, ctx.by, ts + 1)
+      const change = setScope(next, manifest, address, property, scope, ctx.by, ts)
       if (change.refused) return { refused: change.refused, body }
       next = change.store
       if (change.absorbed.length) consequence.absorbed = change.absorbed.map((o) => o.id)
@@ -185,8 +253,9 @@ function shipHandler(ctx: ResolvedContext, home: MalleableHome): Applied | Refus
   const manifest = readManifest(home.root)
   const result = ship(store, manifest, { dryRun: ctx.dryRun, root: home.root })
   if (!ctx.dryRun) writeStore(result.store, home.root)
-  const body: DecisionBody = { kind: 'ship', promoted: result.promoted, frozen: result.frozen }
-  const consequence: Consequence = { affected: result.edits.length }
+  const body: DecisionBody = { kind: 'ship', promoted: result.promoted, frozen: result.frozen, seeds: result.store.seeds }
+  const dropped = store.overrides.filter((o) => !result.store.overrides.some((k) => k.id === o.id)).map((o) => o.id)
+  const consequence: Consequence = { affected: result.edits.length, ...(dropped.length ? { absorbed: dropped } : {}) }
   const notes = [...result.edits.map((e) => `${e.file}: ${e.what}`), ...result.refusals.map((r) => `refused: ${r}`)]
   if (notes.length) consequence.note = notes.join(' · ')
   return { body, consequence, written: [...result.edits.map((e) => e.file), STORE_PATH] }

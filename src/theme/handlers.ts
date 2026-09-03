@@ -9,13 +9,16 @@
  * literal it legalises — the decision and the thing decided are one diff —
  * and the record carries who declared it and why.
  */
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { registerHandler, type Applied, type Refused, type Request, type ResolvedContext } from '@strata/substrate/decide'
-import type { DecisionBody } from '@strata/substrate/decision'
+import type { Decision, DecisionBody } from '@strata/substrate/decision'
+import { current } from '@strata/substrate/log'
+import { registerProjection, type Imported } from '@strata/substrate/projection'
 import { generateTheme, OBSIDIAN } from './generateTheme'
-import { FALLBACKS, type TokenStatus } from './ledger'
-import { emitTokens, readLedger, writeLedger } from './emit'
+import { FALLBACKS, type Ledger, type TokenDecision, type TokenStatus } from './ledger'
+import { emitTokens, readLedger, writeLedger, LEDGER_PATH } from './emit'
 
 export type TokenRequest = Request & { kind: 'token'; token: string; action: 'propose' | 'keep' | 'cut' }
 export type DeviationRequest = Request & { kind: 'deviation'; file: string; line: number; value?: string }
@@ -28,6 +31,49 @@ export const COLOR_LITERAL = /#[0-9a-fA-F]{3,8}\b|\boklch\([^)]*\)|\brgba?\([^)]
 export function registerTheme(home: { root: string }): void {
   registerHandler<TokenRequest>('token', (req, ctx) => tokenHandler(req, ctx, home.root))
   registerHandler<DeviationRequest>('deviation', (req, ctx) => deviationHandler(req, ctx, home.root))
+  registerProjection({ name: LEDGER_PATH, import: importLedger, project: projectTheme })
+}
+
+const ACTION: Record<TokenStatus, TokenRequest['action']> = { proposed: 'propose', kept: 'keep', cut: 'cut' }
+
+/** When the ledger was last committed — the honest time for a decision nobody stamped. */
+function ledgerTime(root: string): string {
+  try {
+    const out = execFileSync('git', ['log', '-1', '--format=%cI', '--', LEDGER_PATH], { cwd: root, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+    if (out) return new Date(out).toISOString()
+  } catch {
+    /* not a repo, or the file is untracked */
+  }
+  return statSync(join(root, LEDGER_PATH)).mtime.toISOString()
+}
+
+/** Every decided line in the old ledger, as the decision that would have written it. Proposed lines are the engine's, not anyone's. */
+function importLedger(root: string): Imported[] {
+  if (!existsSync(join(root, LEDGER_PATH))) return []
+  const at = ledgerTime(root)
+  return Object.entries(readLedger(root).tokens)
+    .filter(([, d]) => d.status !== 'proposed')
+    .map(([token, d]) => ({
+      kind: 'token' as const,
+      token,
+      action: ACTION[d.status],
+      by: d.by ?? 'human',
+      at,
+      ...(d.reason ? { reason: d.reason } : {}),
+      ...(d.status === 'cut' ? { consequence: { collapsesTo: FALLBACKS[token]?.to } } : {}),
+    }))
+}
+
+/** The ledger the record says, and the two files the engine emits through it. */
+function projectTheme(root: string, log: readonly Decision[]): Record<string, string> {
+  const now = current(log)
+  const tokens: Record<string, TokenDecision> = {}
+  for (const name of Object.keys(generateTheme(OBSIDIAN))) {
+    const d = now.get(`token:${name}`)
+    tokens[name] = d && d.kind === 'token' ? { status: STATUS[d.action], by: d.by, ...(d.reason ? { reason: d.reason } : {}), id: d.id } : { status: 'proposed' }
+  }
+  const ledger: Ledger = { ...readLedger(root), tokens }
+  return emitTokens(root, { dryRun: true, ledger }).files
 }
 
 function tokenHandler(req: TokenRequest, ctx: ResolvedContext, root: string): Applied | Refused {

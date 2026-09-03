@@ -99,7 +99,7 @@ export type DecisionBody =
   | { kind: 'prop'; component: string; prop: string; file: string; line: number; from: PropValue; to: PropValue }
   | { kind: 'seed'; seeds: ThemeSeeds; from?: ThemeSeeds }
   | { kind: 'deviation'; file: string; line: number; value: string }
-  | { kind: 'ship'; promoted: { system: number; component: number }; frozen: number }
+  | { kind: 'ship'; promoted: { system: number; component: number }; frozen: number; seeds?: ThemeSeeds }
   | { kind: 'ready' }
 
 export type Kind = DecisionBody['kind']

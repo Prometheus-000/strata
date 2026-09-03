@@ -9,9 +9,10 @@ import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import { decide, resetHandlers } from '@strata/substrate/decide'
+import { importAll, rebuild, resetProjections } from '@strata/substrate/projection'
 import { collapseReversals, readAll, since } from '@strata/substrate/log'
 import { formatHandoff } from '@strata/substrate/format'
-import { registerMalleable } from '../src/decide'
+import { projectStore, registerMalleable } from '../src/decide'
 import { OBSIDIAN } from '../src/engine/generateTheme'
 import { readStore, writeManifest, writeStore } from '../src/store/persist'
 import { emptyStore } from '../src/store/store'
@@ -73,6 +74,7 @@ const MANIFEST: Manifest = {
 
 function world() {
   resetHandlers()
+  resetProjections()
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'malleable-decide-'))
   for (const [f, t] of Object.entries(FILES)) {
     fs.mkdirSync(path.dirname(path.join(dir, 'app', f)), { recursive: true })
@@ -177,4 +179,34 @@ test('a refused move is returned, not recorded; a seed change and a ship are dec
 
   const shipped = decide({ kind: 'ship' }, ctx('agent', { dryRun: true }))
   assert.ok(shipped.ok && shipped.decision.kind === 'ship' && shipped.decision.frozen === 0)
+})
+
+test('the store is a projection: the fold of the record reproduces overrides.json byte for byte, and the old store imports once', () => {
+  const { dir, ctx } = world()
+  const same = () => assert.equal(projectStore(readAll(dir)), fs.readFileSync(path.join(dir, '.malleable/overrides.json'), 'utf8'))
+  decide({ kind: 'override', action: 'set', address: address('ember'), property: 'radius', value: { literal: '20px' } }, ctx('agent'))
+  same()
+  decide({ kind: 'override', action: 'set', address: address('meadow'), property: 'radius', value: { literal: '20px' } }, ctx())
+  decide({ kind: 'override', action: 'rescope', address: address('ember'), property: 'radius', scope: 'view' }, ctx())
+  same()
+  decide({ kind: 'override', action: 'set', address: address('x'), property: 'radius', value: { token: '--radius-pill' }, scope: 'component' }, ctx())
+  same()
+  decide({ kind: 'seed', seeds: { ...OBSIDIAN, hue: 300 } }, ctx())
+  same()
+  decide({ kind: 'override', action: 'remove', id: `component:${CARD}:radius` }, ctx())
+  same()
+  assert.deepEqual(rebuild(dir, { dryRun: true }).changed, [])
+
+  // A product adopting the record: its old store becomes decisions, once.
+  const fresh = fs.mkdtempSync(path.join(os.tmpdir(), 'malleable-import-'))
+  const row = { id: `instance:gallery/ember::${CARD}:radius`, target: { scope: 'instance' as const, selector: `gallery/ember::${CARD}` }, property: 'radius', value: { literal: '20px' }, author: 'agent' as const, ts: 1_700_000_000_000 }
+  writeStore({ version: 1, seeds: { ...OBSIDIAN, hue: 12 }, overrides: [row] }, fresh)
+  resetProjections()
+  registerMalleable({ root: fresh, source: 'app' })
+  const { imported } = importAll(fresh)
+  assert.equal(imported.length, 2, 'one row and the moved seeds')
+  assert.ok(imported[0].kind === 'override' && imported[0].node === CARD && imported[0].view === 'gallery' && imported[0].by === 'agent')
+  assert.ok(imported.every((d) => d.via.startsWith('import:')))
+  assert.deepEqual(importAll(fresh).imported, [])
+  assert.deepEqual(rebuild(fresh, { dryRun: true }).changed, [], 'the imported record projects the file it came from')
 })

@@ -8,8 +8,9 @@ import { targetKey } from './decision'
 import { authorFrom } from './author'
 import { describe, formatDecision } from './format'
 import { byId, history, readAll } from './log'
+import { importAll, rebuild, registeredProjections } from './projection'
 
-export const SUBSTRATE_COMMANDS = ['log', 'history', 'show', 'ready'] as const
+export const SUBSTRATE_COMMANDS = ['log', 'history', 'show', 'ready', 'import', 'rebuild'] as const
 
 export interface CliIo {
   out: (s: string) => void
@@ -69,6 +70,28 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
       const result = decide({ kind: 'ready', reason: flag('why') }, ctx)
       if (!result.ok) return fail(result.error)
       io.out(`\n  ${describe(result.decision)} · ${result.decision.consequence.affected ?? 0} change(s) handed off\n  ${who.because}\n`)
+      return 0
+    }
+
+    case 'import': {
+      const { imported, skipped } = importAll(home.root, { dryRun: has('dry') })
+      for (const d of imported) io.out(`  + ${d.id}  ${d.at.slice(0, 10)}  ${describe(d)}`)
+      for (const s of skipped) io.out(`  · ${s} is already on the record`)
+      io.out(`\n  ${imported.length} decision(s) imported from ${registeredProjections().join(', ') || 'no projection'}${has('dry') ? ' (dry run — nothing written)' : ''}`)
+      if (imported.length && !has('dry')) io.out('  next: strata rebuild — so every projected line points at its decision\n')
+      return 0
+    }
+
+    case 'rebuild': {
+      const check = has('check') || has('dry')
+      const r = rebuild(home.root, { dryRun: check })
+      if (!r.files.length) return fail('no projection is registered here')
+      for (const f of r.files) io.out(`  ${r.changed.includes(f) ? (check ? '≠' : '~') : '='} ${f}`)
+      if (check && r.changed.length) {
+        io.err(`\n  ${r.changed.length} projection(s) do not match the record — run strata rebuild\n`)
+        return 1
+      }
+      io.out(check ? '\n  every projection matches the record\n' : `\n  ${r.written.length} file(s) rewritten from the record\n`)
       return 0
     }
 
