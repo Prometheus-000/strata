@@ -1,0 +1,29 @@
+{
+  "$description": "The tasks the bench runs, each in two arms. `packet` is assembled by `strata skill`; `list` is the same design system as names without reasons. The instruction is identical in both arms — only the context before it differs, which is the whole experiment.",
+  "tasks": [
+    {
+      "id": "cut-token",
+      "skill": "cut-token",
+      "inputs": { "token": "--motion-instant" },
+      "instruction": "Decide whether --motion-instant earns its place in this product's vocabulary. Make the decision, with the reason, wherever decisions belong here.",
+      "whatTheRecordKnows": [
+        "--motion-instant has no consumers in this product; check reports it as unused",
+        "its fallback is 0ms — below instant there is no motion, which is what reduced-motion already does",
+        "three sibling tokens were already cut with arguments, and the record holds them",
+        "--motion-fast collapses to --motion-instant, so cutting it moves where --motion-fast lands"
+      ]
+    },
+    {
+      "id": "move-region",
+      "skill": "move-region",
+      "inputs": { "region": "Filters", "to": "TopBar" },
+      "instruction": "Put the filters in the top bar.",
+      "whatTheRecordKnows": [
+        "a move rewrites the JSX on the spot through `strata move`, and the record names who moved it",
+        "a moved region may still need identifiers from where it came; the move reports them as `needs wiring`",
+        "behaviour is imported from src/behavior, never copied into the moved region",
+        "the designer defines the UX: a move is never moved back"
+      ]
+    }
+  ]
+}

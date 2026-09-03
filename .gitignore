@@ -4,3 +4,4 @@ strata.md
 .DS_Store
 *.tsbuildinfo
 .claude/launch.json.bak
+bench/runs/
