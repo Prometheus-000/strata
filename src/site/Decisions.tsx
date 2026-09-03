@@ -6,7 +6,7 @@
  * was decided, by whom, and why, which is the part a reader came for.
  */
 import raw from '../../.strata/decisions.jsonl?raw'
-import type { Decision } from '@strata/substrate/decision'
+import { handText, type Decision } from '@strata/substrate/decision'
 import { current } from '@strata/substrate/fold'
 import { describe, rows } from '@strata/substrate/format'
 import { Section } from './Section'
@@ -50,7 +50,7 @@ export function Decisions() {
                 <span className="ledger__tag">{d.kind}</span>
                 <p className="ledger__what">{describe(d)}</p>
                 <span className="ledger__rule">
-                  {d.by} · {d.at.slice(0, 10)}
+                  {handText(d.decided)} · {d.at.slice(0, 10)}
                 </span>
               </summary>
               <div className="decisions__box">

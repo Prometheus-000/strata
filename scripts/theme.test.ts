@@ -25,7 +25,7 @@ function world() {
   fs.copyFileSync(path.join(REPO, LEDGER_PATH), path.join(dir, LEDGER_PATH))
   registerTheme({ root: dir })
   let t = Date.parse('2026-09-03T12:00:00.000Z')
-  const ctx = (by: 'human' | 'agent' = 'human', dryRun = false) => ({ root: dir, by, via: 'test', at: new Date((t += 1000)).toISOString(), dryRun })
+  const ctx = (by: 'human' | 'agent' = 'human', dryRun = false) => ({ root: dir, decided: { kind: by }, written: { kind: by }, via: 'test', at: new Date((t += 1000)).toISOString(), dryRun })
   return { dir, ctx }
 }
 
@@ -39,7 +39,7 @@ test('a cut lands in the ledger with its id, re-emits the projections with the d
   assert.equal(cut.decision.consequence.collapsesTo, '--accent')
   assert.deepEqual(cut.written, [LEDGER_PATH, SEMANTIC_PATH, TOKENS_PATH])
   const line = readLedger(dir).tokens['--accent-strong']
-  assert.deepEqual(line, { status: 'cut', by: 'human', reason: 'one filled action per surface', id: cut.decision.id })
+  assert.deepEqual(line, { status: 'cut', decided: { kind: 'human' }, written: { kind: 'human' }, reason: 'one filled action per surface', id: cut.decision.id })
   assert.match(fs.readFileSync(path.join(dir, SEMANTIC_PATH), 'utf8'), /--accent-strong: var\(--accent\); \/\* cut by human: one filled action per surface \*\//)
   const contract = JSON.parse(fs.readFileSync(path.join(dir, TOKENS_PATH), 'utf8'))
   assert.equal(contract.strata.color.dark['accent-strong'].$extensions['strata.ledger'].status, 'cut')
@@ -87,10 +87,14 @@ test('the token CLI is a thin layer over decide and prints who decided', () => {
 
 test('the ledger imports onto the record once and rebuilds from it byte for byte, every line pointing at its decision', () => {
   const { dir } = world()
-  const { imported, skipped } = importAll(dir)
+  // The hands are stated by whoever runs the import; the old ledger's `by`
+  // recorded a channel, and a channel is not a judgement.
+  const hands = { decided: { kind: 'human' as const, actor: 'prometheus-000' }, written: { kind: 'agent' as const, actor: 'claude-code' } }
+  const { imported, skipped } = importAll(dir, hands)
   assert.equal(imported.length, 34, 'every decided token')
   assert.deepEqual(skipped, [])
-  assert.ok(imported.every((d) => d.kind === 'token' && d.via === LEDGER_PATH.replace(/^/, 'import:') && d.by === 'agent'))
+  assert.ok(imported.every((d) => d.kind === 'token' && d.via === LEDGER_PATH.replace(/^/, 'import:')))
+  assert.ok(imported.every((d) => d.decided.actor === 'prometheus-000' && d.written.actor === 'claude-code'))
   assert.equal(imported.filter((d) => d.kind === 'token' && d.action === 'cut').length, 3)
   assert.deepEqual(importAll(dir).skipped, [LEDGER_PATH])
 
@@ -102,7 +106,7 @@ test('the ledger imports onto the record once and rebuilds from it byte for byte
   assert.deepEqual(rebuild(dir, { dryRun: true }).changed, [])
   assert.equal(fs.readFileSync(path.join(dir, SEMANTIC_PATH), 'utf8'), fs.readFileSync(path.join(REPO, SEMANTIC_PATH), 'utf8'), 'the same record projects the same stylesheet')
 
-  decide({ kind: 'token', token: '--accent-strong', action: 'cut', reason: 'one filled action per surface' }, { root: dir, by: 'human', via: 'test' })
+  decide({ kind: 'token', token: '--accent-strong', action: 'cut', reason: 'one filled action per surface' }, { root: dir, decided: { kind: 'human' }, written: { kind: 'human' }, via: 'test' })
   assert.deepEqual(rebuild(dir, { dryRun: true }).changed, [], 'a decision through decide() leaves the projections already rebuilt')
   fs.appendFileSync(path.join(dir, SEMANTIC_PATH), '/* by hand */\n')
   assert.deepEqual(rebuild(dir, { dryRun: true }).changed, [SEMANTIC_PATH], 'a hand edit is drift from the record')
@@ -110,7 +114,7 @@ test('the ledger imports onto the record once and rebuilds from it byte for byte
 
 test('the theme evaluators: invariants hold on this repo, a raw colour is a policy finding with the way to declare it, and a token explains itself', () => {
   const { dir, ctx } = world()
-  importAll(dir)
+  importAll(dir, { decided: { kind: 'human', actor: 'prometheus-000' }, written: { kind: 'agent', actor: 'claude-code' } })
   rebuild(dir)
   fs.mkdirSync(path.join(dir, 'src/site'), { recursive: true })
   fs.writeFileSync(path.join(dir, 'src/site/site.css'), '.a { color: var(--accent-strong); background: #fff; }\n.b { color: var(--ink); }\n.c {\n  /* deviation: the wheel paints itself */\n  color: oklch(0.5 0 0);\n}\n.d { border: 1px solid var(--nope); }\n')

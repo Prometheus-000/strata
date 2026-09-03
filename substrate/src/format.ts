@@ -4,12 +4,12 @@
  * bottom. The CLI, the check report and the hub all render through here, so
  * there is one shape to learn.
  *
- *   DECISION      the body and its provenance
+ *   DECISION      the body, who decided it, and whose hand wrote it
  *   CONTEXT       what was true around it (supplied by whoever asked)
  *   EVIDENCE      what an evaluator found (supplied, never computed here)
  *   CONSEQUENCE   what the operation recorded when it ran
  */
-import { targetKey, type Decision, type Value } from './decision.ts'
+import { handText, targetKey, type Decision, type Value } from './decision.ts'
 
 export interface Fact {
   name: string
@@ -53,7 +53,7 @@ export function rows(d: Decision): Array<[string, string]> {
       r.push(['Action', 'ready'])
       break
   }
-  r.push(['Author', d.by])
+  r.push(['Decided by', handText(d.decided)], ['Written by', handText(d.written)])
   if (d.reason) r.push(['Reason', d.reason])
   return r
 }
@@ -86,7 +86,7 @@ export function formatDecision(d: Decision, extras: { context?: Fact[]; evidence
 
 /** One line, for lists. */
 export function describe(d: Decision): string {
-  const who = ` · ${d.by}`
+  const who = ` · ${handText(d.decided)}${d.written.kind === d.decided.kind && d.written.actor === d.decided.actor ? '' : ` (written ${handText(d.written)})`}`
   switch (d.kind) {
     case 'token':
       return `${d.action} ${d.token}${d.consequence.collapsesTo ? ` → ${d.consequence.collapsesTo}` : ''}${who}${d.reason ? ` · ${d.reason}` : ''}`
@@ -115,7 +115,7 @@ export function formatHandoff(changes: readonly Decision[], ready: Decision | nu
   if (!changes.length) out.push('  nothing changed since the last review')
   for (const d of changes) out.push(`  ${describe(d)}`)
   out.push('')
-  out.push(ready ? `ready for review — ${ready.by}, ${ready.at}` : 'not yet handed off')
+  out.push(ready ? `ready for review — ${handText(ready.decided)}, ${ready.at}` : 'not yet handed off')
   out.push('')
   return out.join('\n')
 }

@@ -3,15 +3,18 @@
  * plugin so a host that serves this harness beside other surfaces mounts the
  * same writer — two copies would be two places for a file path to disagree.
  *
- *   POST /__strata/decide         every write: { request, by?, reason?, dryRun? } → decide()
+ *   POST /__strata/decide         every write: { request, decided?, written?, reason?, dryRun? } → decide()
  *   GET  /__malleable/structure   the page's containers and regions, read fresh
  *   GET  /__malleable/callsite    where a component instance was written, and what it is passed
  *
  * One write endpoint, because there is one way anything changes. A drag, a
  * drop, a pick and "ready" each post a request; the projection's handler
- * applies it and the substrate appends the decision. The overlay says `by:
- * human` because a pointer is a hand; an agent driving the same endpoint says
- * `by: agent`, and nothing else differs.
+ * applies it and the substrate appends the decision. The overlay says
+ * `decided: human` because a pointer is a hand, and `written: human` for the
+ * same reason: the hand on the mouse is the hand that chose. An agent driving
+ * the same endpoint says what it is — `decided: agent` when it chose the
+ * value, `decided: human` with the person's actor when it is carrying out an
+ * instruction that named target and value — and nothing else differs.
  *
  * Two roots: the log lives at the product's root; `.malleable/` and the app
  * tree at the library's. A project that installs the library has one.
@@ -20,7 +23,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import type { Plugin } from 'vite'
 import { decide, type Request } from '@strata/substrate/decide'
-import { isAuthor } from '@strata/substrate/decision'
+import { handText, isAuthor, isHand, type Hand } from '@strata/substrate/decision'
 import { buildStructure } from '../identity/manifest'
 import { resolveCallSite } from '../controls/apply'
 import { registerMalleable } from '../decide'
@@ -44,19 +47,40 @@ export function malleableDevPlugin(root = process.cwd(), source = 'fixtures/app'
       }
 
       server.middlewares.use('/__strata/decide', (req, res) => {
-        if (req.method !== 'POST') return json(res, { ok: false, error: 'POST a { request, by?, reason? }' }, 405)
+        if (req.method !== 'POST') return json(res, { ok: false, error: 'POST a { request, decided?, written?, reason? }' }, 405)
         void readBody(req).then((body) => {
           try {
-            const parsed = JSON.parse(body || '{}') as { request?: Request; by?: unknown; reason?: string; via?: string; dryRun?: boolean }
+            const parsed = JSON.parse(body || '{}') as {
+              request?: Request
+              decided?: unknown
+              written?: unknown
+              reason?: string
+              via?: string
+              dryRun?: boolean
+            }
             if (!parsed.request?.kind) return json(res, { ok: false, error: 'a request needs a kind' }, 400)
-            const by = parsed.by ?? 'human'
-            if (!isAuthor(by)) return json(res, { ok: false, error: `by must be human or agent, not "${String(by)}"` }, 400)
+            const via = parsed.via ?? 'overlay'
+            // A hand may arrive as a kind ("agent") or as a named one
+            // ({ kind, actor }). Anything else is refused rather than coerced.
+            const hand = (v: unknown, what: string): Hand | { error: string } => {
+              if (typeof v === 'string') return isAuthor(v) ? { kind: v } : { error: `${what} must be human or agent, not "${v}"` }
+              if (isHand(v)) return v
+              return { error: `${what} must be human, agent, or { kind, actor }` }
+            }
+            const decided = parsed.decided === undefined ? ({ kind: 'human' } as Hand) : hand(parsed.decided, 'decided')
+            if ('error' in decided) return json(res, { ok: false, error: decided.error }, 400)
+            const written = parsed.written === undefined ? decided : hand(parsed.written, 'written')
+            if ('error' in written) return json(res, { ok: false, error: written.error }, 400)
             const request = parsed.reason ? { ...parsed.request, reason: parsed.reason } : parsed.request
             const result = decide(request, {
               root: logRoot,
-              by,
-              via: parsed.via ?? 'overlay',
-              because: parsed.by ? `by ${by} — stated by the ${parsed.via ?? 'overlay'}` : 'by human — a pointer is a hand',
+              decided,
+              written,
+              via,
+              because:
+                parsed.decided === undefined
+                  ? `decided by human — a pointer is a hand; written by human — the same hand, through the ${via}`
+                  : `decided by ${handText(decided)}; written by ${handText(written)} — both stated by the ${via}`,
               dryRun: parsed.dryRun === true,
             })
             json(res, result, result.ok ? 200 : 200)

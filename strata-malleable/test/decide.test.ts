@@ -87,7 +87,7 @@ function world() {
   writeStore(emptyStore(OBSIDIAN), dir)
   registerMalleable({ root: dir, source: 'app' })
   let t = Date.parse('2026-09-03T12:00:00.000Z')
-  const ctx = (by: 'human' | 'agent' = 'human', extra: { dryRun?: boolean } = {}) => ({ root: dir, by, via: 'test', at: new Date((t += 1000)).toISOString(), ...extra })
+  const ctx = (by: 'human' | 'agent' = 'human', extra: { dryRun?: boolean } = {}) => ({ root: dir, decided: { kind: by }, written: { kind: by }, via: 'test', at: new Date((t += 1000)).toISOString(), ...extra })
   return { dir, ctx }
 }
 const address = (instancePath: string) => ({ nodeId: CARD, viewId: 'gallery', instancePath })
@@ -120,7 +120,7 @@ test('an override is set, widened, and removed through decide, and each lands on
   assert.equal(readStore(dir).overrides.length, 0)
 
   const log = readAll(dir)
-  assert.deepEqual(log.map((d) => [d.kind, d.by, !!d.consequence.refused]), [
+  assert.deepEqual(log.map((d) => [d.kind, d.decided.kind, !!d.consequence.refused]), [
     ['override', 'agent', false],
     ['override', 'human', false],
     ['override', 'human', false],
@@ -206,9 +206,13 @@ test('the store is a projection: the fold of the record reproduces overrides.jso
   writeStore({ version: 1, seeds: { ...OBSIDIAN, hue: 12 }, overrides: [row] }, fresh)
   resetProjections()
   registerMalleable({ root: fresh, source: 'app' })
-  const { imported } = importAll(fresh)
+  // The old store recorded one `author`, and it recorded the surface that
+  // wrote rather than the hand that chose. So the import states the hands
+  // once, out loud, and every row takes them.
+  const { imported } = importAll(fresh, { decided: { kind: 'agent' }, written: { kind: 'agent' } })
   assert.equal(imported.length, 2, 'one row and the moved seeds')
-  assert.ok(imported[0].kind === 'override' && imported[0].node === CARD && imported[0].view === 'gallery' && imported[0].by === 'agent')
+  assert.ok(imported[0].kind === 'override' && imported[0].node === CARD && imported[0].view === 'gallery')
+  assert.deepEqual(imported[0].decided, { kind: 'agent' }, 'the hands come from the import, not from a field that never knew')
   assert.ok(imported.every((d) => d.via.startsWith('import:')))
   assert.deepEqual(importAll(fresh).imported, [])
   assert.deepEqual(rebuild(fresh, { dryRun: true }).changed, [], 'the imported record projects the file it came from')
@@ -224,6 +228,6 @@ test('an override explains itself with precedent, and drift that converges is a 
   const r = runCheck(dir)
   const drift = r.findings.find((f) => f.rule === 'drift.convergence')!
   assert.equal(drift.authority, 'precedent')
-  assert.match(drift.message, /3 instances independently converged — promotion candidate \(2 by hand, 1 by agent\)/)
+  assert.match(drift.message, /3 instances independently converged · hands unnamed · 2 by hand, 1 by agent — a candidate, which is computed/)
   assert.ok(r.invariants.every((i) => i.ok))
 })

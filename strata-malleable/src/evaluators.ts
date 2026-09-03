@@ -12,7 +12,7 @@ import path from 'node:path'
 import { registerEvaluator, type Finding } from '@strata/substrate/evidence'
 import type { Fact } from '@strata/substrate/format'
 import { preference } from '@strata/substrate/grammar'
-import { buildIndex, converge, search, valueText, PROMOTION_CANDIDATE_AT } from '@strata/substrate/precedent'
+import { buildIndex, converge, handsIn, search, valueText, PROMOTION_CANDIDATE_AT } from '@strata/substrate/precedent'
 import type { Structure } from './schema'
 import { readManifest, readStore, STRUCTURE_PATH } from './store/persist'
 import { reconcile, describe } from './store/store'
@@ -70,7 +70,7 @@ export function registerMalleableEvaluators(home: MalleableHome): void {
             rule: 'drift.convergence',
             authority: 'precedent',
             where: `${c.property} = ${c.value}`,
-            message: `${c.count} instances independently converged${c.views.length > 1 ? ` across ${c.views.length} views` : ''} — promotion candidate (${c.byAuthor.human} by hand, ${c.byAuthor.agent} by agent)`,
+            message: `${c.count} instances${c.independent ? ' independently' : ''} converged${c.views.length > 1 ? ` across ${c.views.length} views` : ''} · ${handsIn(c)} · ${c.byAuthor.human} by hand, ${c.byAuthor.agent} by agent — a candidate, which is computed; promoting it is a hand's decision`,
           })
       try {
         const store = readStore(home.root)

@@ -109,11 +109,13 @@ function importStore(home: MalleableHome): Imported[] {
     property: o.property,
     value: o.value,
     ...nodeOf(o),
-    by: o.author,
     at: new Date(o.ts).toISOString(),
+    // The store recorded one `author`, and what it recorded was the surface
+    // that wrote — the same conflation the ledger made. These rows take the
+    // hands the import states rather than reading a judgement into a channel.
   }))
   if (JSON.stringify(store.seeds) !== JSON.stringify(OBSIDIAN))
-    rows.push({ kind: 'seed', seeds: store.seeds, by: 'human', at: fs.statSync(file).mtime.toISOString() })
+    rows.push({ kind: 'seed', seeds: store.seeds, at: fs.statSync(file).mtime.toISOString() })
   return rows
 }
 
@@ -139,7 +141,7 @@ export function projectStore(log: readonly Decision[], initialSeeds: ThemeSeeds 
       }
       if (!d.value) continue
       overrides = overrides.filter((o) => o.id !== id)
-      overrides.push({ id, target: { scope: d.scope, selector: d.selector }, property: d.property, value: d.value, author: d.by, ts: Date.parse(d.at) })
+      overrides.push({ id, target: { scope: d.scope, selector: d.selector }, property: d.property, value: d.value, author: d.decided.kind, ts: Date.parse(d.at) })
       drop(d.consequence.absorbed)
     } else if (d.kind === 'seed') seeds = d.seeds
     else if (d.kind === 'ship') {
@@ -190,12 +192,12 @@ function overrideHandler(req: OverrideRequest, ctx: ResolvedContext, home: Malle
     // A drag is a statement about the thing under the cursor; widening goes
     // through setScope exactly as the promote control does.
     const prior = store.overrides.find((o) => o.id === `instance:${selectorFor('instance', address)}:${property}`)
-    let next = put(store, { address, property, value: req.value, author: ctx.by, ts })
+    let next = put(store, { address, property, value: req.value, author: ctx.decided.kind, ts })
     const consequence: Consequence = {}
     let body = bodyFor(scope, selector, req.value)
     if (scope === 'instance' && prior && sameValue(prior.value, req.value)) return { body, unchanged: true }
     if (scope !== 'instance') {
-      const change = setScope(next, manifest, address, property, scope, ctx.by, ts)
+      const change = setScope(next, manifest, address, property, scope, ctx.decided.kind, ts)
       if (change.refused) return { refused: change.refused, body }
       next = change.store
       if (change.absorbed.length) consequence.absorbed = change.absorbed.map((o) => o.id)
@@ -211,7 +213,7 @@ function overrideHandler(req: OverrideRequest, ctx: ResolvedContext, home: Malle
   // rescope: the value winning at this address moves to another scope
   if (!req.scope) return { refused: 'rescope needs a scope' }
   const before = resolve({ seeds: store.seeds, overrides: store.overrides, address, property, base })
-  const change = setScope(store, manifest, address, property, req.scope, ctx.by, ts)
+  const change = setScope(store, manifest, address, property, req.scope, ctx.decided.kind, ts)
   const selector = change.proposal ? change.proposal.seed : selectorFor(req.scope, address)
   const body: DecisionBody = {
     kind: 'override',
@@ -234,7 +236,7 @@ function overrideHandler(req: OverrideRequest, ctx: ResolvedContext, home: Malle
 
 function moveHandler(req: MoveDecisionRequest, ctx: ResolvedContext, home: MalleableHome): Applied | Refused {
   if (!req.request?.what || !req.request?.to) return { refused: 'a move needs what and to' }
-  const result = within(home.root, () => applyMove(home.source, req.request, ctx.by, ctx.at, { root: home.root, dryRun: ctx.dryRun }))
+  const result = within(home.root, () => applyMove(home.source, req.request, ctx.decided.kind, ctx.at, { root: home.root, dryRun: ctx.dryRun }))
   if (!result.ok) return { refused: result.error }
   const r = result.record
   const body: DecisionBody = { kind: 'move', region: r.what, from: r.from, to: r.to }
@@ -246,7 +248,7 @@ function moveHandler(req: MoveDecisionRequest, ctx: ResolvedContext, home: Malle
 
 function propHandler(req: PropDecisionRequest, ctx: ResolvedContext, home: MalleableHome): Applied | Refused {
   if (!req.request?.file || !req.request?.component || !req.request?.prop) return { refused: 'a pick needs file, component and prop' }
-  const result = applyProp(req.request, ctx.by, ctx.at, { root: home.root, dryRun: ctx.dryRun })
+  const result = applyProp(req.request, ctx.decided.kind, ctx.at, { root: home.root, dryRun: ctx.dryRun })
   if (!result.ok) return { refused: result.error }
   const r = result.record
   const body: DecisionBody = { kind: 'prop', component: r.what, prop: r.prop, file: r.file, line: r.line, from: r.from, to: r.to }

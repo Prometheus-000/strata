@@ -65,7 +65,17 @@ function ledgerTime(root: string): string {
   return statSync(join(root, LEDGER_PATH)).mtime.toISOString()
 }
 
-/** Every decided line in the old ledger, as the decision that would have written it. Proposed lines are the engine's, not anyone's. */
+/**
+ * Every decided line in the old ledger, as the decision that would have
+ * written it. Proposed lines are the engine's, not anyone's.
+ *
+ * The old ledger recorded one `by`, and what it recorded there was the
+ * channel that ran the command — so a token Kenan cut through an agent's
+ * shell came back reading as the agent's judgement. That field is not
+ * evidence of who chose, so it is not read as one: these rows leave both
+ * hands unset and take the ones the import was run with, which is a claim
+ * made once, out loud, by whoever runs it.
+ */
 function importLedger(root: string): Imported[] {
   if (!existsSync(join(root, LEDGER_PATH))) return []
   const at = ledgerTime(root)
@@ -75,7 +85,6 @@ function importLedger(root: string): Imported[] {
       kind: 'token' as const,
       token,
       action: ACTION[d.status],
-      by: d.by ?? 'human',
       at,
       ...(d.reason ? { reason: d.reason } : {}),
       ...(d.status === 'cut' ? { consequence: { collapsesTo: FALLBACKS[token]?.to } } : {}),
@@ -88,7 +97,7 @@ function projectTheme(root: string, log: readonly Decision[]): Record<string, st
   const tokens: Record<string, TokenDecision> = {}
   for (const name of Object.keys(generateTheme(OBSIDIAN))) {
     const d = now.get(`token:${name}`)
-    tokens[name] = d && d.kind === 'token' ? { status: STATUS[d.action], by: d.by, ...(d.reason ? { reason: d.reason } : {}), id: d.id } : { status: 'proposed' }
+    tokens[name] = d && d.kind === 'token' ? { status: STATUS[d.action], decided: d.decided, written: d.written, ...(d.reason ? { reason: d.reason } : {}), id: d.id } : { status: 'proposed' }
   }
   const ledger: Ledger = { ...readLedger(root), tokens }
   return emitTokens(root, { dryRun: true, ledger }).files
@@ -109,7 +118,7 @@ function tokenHandler(req: TokenRequest, ctx: ResolvedContext, root: string): Ap
 
   const next = {
     ...ledger,
-    tokens: { ...ledger.tokens, [req.token]: { status, by: ctx.by, ...(req.reason ? { reason: req.reason } : {}), id: ctx.id } },
+    tokens: { ...ledger.tokens, [req.token]: { status, decided: ctx.decided, written: ctx.written, ...(req.reason ? { reason: req.reason } : {}), id: ctx.id } },
   }
   if (!ctx.dryRun) writeLedger(root, next)
   const emitted = emitTokens(root, { dryRun: ctx.dryRun })

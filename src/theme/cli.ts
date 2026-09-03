@@ -10,6 +10,7 @@
 import { authorFrom } from '@strata/substrate/author'
 import { decide, type DecideContext } from '@strata/substrate/decide'
 import { describe } from '@strata/substrate/format'
+import { handText } from '@strata/substrate/decision'
 import { generateTheme, OBSIDIAN } from './generateTheme'
 import { FALLBACKS, summarise } from './ledger'
 import { readLedger } from './emit'
@@ -43,7 +44,7 @@ export function runTheme(argv: string[], home: { root: string }, env: Record<str
   const context = (): DecideContext | { error: string } => {
     const who = authorFrom(rest, env)
     if ('error' in who) return who
-    return { root: home.root, by: who.author, via: 'cli', because: who.because, dryRun: has('dry') }
+    return { root: home.root, decided: who.decided, written: who.written, via: 'cli', because: who.because, dryRun: has('dry') }
   }
 
   switch (cmd) {
@@ -54,11 +55,12 @@ export function runTheme(argv: string[], home: { root: string }, env: Record<str
       for (const name of Object.keys(engine)) {
         const d = ledger.tokens[name] ?? { status: 'proposed' as const }
         const mark = d.status === 'cut' ? '✂' : d.status === 'kept' ? '✓' : '·'
+        const hand = d.decided ? handText(d.decided) : ''
         const tail =
           d.status === 'cut'
-            ? `→ ${FALLBACKS[name]?.to}${d.by ? ` · ${d.by}` : ''}${d.reason ? ` · ${d.reason}` : ''}`
+            ? `→ ${FALLBACKS[name]?.to}${hand ? ` · ${hand}` : ''}${d.reason ? ` · ${d.reason}` : ''}`
             : d.status === 'kept'
-              ? `${d.by ? `· ${d.by}` : ''}${d.reason ? ` · ${d.reason}` : ''}`
+              ? `${hand ? `· ${hand}` : ''}${d.reason ? ` · ${d.reason}` : ''}`
               : 'unreviewed'
         io.out(`  ${mark} ${name.padEnd(24)} ${d.status.padEnd(9)} ${tail}${d.id ? `  [${d.id}]` : ''}`)
       }

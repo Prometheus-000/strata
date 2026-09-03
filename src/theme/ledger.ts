@@ -24,12 +24,15 @@
  */
 
 export type TokenStatus = 'proposed' | 'kept' | 'cut'
-export type { Author } from '@strata/substrate/decision'
-import type { Author } from '@strata/substrate/decision'
+export type { Author, Hand } from '@strata/substrate/decision'
+import type { Author, Hand } from '@strata/substrate/decision'
 
 export interface TokenDecision {
   status: TokenStatus
-  by?: Author
+  /** Who could have chosen otherwise. */
+  decided?: Hand
+  /** Whose hand ran the command. */
+  written?: Hand
   reason?: string
   /** The decision in `.strata/decisions.jsonl` that set this line. The ledger is a projection of the record. */
   id?: string
@@ -116,7 +119,7 @@ export function applyLedger(
   tokens: Record<string, string>,
   ledger: Ledger,
   opts: { mode: 'var' | 'value' } = { mode: 'var' },
-): { tokens: Record<string, string>; receipts: Array<{ token: string; to: string; by?: Author; reason?: string }> } {
+): { tokens: Record<string, string>; receipts: Array<{ token: string; to: string; decided?: Hand; reason?: string }> } {
   const out: Record<string, string> = {}
   const receipts: ReturnType<typeof applyLedger>['receipts'] = []
   const isCut = (name: string) => ledger.tokens[name]?.status === 'cut'
@@ -137,7 +140,7 @@ export function applyLedger(
     }
     const to = landing(name)
     const decision = ledger.tokens[name]
-    receipts.push({ token: name, to, by: decision.by, reason: decision.reason })
+    receipts.push({ token: name, to, decided: decision.decided, reason: decision.reason })
     out[name] = !isToken(to) ? to : opts.mode === 'var' ? `var(${to})` : (tokens[to] ?? to)
   }
   return { tokens: out, receipts }

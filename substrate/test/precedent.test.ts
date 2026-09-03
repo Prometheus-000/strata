@@ -4,12 +4,12 @@ import { newId, type Decision } from '../src/decision.ts'
 import { buildIndex, converge, search } from '../src/precedent.ts'
 
 let clock = Date.parse('2026-09-01T00:00:00.000Z')
-const d = (body: Omit<Decision, 'id' | 'at' | 'via' | 'consequence' | 'by'> & Partial<Decision>): Decision => {
+const d = (body: Omit<Decision, 'id' | 'at' | 'via' | 'consequence' | 'decided' | 'written'> & Partial<Decision>): Decision => {
   const at = body.at ?? new Date((clock += 60_000)).toISOString()
-  return { id: newId(Date.parse(at)), by: 'human', via: 'test', consequence: {}, ...body, at } as Decision
+  return { id: newId(Date.parse(at)), decided: { kind: 'human' }, written: { kind: 'human' }, via: 'test', consequence: {}, ...body, at } as Decision
 }
-const pad = (view: string, inst: string, by: 'human' | 'agent' = 'human', value = '12px', node = 'Card.div.st-card') =>
-  d({ kind: 'override', action: 'set', scope: 'instance', selector: `${view}/${inst}::${node}`, property: 'padding', value: { literal: value }, node, view, by })
+const pad = (view: string, inst: string, by: 'human' | 'agent' = 'human', value = '12px', node = 'Card.div.st-card', actor?: string) =>
+  d({ kind: 'override', action: 'set', scope: 'instance', selector: `${view}/${inst}::${node}`, property: 'padding', value: { literal: value }, node, view, decided: { kind: by, ...(actor ? { actor } : {}) } })
 
 const LOG: Decision[] = [
   pad('gallery', 'a'),
@@ -20,8 +20,8 @@ const LOG: Decision[] = [
   d({ kind: 'override', action: 'rescope', scope: 'view', selector: 'gallery::Card.div.st-card', property: 'padding', value: { literal: '12px' }, node: 'Card.div.st-card', view: 'gallery', fromScope: 'instance', consequence: { absorbed: ['x'] } }),
   d({ kind: 'override', action: 'set', scope: 'instance', selector: 'gallery/z::Card.div.st-card', property: 'radius', value: { token: '--radius-pill' }, node: 'Card.div.st-card', view: 'gallery' }),
   d({ kind: 'prop', component: 'Badge', prop: 'tone', file: 'G.tsx', line: 4, from: null, to: 'positive' }),
-  d({ kind: 'prop', component: 'Badge', prop: 'tone', file: 'S.tsx', line: 9, from: 'accent', to: 'positive', by: 'agent' }),
-  d({ kind: 'token', token: '--accent-strong', action: 'cut', reason: 'one filled action per surface', by: 'agent' }),
+  d({ kind: 'prop', component: 'Badge', prop: 'tone', file: 'S.tsx', line: 9, from: 'accent', to: 'positive', decided: { kind: 'agent' } }),
+  d({ kind: 'token', token: '--accent-strong', action: 'cut', reason: 'one filled action per surface', decided: { kind: 'agent' } }),
   d({ kind: 'move', region: 'Filters', from: { container: 'main', file: 'P.tsx', line: 1 }, to: { container: 'nav', file: 'T.tsx', line: 2, index: 0 }, reason: 'filters belong with navigation' }),
   d({ kind: 'override', action: 'set', scope: 'instance', selector: 'gallery/q::Card.div.st-card', property: 'padding', value: { literal: '12px' }, node: 'Card.div.st-card', view: 'gallery', consequence: { refused: 'no' } }),
 ]
@@ -44,7 +44,7 @@ test('search narrows by every field and reads the reasons; the lines are sentenc
   const index = buildIndex(LOG)
   const padding = search(index, { property: 'padding' })
   assert.equal(padding.decisions.length, 7)
-  assert.match(padding.lines[0], /^5 instances independently converged on padding = 12px across 2 views \(4 by hand, 1 by agent\) — promotion candidate$/)
+  assert.match(padding.lines[0], /^5 instances independently converged on padding = 12px across 2 views · hands unnamed · 4 by hand, 1 by agent — a candidate for promotion, which is a hand's to decide$/)
   assert.equal(search(index, { property: 'padding', value: '16px' }).decisions.length, 1)
   assert.equal(search(index, { component: 'Badge' }).decisions.length, 3, 'its node, and both call sites')
   assert.equal(search(index, { token: '--radius-pill' }).decisions.length, 1)

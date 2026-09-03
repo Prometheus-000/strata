@@ -17,6 +17,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { generateTheme, OBSIDIAN, PRESETS, type ThemeSeeds } from './generateTheme'
 import { applyLedger, emptyLedger, FALLBACKS, reconcileLedger, summarise, type Ledger, type TokenStatus } from './ledger'
+import { handText, type Hand } from '@strata/substrate/decision'
 
 export const LEDGER_PATH = 'src/theme/ledger.json'
 export const SEMANTIC_PATH = 'src/tokens/semantic.css'
@@ -31,7 +32,7 @@ export interface EmitResult {
   counts: Record<TokenStatus, number>
   added: string[]
   stale: string[]
-  receipts: Array<{ token: string; to: string; by?: string; reason?: string }>
+  receipts: Array<{ token: string; to: string; decided?: Hand; reason?: string }>
   /** The projections, as text, so a check can compare them with what is on disk. */
   files: Record<string, string>
   written: string[]
@@ -61,7 +62,7 @@ export function emitTokens(root: string, opts: { dryRun?: boolean; ledger?: Ledg
   /** A declaration, with the decision beside it when the token was cut. */
   const decl = (p: string, v: string, indent = '  ') => {
     const cut = cutNote.get(p)
-    const note = cut ? ` /* cut by ${cut.by ?? 'human'}${cut.reason ? `: ${cut.reason}` : ''} */` : ''
+    const note = cut ? ` /* cut by ${cut.decided ? handText(cut.decided) : 'an unnamed hand'}${cut.reason ? `: ${cut.reason}` : ''} */` : ''
     return `${indent}${p}: ${v};${note}`
   }
 
@@ -140,7 +141,8 @@ ${block(dark.tokens, (p) => !isColor(p))}
     return {
       'strata.ledger': {
         status: d.status,
-        ...(d.by ? { by: d.by } : {}),
+        ...(d.decided ? { decided: d.decided } : {}),
+        ...(d.written ? { written: d.written } : {}),
         ...(d.reason ? { reason: d.reason } : {}),
         ...(cut ? { fallback: cut.to } : {}),
         collapsesTo: FALLBACKS[p]?.to,
@@ -183,7 +185,7 @@ ${block(dark.tokens, (p) => !isColor(p))}
           'Every generated token is a proposal; src/theme/ledger.json records what people decided. proposed = unreviewed, ships as generated. kept = reviewed and wanted. cut = collapses to its fallback everywhere; the fallback is named on the token. Agents: never reach for a cut token; to cut or keep one, run npm run ledger -- cut|keep <token> --why "…".',
         source: LEDGER_PATH,
         counts,
-        cut: dark.receipts.map((r) => ({ token: r.token, fallback: r.to, by: r.by, reason: r.reason })),
+        cut: dark.receipts.map((r) => ({ token: r.token, fallback: r.to, decided: r.decided, reason: r.reason })),
       },
       font: {
         display: { $value: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif", $type: 'fontFamily' },

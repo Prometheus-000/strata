@@ -42,7 +42,7 @@ test('the front matter subset reads scalars, lists, maps, nested maps and blocks
 test('a skill parses, loads from its directory, and assembles a packet with rules, precedent, state and examples', () => {
   resetState()
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'strata-skill-'))
-  const cut: Decision = { id: newId(Date.parse('2026-09-03T12:00:00.000Z')), at: '2026-09-03T12:00:00.000Z', by: 'human', via: 'cli', kind: 'token', token: '--accent-strong', action: 'cut', reason: 'one filled action per surface', consequence: { collapsesTo: '--accent' } }
+  const cut: Decision = { id: newId(Date.parse('2026-09-03T12:00:00.000Z')), at: '2026-09-03T12:00:00.000Z', decided: { kind: 'human' }, written: { kind: 'human' }, via: 'cli', kind: 'token', token: '--accent-strong', action: 'cut', reason: 'one filled action per surface', consequence: { collapsesTo: '--accent' } }
   append(dir, cut)
   fs.mkdirSync(path.join(dir, 'skills/cut-token'), { recursive: true })
   fs.writeFileSync(path.join(dir, 'skills/cut-token/SKILL.md'), SKILL.replace('ID_CUT', cut.id))

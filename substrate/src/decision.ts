@@ -46,13 +46,40 @@ export interface ThemeSeeds {
 
 /* ---- provenance ---- */
 
+/**
+ * A hand, as the record names one: what kind of hand it was, and — when the
+ * surface knew — which one. `actor` is opaque: a handle, an email, a harness
+ * id. The substrate stores it and never interprets it. No rank, no weight, no
+ * default; two actors are the same hand only when the strings match.
+ */
+export interface Hand {
+  kind: Author
+  actor?: string
+}
+
+export const isHand = (v: unknown): v is Hand =>
+  typeof v === 'object' && v !== null && isAuthor((v as { kind?: unknown }).kind) &&
+  ((v as { actor?: unknown }).actor === undefined || typeof (v as { actor?: unknown }).actor === 'string')
+
+export const sameHand = (a: Hand, b: Hand) => a.kind === b.kind && a.actor === b.actor
+
+/** `human`, or `human prometheus-000` when a name was given. */
+export const handText = (h: Hand) => (h.actor ? `${h.kind} ${h.actor}` : h.kind)
+
 export interface Provenance {
-  by: Author
+  /**
+   * Who chose. The test is one question: who could have chosen otherwise? If
+   * every input was named to the hand that ran the command — the target and
+   * the value both — the choosing happened elsewhere and this says so.
+   */
+  decided: Hand
+  /** Whose hand ran the command. An agent writing a person's decision is the ordinary case, not a special one. */
+  written: Hand
   /** ISO 8601. */
   at: string
   /** The surface that wrote it: 'cli' | 'overlay' | 'server' | 'import:<file>' | 'reconcile' | a harness name. */
   via: string
-  /** How `by` was determined, verbatim from authorFrom(). Printed at the write, kept on the record. */
+  /** How `decided` and `written` were determined, verbatim from authorFrom(). Printed at the write, kept on the record. */
   because?: string
 }
 
@@ -169,7 +196,13 @@ export function problemsWith(x: unknown): string[] {
   const p: string[] = []
   if (!isObj(x)) return ['not an object']
   if (!isStr(x.id) || !ID_PATTERN.test(x.id)) p.push('id is not a decision id')
-  if (!isAuthor(x.by)) p.push(`by must be human or agent, not "${String(x.by)}"`)
+  if (!isHand(x.decided))
+    p.push(
+      x.by !== undefined
+        ? `decided is missing and by is "${String(x.by)}" — this line predates the decided/written split; re-import it`
+        : 'decided must be { kind: human | agent, actor?: string }',
+    )
+  if (!isHand(x.written)) p.push('written must be { kind: human | agent, actor?: string }')
   if (!isStr(x.at) || Number.isNaN(Date.parse(x.at))) p.push('at is not an ISO date')
   if (!isStr(x.via) || !x.via) p.push('via is missing')
   if (x.reason !== undefined && !isStr(x.reason)) p.push('reason is not a string')
