@@ -3,8 +3,8 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import { readAll } from '../src/log'
-import { importAll, rebuild, registerProjection, resetProjections } from '../src/projection'
+import { readAll } from '../src/log.ts'
+import { importAll, rebuild, registerProjection, resetProjections } from '../src/projection.ts'
 
 test('import brings an old file onto the record once, in time order, chained; rebuild writes what the record says and check reports drift', () => {
   resetProjections()

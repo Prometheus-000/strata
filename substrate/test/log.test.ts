@@ -3,8 +3,8 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import { newId, type Decision } from '../src/decision'
-import { append, collapseReversals, current, history, parseLog, readAll, since, LOG_PATH } from '../src/log'
+import { newId, type Decision } from '../src/decision.ts'
+import { append, collapseReversals, current, history, parseLog, readAll, since, LOG_PATH } from '../src/log.ts'
 
 let clock = Date.parse('2026-09-03T12:00:00.000Z')
 const next = () => new Date((clock += 1000)).toISOString()

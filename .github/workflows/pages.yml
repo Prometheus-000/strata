@@ -1,7 +1,11 @@
-# Builds the three surfaces into one static site and publishes it at
-# https://prometheus-000.github.io/strata/. The write-through endpoints are
-# dev-server only; on the static site the harness falls back to localStorage,
-# which is what its provider already does when no server answers.
+# Runs every test, then builds the three surfaces into one static site and
+# publishes it at https://prometheus-000.github.io/strata/. The build runs
+# `strata check --enforce`: only an invariant — the record parses, the
+# projections match it, every fallback chain ends, every var() resolves —
+# can fail it. A design that is different is reported, never refused.
+# The write-through endpoint is dev-server only; on the static site the
+# harness falls back to localStorage, which its provider already does when
+# no server answers.
 name: pages
 on:
   push:
@@ -24,6 +28,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm ci --prefix strata-malleable
+      - run: npm test
       - run: npm run build
         env:
           BASE_PATH: /strata/

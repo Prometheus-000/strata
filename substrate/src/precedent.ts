@@ -9,9 +9,9 @@
  * authority of its own. The threshold at which a convergence is called a
  * candidate is a preference, held in the grammar; the default is three.
  */
-import { targetKey, type Author, type Decision, type Kind } from './decision'
-import { describe } from './format'
-import { current } from './log'
+import { targetKey, type Author, type Decision, type Kind } from './decision.ts'
+import { describe } from './format.ts'
+import { current } from './log.ts'
 
 export const PROMOTION_CANDIDATE_AT = 3
 

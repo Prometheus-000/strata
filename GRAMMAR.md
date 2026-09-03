@@ -1,12 +1,22 @@
 # The Strata Grammar
 
+Rules with reasons, in prose. The same rules are data in `grammar/rules.json`,
+each with the authority it carries — **invariant** (a mechanical truth about
+the artifact; the only class a build fails on), **policy** (evaluated and
+reported, never enforced), **preference** (a leaning, with its number),
+**knowledge** (what was learned, with its source). **Precedent** — what the
+record shows — is computed from `.strata/decisions.jsonl` and never declared
+here. `strata check` reads every rule that has an evaluator and says what it
+found under the authority it found it with; `strata skill` cites the rules a
+piece of design work bears on.
+
 ## Credo
 
 Two commitments, stated once, enacted everywhere below:
 
 **The most important design choices are what you don't see.** The engine deepens accents on
 light grounds to hold AA contrast, honors reduced-motion at both the stylesheet and the
-runtime, and a validator reviews every diff. None of it has a UI. All of it is the design.
+runtime, and an evaluator reads every diff. None of it has a UI. All of it is the design.
 
 **Less but better.** Six seeds instead of a thousand hand-picked values. One filled action
 per surface. Promotion is earned by three appearances in the wild, so the inventory stays
@@ -18,8 +28,9 @@ philosophies were candidates for this section, and it kept two.
 Rules ship with reasons. An agent (or a new teammate) that has the reasoning generates
 novel-but-coherent work; one that only has the component list generates collage. Every rule
 below carries the incident or argument that earned it. If you deviate, declare it —
-`// deviation: <reason>` — and the validator will log it instead of failing you. Declared
-drift is promotion-candidate telemetry, not a violation.
+`strata deviate <file>:<line> --why "…"` writes the `deviation:` comment beside the literal
+and the decision on the record — and `strata check` reports it as knowledge instead of
+failing you. Declared drift is promotion-candidate telemetry, not a violation.
 
 ## Layer 0 — Meaning
 
@@ -133,8 +144,8 @@ and a fill alpha doing different jobs under one name is how 34 accidental alphas
 
 ## Layer 3 — Local (no permission required)
 
-Build one-offs in your feature. The validator still enforces Layer 0 — tokens are enforced
-regardless of where code lives — but no one reviews expression here. When the same shape
+Build one-offs in your feature. Layer 0's vocabulary still applies — a raw colour is reported
+wherever code lives — but nothing fails, and no one reviews expression here. When the same shape
 appears in three features, it becomes a promotion candidate; promotion is earned by usage,
 never granted by proposal.
 
@@ -142,17 +153,20 @@ never granted by proposal.
 
 - `npm run tokens` — regenerate all Layer 0 projections from the engine, through the
   ledger. Adds a `proposed` line for any new token; never edits a decision.
-- `npm run ledger -- cut|keep --<token> --why "…"` — decide one generated token. A cut
+- `strata cut|keep --<token> --why "…"` — decide one generated token, on the record. A cut
   token collapses to its fallback (`src/theme/ledger.ts`, beside the engine, with a reason
   per entry) in every projection, and the decision is emitted beside the declaration.
   Omitting the property instead would fail every `var()` that names it, silently, at the
   consumer — which is the behaviour this repo calls the worst available.
-- `npm run validate` — fails undeclared color literals in `src/components` and `src/site`;
-  prints declared deviations as telemetry; counts every consumer of a cut token and names
-  every token nothing uses. Runs in `npm run build`.
+- `strata check` — evaluates everything and fails nothing: invariants first, then every
+  finding under its authority, then the handoff. `strata check --enforce` runs in
+  `npm run build` and fails only on an invariant: the record parses, the projections match
+  it, every fallback chain ends, every `var()` resolves. A design that is different is
+  reported, never refused.
+- `strata explain <id | target>` — one decision as four blocks: DECISION, CONTEXT, EVIDENCE,
+  CONSEQUENCE. `strata precedent …` — what was decided before, with convergence counted.
 - `src/tokens/tokens.json` — the agent-readable contract: seeds, ranges, and the *reasons*
   for each dial, alongside compiled values; each token carries its ledger decision.
-- Next, in order of leverage: a precedent index over Layer 3, an MCP server exposing live
-  token values + `ds.precedent(q)`, and code→Figma regeneration on CI (the current Figma
-  library was pushed by hand once and is already a stale projection — see
-  `figma-library-state.json`).
+- Next, in order of leverage: an MCP server over the same `decide()`, `explain()` and
+  `precedent()` the CLI calls, and code→Figma regeneration on CI (the current Figma library
+  was pushed by hand once and is already a stale projection — see `figma-library-state.json`).

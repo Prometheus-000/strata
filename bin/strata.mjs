@@ -40,12 +40,15 @@ const help = () => {
   console.log(`strata — the record of what this product decided, and the one way to change it
 
   the record
+    check [--enforce] [--json]  here is what happened: invariants, then policy, preference, knowledge, precedent, handoff
+    explain <id | targetKey>    one decision as a glass box: DECISION · CONTEXT · EVIDENCE · CONSEQUENCE
     log [--kind k]              every decision, one line each
     history <targetKey>         every decision on one target, as glass boxes
     show <id>                   one decision
     ready [--why …]             hand off what changed since the last ready
     import                      bring the old ledger and store onto the record, once
     rebuild [--check]           write every projection from the record; --check only says which differ
+    skill [name] [--<input> v]  list the skills, or assemble one's packet: rules, precedent, state, procedure
     precedent [words] [--property p] [--value v] [--component C] [--token --x] [--author a] [--kind k] [--since iso] [--unpromoted] [--at n]
                                 what has been decided before, with convergence counted
 

@@ -37,6 +37,9 @@ export function init(root: string, packageRoot: string): InitResult {
 
   copyTree(path.join(integration, 'skills'), path.join(root, '.claude/skills'), wrote, skipped, root)
   copyTree(path.join(integration, 'commands'), path.join(root, '.claude/commands'), wrote, skipped, root)
+  // The product's own skills catalogue, when the library sits inside it.
+  const catalogue = path.join(packageRoot, '..', 'skills')
+  if (fs.existsSync(catalogue) && path.resolve(catalogue) !== path.resolve(root, 'skills')) copyTree(catalogue, path.join(root, '.claude/skills'), wrote, skipped, root)
 
   notes.push(
     'commit .malleable/manifest.json, .malleable/structure.json and .malleable/overrides.json — build output, but the overrides are design decisions',

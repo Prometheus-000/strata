@@ -18,8 +18,8 @@
  * tried" is on the record too. Nothing here evaluates anything: that is
  * `explain`, `check` and `handoff`, and they run when asked.
  */
-import { newId, targetKey, type Author, type Consequence, type Decision, type DecisionBody, type Kind } from './decision'
-import { append, current, readAll, since } from './log'
+import { newId, targetKey, type Author, type Consequence, type Decision, type DecisionBody, type Kind } from './decision.ts'
+import { append, current, pending, readAll } from './log.ts'
 
 export interface DecideContext {
   /** Where the log lives. */
@@ -133,7 +133,7 @@ const supersedesOf = (log: readonly Decision[], body: DecisionBody): { supersede
 function registerBuiltins() {
   registerHandler<Request & { kind: 'ready' }>('ready', (_req, _ctx, log) => ({
     body: { kind: 'ready' },
-    consequence: { affected: since(log, 'ready').filter((d) => !d.consequence.refused).length },
+    consequence: { affected: pending(log).length },
   }))
 }
 registerBuiltins()

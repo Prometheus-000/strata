@@ -3,8 +3,8 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import { decide, registerHandler, resetHandlers, type Request } from '../src/decide'
-import { readAll } from '../src/log'
+import { decide, registerHandler, resetHandlers, type Request } from '../src/decide.ts'
+import { readAll } from '../src/log.ts'
 
 const fresh = () => {
   resetHandlers()

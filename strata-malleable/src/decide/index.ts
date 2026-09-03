@@ -26,6 +26,11 @@ import { selectorFor } from '../resolve/selector'
 import { applyMove } from '../structure/apply'
 import { applyProp } from '../controls/apply'
 import { ship } from '../ship/collapse'
+import { registerState } from '@strata/substrate/skills'
+import { registerMalleableEvaluators } from '../evaluators'
+import { buildStructure } from '../identity/manifest'
+import { formatStructure } from '../structure/read'
+import { driftReport, formatDrift } from '../ship/drift'
 
 export interface MalleableHome {
   /** Where `.malleable/` lives. */
@@ -75,6 +80,15 @@ export function registerMalleable(home: MalleableHome): void {
     name: path.join(path.relative(process.cwd(), home.root) || '.', STORE_PATH).replace(/^\.\//, ''),
     import: () => importStore(home),
     project: (_root, log) => ({ [path.join(path.relative(_root, home.root) || '.', STORE_PATH).replace(/^\.\//, '')]: projectStore(log) }),
+  })
+  registerMalleableEvaluators(home)
+  registerState('structure', () => within(home.root, () => formatStructure(buildStructure(home.source))))
+  registerState('drift', () => {
+    try {
+      return formatDrift(driftReport(readStore(home.root), readManifest(home.root)))
+    } catch (err) {
+      return `(no manifest here — ${err instanceof Error ? err.message : String(err)})`
+    }
   })
 }
 

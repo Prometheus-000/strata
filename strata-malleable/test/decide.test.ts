@@ -10,6 +10,8 @@ import path from 'node:path'
 import { test } from 'node:test'
 import { decide, resetHandlers } from '@strata/substrate/decide'
 import { importAll, rebuild, resetProjections } from '@strata/substrate/projection'
+import { resetEvaluators } from '@strata/substrate/evidence'
+import { explain, runCheck } from '@strata/substrate/check'
 import { collapseReversals, readAll, since } from '@strata/substrate/log'
 import { formatHandoff } from '@strata/substrate/format'
 import { projectStore, registerMalleable } from '../src/decide'
@@ -75,6 +77,7 @@ const MANIFEST: Manifest = {
 function world() {
   resetHandlers()
   resetProjections()
+  resetEvaluators()
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'malleable-decide-'))
   for (const [f, t] of Object.entries(FILES)) {
     fs.mkdirSync(path.dirname(path.join(dir, 'app', f)), { recursive: true })
@@ -209,4 +212,18 @@ test('the store is a projection: the fold of the record reproduces overrides.jso
   assert.ok(imported.every((d) => d.via.startsWith('import:')))
   assert.deepEqual(importAll(fresh).imported, [])
   assert.deepEqual(rebuild(fresh, { dryRun: true }).changed, [], 'the imported record projects the file it came from')
+})
+
+test('an override explains itself with precedent, and drift that converges is a precedent finding in check', () => {
+  const { dir, ctx } = world()
+  fs.mkdirSync(path.join(dir, 'grammar'))
+  fs.writeFileSync(path.join(dir, 'grammar/rules.json'), JSON.stringify({ rules: [{ id: 'promotion.candidate-at', authority: 'preference', statement: 's', reason: 'one is taste; three is a shape', source: 'x', value: 3 }] }))
+  for (const inst of ['a', 'b', 'c']) decide({ kind: 'override', action: 'set', address: address(inst), property: 'radius', value: { literal: '20px' } }, ctx(inst === 'c' ? 'agent' : 'human'))
+  const e = explain(dir, `override:instance:gallery/a::${CARD}:radius`)!
+  assert.deepEqual(e.evidence.map((f) => [f.name, f.value]), [['value', 'drifted to 20px'], ['reuse count', 3], ['independent', true], ['promotion candidate', true]])
+  const r = runCheck(dir)
+  const drift = r.findings.find((f) => f.rule === 'drift.convergence')!
+  assert.equal(drift.authority, 'precedent')
+  assert.match(drift.message, /3 instances independently converged — promotion candidate \(2 by hand, 1 by agent\)/)
+  assert.ok(r.invariants.every((i) => i.ok))
 })

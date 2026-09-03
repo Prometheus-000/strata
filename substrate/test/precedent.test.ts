@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { newId, type Decision } from '../src/decision'
-import { buildIndex, converge, search } from '../src/precedent'
+import { newId, type Decision } from '../src/decision.ts'
+import { buildIndex, converge, search } from '../src/precedent.ts'
 
 let clock = Date.parse('2026-09-01T00:00:00.000Z')
 const d = (body: Omit<Decision, 'id' | 'at' | 'via' | 'consequence' | 'by'> & Partial<Decision>): Decision => {

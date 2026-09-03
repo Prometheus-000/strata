@@ -1,11 +1,11 @@
 ---
-allowed-tools: Bash(malleable:*), Bash(npx malleable:*), Bash(./node_modules/.bin/malleable:*), Bash(npm run dev:*)
+allowed-tools: Bash(strata:*), Bash(npx strata:*), Bash(malleable:*), Bash(npx malleable:*), Bash(npm run dev:*)
 description: Serve the page so a designer can move regions and drag properties by hand
 ---
 
 Start the page and hand the loop over.
 
-1. Run `malleable id` to stamp identity and rebuild the manifest and structure.
+1. Run `strata id` to stamp identity and rebuild the manifest and structure.
 2. Report anything it prints as a problem. Do not continue past one — a page
    that does not build cannot be moved.
 3. Run the dev server in the background and give the user the URL.

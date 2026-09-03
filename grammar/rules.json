@@ -1,0 +1,233 @@
+{
+  "$description": "The grammar as data. Every rule in GRAMMAR.md, with the authority it carries. Only an invariant can fail a build, and an invariant is a mechanical truth about the artifact, never a design judgement. Policy is evaluated and reported. A preference carries its number. Knowledge is what was learned, with its source. Precedent is never declared here: it is computed from the record.",
+  "rules": [
+    {
+      "id": "record.parses",
+      "authority": "invariant",
+      "statement": "Every line of .strata/decisions.jsonl is a decision: an id, a kind, a hand, a time, a surface.",
+      "reason": "The record is the source; a projection of a record that cannot be read is a guess.",
+      "source": "substrate/src/decision.ts",
+      "check": "record.parses"
+    },
+    {
+      "id": "projections.match-record",
+      "authority": "invariant",
+      "statement": "ledger.json, semantic.css, tokens.json and overrides.json are byte for byte what the record projects.",
+      "reason": "An artifact that cannot be faithfully produced from the record is not a projection of it, and a hand edit there is a decision nobody made.",
+      "incident": "The stylesheet that said surface chroma 0.012 while the engine computed 0.006. Nobody chose that; transcription did.",
+      "source": "GRAMMAR.md › Layer 0 — Meaning › The engine is the only author",
+      "check": "projections.match-record"
+    },
+    {
+      "id": "fallbacks.total-acyclic",
+      "authority": "invariant",
+      "statement": "Every token the engine emits has a fallback, nothing else does, and every chain ends in a literal.",
+      "reason": "A cut token collapses instead of disappearing; a token with no floor, or a floor that loops, would fail every consumer silently at computed-value time.",
+      "source": "src/theme/ledger.ts",
+      "check": "fallbacks.total-acyclic"
+    },
+    {
+      "id": "css.vars-defined",
+      "authority": "invariant",
+      "statement": "Every var(--name) a stylesheet reaches for names a custom property something defines.",
+      "reason": "An undefined custom property is an invalid declaration paid at the consumer, invisible in the diff — the behaviour this repo calls the worst available.",
+      "source": "src/theme/ledger.ts",
+      "check": "css.vars-defined"
+    },
+
+    {
+      "id": "layer0.semantic-names-only",
+      "authority": "policy",
+      "statement": "Components and the site speak semantic names — --accent, --surface-raised — never a hex, an oklch(), an rgb() or a green-500. A literal that must exist declares itself: a comment containing deviation: and the reason.",
+      "reason": "Consistency is not visual sameness; it is predictability of meaning. Two screens that share nothing but this vocabulary still cohere. Declared drift is promotion-candidate telemetry, not a violation.",
+      "source": "GRAMMAR.md › Layer 0 — Meaning › Semantic names only",
+      "check": "layer0.semantic-names-only"
+    },
+    {
+      "id": "layer0.engine-only-author",
+      "authority": "policy",
+      "statement": "semantic.css and tokens.json are projections of generateTheme.ts through the ledger. Regenerate; never edit.",
+      "reason": "The repo grew its own drift in week one by transcription. The invariant projections.match-record is the mechanical half of this rule; this is the practice.",
+      "source": "GRAMMAR.md › Layer 0 — Meaning › The engine is the only author"
+    },
+    {
+      "id": "layer0.light-not-inverted-dark",
+      "authority": "policy",
+      "statement": "A theme is six seeds, and light is not inverted dark: light appearances compile accents at 0.87× chroma and lower lightness.",
+      "reason": "A light accent that merely inverts fails AA on paper. The engine encodes the correction so no one has to remember it.",
+      "source": "GRAMMAR.md › Layer 0 — Meaning › A theme is six seeds",
+      "check": "token.contrast"
+    },
+    {
+      "id": "layer0.warmth-tints-neutrals",
+      "authority": "policy",
+      "statement": "Warmth tints every neutral toward paper or slate; a pure mid-grey is never emitted.",
+      "reason": "A pure mid-grey reads as unconsidered. Even grey is a chosen colour.",
+      "source": "GRAMMAR.md › Layer 0 — Meaning › Warmth tints every neutral"
+    },
+    {
+      "id": "layer0.energy-buys-shape",
+      "authority": "policy",
+      "statement": "Energy sets easing, duration and radius together.",
+      "reason": "Motion personality that stops at duration produces themes that feel mislabeled.",
+      "source": "GRAMMAR.md › Layer 0 — Meaning › Energy buys shape as well as speed"
+    },
+
+    {
+      "id": "voice.one-family",
+      "authority": "policy",
+      "statement": "One family. Hierarchy is weight, size and measure — never a second voice.",
+      "reason": "v0.2 shipped a variable serif with italic accents and a green display line; the owner's correction is the record: overly designed text that did not meet the design grammar.",
+      "incident": "v0.2's serif display line.",
+      "source": "GRAMMAR.md › The voice › One family"
+    },
+    {
+      "id": "voice.mono-for-data",
+      "authority": "policy",
+      "statement": "Mono is for what is read as data — labels, values, receipts — and never for prose.",
+      "reason": "When a compiled prompt was dressed as a developer tool the owner wrote that it should not look like code. A value in mono is honest; a paragraph in mono is a costume.",
+      "source": "GRAMMAR.md › The voice › Mono is for what is read as data"
+    },
+    {
+      "id": "voice.labels-microtype",
+      "authority": "policy",
+      "statement": "Labels are microtype: small, tracked caps, faint ink. The accent never carries a label.",
+      "reason": "A kicker in the accent colour is a second voice competing with the heading it introduces.",
+      "source": "GRAMMAR.md › The voice › Labels are microtype"
+    },
+    {
+      "id": "voice.monochrome-default",
+      "authority": "policy",
+      "statement": "Monochrome by default; colour is a choice, and a monochrome accent is ink.",
+      "reason": "A tool is unobtrusive so the user's own work carries the colour. A mid grey at the chromatic lightness fails AA on paper and reads as disabled everywhere.",
+      "source": "GRAMMAR.md › The voice › Monochrome by default"
+    },
+    {
+      "id": "voice.lines-not-shadows",
+      "authority": "policy",
+      "statement": "Lines, not shadows. Every level is a 1px rule and an alpha wash.",
+      "reason": "Neither reference paints a drop shadow anywhere; --shadow-color is cut in the ledger, so the elevation tokens keep their offsets and paint nothing.",
+      "source": "GRAMMAR.md › The voice › Lines, not shadows"
+    },
+    {
+      "id": "voice.two-radii",
+      "authority": "policy",
+      "statement": "Nothing bounces, and there are two radii: a control and a panel.",
+      "reason": "A sheet that overshoots and the one soft shape on an architectural page were both personality the chrome should not have.",
+      "source": "GRAMMAR.md › The voice › Nothing bounces"
+    },
+    {
+      "id": "voice.appearance-dot",
+      "authority": "policy",
+      "statement": "The appearance control is a dot after the wordmark: faint ink when monochrome, the accent when there is one. A real button with a name, reachable by tab.",
+      "reason": "Appearance costs nothing and answers to nobody; a labelled switch in the navigation read as one more thing to decide before you could work. Quiet and hidden are different things.",
+      "source": "GRAMMAR.md › The voice › The appearance control is the mark"
+    },
+    {
+      "id": "voice.dark-first",
+      "authority": "policy",
+      "statement": "Dark is the first ground; light is one flipped bit.",
+      "reason": "Gallery is Obsidian with appearance flipped and nothing else changed, because the two poles are one theme's two grounds.",
+      "source": "GRAMMAR.md › The voice › Dark is the first ground"
+    },
+
+    {
+      "id": "layer1.correctness-not-taste",
+      "authority": "policy",
+      "statement": "Roving tabindex, arrow-key order, Escape and backdrop dismissal live in src/behavior and are consumed, never copied.",
+      "reason": "This is the part everyone quietly rebuilds badly when they eject from a monolithic system — so it is the part an eject must preserve.",
+      "source": "GRAMMAR.md › Layer 1 — Behavior",
+      "check": "layer1.imported-not-copied"
+    },
+    {
+      "id": "layer1.backdrop-click",
+      "authority": "policy",
+      "statement": "A backdrop click is a click on the <dialog> element itself: e.target === dialog is the whole implementation.",
+      "reason": "Anything cleverer breaks the moment the sheet scrolls.",
+      "source": "GRAMMAR.md › Layer 1 — Behavior › A backdrop click"
+    },
+    {
+      "id": "layer1.reduced-motion-both-layers",
+      "authority": "policy",
+      "statement": "Reduced motion is honoured in the generated CSS and re-checked by applyTheme at runtime.",
+      "reason": "Inline style properties beat media queries; a runtime engine that ignores the preference silently undoes the stylesheet's promise.",
+      "source": "GRAMMAR.md › Layer 1 — Behavior › Reduced motion"
+    },
+
+    {
+      "id": "layer2.recipes-speak-tokens",
+      "authority": "policy",
+      "statement": "Recipes speak tokens and consume behaviour; everything else is theirs. Copy a recipe, keep the two imports, restyle freely.",
+      "reason": "The adversarial relationship with a design system ends the moment taking the code is sanctioned.",
+      "source": "GRAMMAR.md › Layer 2 — Recipes"
+    },
+    {
+      "id": "layer2.one-filled-action",
+      "authority": "policy",
+      "statement": "One filled action per surface. Primary is filled; Secondary is an edge; Ghost is bare text.",
+      "reason": "When three calls to action carry the same chrome, the screen has no point.",
+      "source": "GRAMMAR.md › Layer 2 — Recipes › One filled action per surface"
+    },
+    {
+      "id": "layer2.disabled-is-opacity",
+      "authority": "policy",
+      "statement": "Disabled is opacity 0.45 on the whole control, not a third palette.",
+      "reason": "A disabled variant per colour multiplies the matrix without adding meaning; a uniform veil reads as off everywhere at once.",
+      "source": "GRAMMAR.md › Layer 2 — Recipes › Disabled"
+    },
+    {
+      "id": "layer2.status-ink-and-wash",
+      "authority": "policy",
+      "statement": "Status colours are ink and wash, split by role: --danger is ink, --danger-soft is a fill. One name per role.",
+      "reason": "A border alpha and a fill alpha doing different jobs under one name is how 34 accidental alphas happen.",
+      "incident": "The stylesheet with thirty-four accidental white alphas.",
+      "source": "GRAMMAR.md › Layer 2 — Recipes › Status colors"
+    },
+    {
+      "id": "layer3.free",
+      "authority": "policy",
+      "statement": "Build one-offs in your feature. No one reviews expression there; Layer 0's vocabulary still applies.",
+      "reason": "Promotion is earned by usage, never granted by proposal.",
+      "source": "GRAMMAR.md › Layer 3 — Local"
+    },
+
+    {
+      "id": "promotion.candidate-at",
+      "authority": "preference",
+      "statement": "A shape that appears this many times, independently, is a promotion candidate.",
+      "reason": "One is taste; nine of the same shape is a missing token. Three is where the report starts saying so.",
+      "source": "GRAMMAR.md › Credo › Less but better",
+      "value": 3
+    },
+    {
+      "id": "evaluation.report-not-police",
+      "authority": "policy",
+      "statement": "Nothing runs, warns or flags while someone is designing. Evaluation happens at ready, at check, and when asked.",
+      "reason": "A design in progress fails any check by definition, so a tool that reports mid-drag is measuring the wrong moment and reads as policing by volume.",
+      "incident": "The slot layer priced every drag against a contract and wrote the cost into source. It was removed.",
+      "source": "README.md › Governance"
+    },
+
+    {
+      "id": "knowledge.drift-by-transcription",
+      "authority": "knowledge",
+      "statement": "Hand-written projections drift from the engine within a week.",
+      "reason": "Week one of this repo: the CSS said 0.012 where the engine computed 0.006.",
+      "source": "GRAMMAR.md › Layer 0 — Meaning › The engine is the only author"
+    },
+    {
+      "id": "knowledge.accent-gate",
+      "authority": "knowledge",
+      "statement": "Cutting the accent collapses the whole colour tier to ink, and focus stays visible through it.",
+      "reason": "The fallback table is written as a gate: --accent → --ink, everything accent-derived follows, --focus-ring lands on ink last.",
+      "source": "src/theme/ledger.ts"
+    },
+    {
+      "id": "knowledge.designer-defines-ux",
+      "authority": "knowledge",
+      "statement": "A move is never wrong at the page level; what it costs is code, and code is malleable to the design.",
+      "reason": "The reviewer makes the code fit and never moves anything back — undoing a designer's move is how a designer stops believing the tool.",
+      "source": "README.md › Structure is moved, not declared"
+    }
+  ]
+}

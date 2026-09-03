@@ -9,7 +9,7 @@
  *   EVIDENCE      what an evaluator found (supplied, never computed here)
  *   CONSEQUENCE   what the operation recorded when it ran
  */
-import { targetKey, type Decision, type Value } from './decision'
+import { targetKey, type Decision, type Value } from './decision.ts'
 
 export interface Fact {
   name: string

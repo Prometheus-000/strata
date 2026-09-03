@@ -16,7 +16,7 @@
  * Other agents have no standard signal; the skill tells them to pass `--by`.
  * A pointer is a hand: the overlay writes `human` without asking.
  */
-import { isAuthor, type Author } from './decision'
+import { isAuthor, type Author } from './decision.ts'
 
 export interface AuthorDecision {
   author: Author

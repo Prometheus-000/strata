@@ -11,8 +11,8 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import { newId, targetKey, type Author, type Consequence, type Decision, type DecisionBody } from './decision'
-import { append, current, readAll } from './log'
+import { newId, targetKey, type Author, type Consequence, type Decision, type DecisionBody } from './decision.ts'
+import { append, current, readAll } from './log.ts'
 
 /** A decision as an importer reconstructs it from an old file: body, hand, time, reason. */
 export type Imported = DecisionBody & { by: Author; at: string; reason?: string; consequence?: Consequence }

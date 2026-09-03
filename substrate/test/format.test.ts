@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { newId, type Decision } from '../src/decision'
-import { describe, formatDecision, formatHandoff } from '../src/format'
+import { newId, type Decision } from '../src/decision.ts'
+import { describe, formatDecision, formatHandoff } from '../src/format.ts'
 
 const cut: Decision = {
   id: newId(Date.parse('2026-09-03T12:00:00.000Z')),

@@ -3,16 +3,18 @@
  * projection: the log, a target's history. `explain`, `check`, `precedent`
  * and `skill` join here as the evaluators and the index arrive.
  */
-import { decide, type DecideContext } from './decide'
-import { targetKey } from './decision'
-import { authorFrom } from './author'
-import { describe, formatDecision } from './format'
-import { byId, history, readAll } from './log'
-import { importAll, rebuild, registeredProjections } from './projection'
-import { buildIndex, search, PROMOTION_CANDIDATE_AT } from './precedent'
-import type { Author, Kind } from './decision'
+import { decide, type DecideContext } from './decide.ts'
+import { targetKey } from './decision.ts'
+import { authorFrom } from './author.ts'
+import { describe, formatDecision } from './format.ts'
+import { byId, history, readAll } from './log.ts'
+import { importAll, rebuild, registeredProjections } from './projection.ts'
+import { buildIndex, search, PROMOTION_CANDIDATE_AT } from './precedent.ts'
+import { enforced, explain, formatCheck, formatExplanation, runCheck } from './check.ts'
+import { assemblePacket, formatPacket, loadSkills } from './skills.ts'
+import type { Author, Kind } from './decision.ts'
 
-export const SUBSTRATE_COMMANDS = ['log', 'history', 'show', 'ready', 'import', 'rebuild', 'precedent'] as const
+export const SUBSTRATE_COMMANDS = ['log', 'history', 'show', 'ready', 'import', 'rebuild', 'precedent', 'check', 'explain', 'skill'] as const
 
 export interface CliIo {
   out: (s: string) => void
@@ -119,6 +121,46 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
       if (r.decisions.length > limit) io.out(`  … ${r.decisions.length - limit} earlier`)
       io.out(r.decisions.length ? `\n  ${r.decisions.length} decision(s)\n` : '')
       return 0
+    }
+
+    case 'check': {
+      const r = runCheck(home.root)
+      if (has('json')) io.out(JSON.stringify(r, null, 2))
+      else io.out(formatCheck(r))
+      return has('enforce') && !enforced(r) ? 1 : 0
+    }
+
+    case 'explain': {
+      const [what] = positional
+      if (!what) return fail('usage: explain <decision id | targetKey>   e.g. explain token:--accent-strong')
+      const e = explain(home.root, what)
+      if (!e) return fail(`nothing on the record about ${what}`)
+      if (has('json')) io.out(JSON.stringify(e, null, 2))
+      else io.out(formatExplanation(e))
+      return 0
+    }
+
+    case 'skill': {
+      const skills = loadSkills(home.root)
+      const [name] = positional
+      if (!name) {
+        if (!skills.length) return fail('no skills here — a skill is skills/<name>/SKILL.md')
+        io.out('')
+        for (const s of skills) io.out(`  ${s.name.padEnd(16)} ${s.purpose}`)
+        io.out('\n  strata skill <name> [--<input> value …] assembles the packet the harness performs\n')
+        return 0
+      }
+      const skill = skills.find((s) => s.name === name)
+      if (!skill) return fail(`no skill "${name}" — ${skills.map((s) => s.name).join(', ') || 'none here'}`)
+      const inputs: Record<string, string> = {}
+      for (const k of skill.inputs) {
+        const v = flag(k)
+        if (v !== undefined) inputs[k] = v
+      }
+      const packet = assemblePacket(skill, inputs, home.root)
+      if (has('json')) io.out(JSON.stringify(packet, null, 2))
+      else io.out(formatPacket(packet))
+      return packet.missing.length ? 1 : 0
     }
 
     default:

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { ID_PATTERN, isDecision, newId, problemsWith, targetKey, type Decision } from '../src/decision'
+import { ID_PATTERN, isDecision, newId, problemsWith, targetKey, type Decision } from '../src/decision.ts'
 
 export const base = (at = '2026-09-03T12:00:00.000Z'): Pick<Decision, 'id' | 'by' | 'at' | 'via' | 'consequence'> => ({
   id: newId(Date.parse(at)),

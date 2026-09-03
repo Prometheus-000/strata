@@ -19,6 +19,8 @@ import { registerProjection, type Imported } from '@strata/substrate/projection'
 import { generateTheme, OBSIDIAN } from './generateTheme'
 import { FALLBACKS, type Ledger, type TokenDecision, type TokenStatus } from './ledger'
 import { emitTokens, readLedger, writeLedger, LEDGER_PATH } from './emit'
+import { registerState } from '@strata/substrate/skills'
+import { consumers, registerThemeEvaluators } from './evaluators'
 
 export type TokenRequest = Request & { kind: 'token'; token: string; action: 'propose' | 'keep' | 'cut' }
 export type DeviationRequest = Request & { kind: 'deviation'; file: string; line: number; value?: string }
@@ -32,6 +34,22 @@ export function registerTheme(home: { root: string }): void {
   registerHandler<TokenRequest>('token', (req, ctx) => tokenHandler(req, ctx, home.root))
   registerHandler<DeviationRequest>('deviation', (req, ctx) => deviationHandler(req, ctx, home.root))
   registerProjection({ name: LEDGER_PATH, import: importLedger, project: projectTheme })
+  registerThemeEvaluators(home)
+  registerState('tokens', () => {
+    const ledger = readLedger(home.root)
+    return Object.keys(generateTheme(OBSIDIAN))
+      .map((name) => {
+        const d = ledger.tokens[name] ?? { status: 'proposed' as const }
+        return `${name.padEnd(24)} ${d.status.padEnd(9)}${d.status === 'cut' ? ` → ${FALLBACKS[name]?.to}` : ''}${d.reason ? ` · ${d.reason}` : ''}`
+      })
+      .join('\n')
+  })
+  registerState('consumers', () =>
+    [...consumers(home.root)]
+      .sort((a, b) => b[1].length - a[1].length)
+      .map(([name, sites]) => `${name.padEnd(24)} ${String(sites.length).padStart(3)} consumer(s)`)
+      .join('\n'),
+  )
 }
 
 const ACTION: Record<TokenStatus, TokenRequest['action']> = { proposed: 'propose', kept: 'keep', cut: 'cut' }

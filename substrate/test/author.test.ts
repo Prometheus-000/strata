@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { authorFrom } from '../src/author'
+import { authorFrom } from '../src/author.ts'
 
 test('the author is decided explicitly, with a printed reason, and never silently', () => {
   assert.deepEqual(authorFrom(['--by', 'agent'], {}), { author: 'agent', because: 'by agent — --by agent on the command line' })

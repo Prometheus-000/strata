@@ -15,7 +15,7 @@ import { authorFrom } from '@strata/substrate/author'
 import { decide, type DecideContext, type Request } from '@strata/substrate/decide'
 import { SCOPES, type Scope } from '@strata/substrate/decision'
 import { describe as describeDecision, formatHandoff } from '@strata/substrate/format'
-import { collapseReversals, current, readAll, since } from '@strata/substrate/log'
+import { collapseReversals, current, pending, readAll, since } from '@strata/substrate/log'
 import { assignIdentity, buildManifest, buildStructure } from './identity/manifest'
 import { readManifest, readStore, writeManifest, writeStructure } from './store/persist'
 import { formatStructure } from './structure/read'
@@ -342,8 +342,7 @@ export function runMalleable(argv: string[], home: CliHome, env: Record<string, 
   /** Handed off means nothing has happened since the last ready; otherwise the ready is stale and the list is what is pending. */
   function handoff(): string {
     const all = readAll(home.logRoot)
-    const pending = since(all, 'ready')
-    const ready = pending.length === 0 ? (current(all).get('ready') ?? null) : null
-    return formatHandoff(collapseReversals(pending), ready)
+    const ready = since(all, 'ready').length === 0 ? (current(all).get('ready') ?? null) : null
+    return formatHandoff(collapseReversals(pending(all)), ready)
   }
 }

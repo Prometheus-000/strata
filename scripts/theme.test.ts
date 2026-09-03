@@ -5,6 +5,8 @@ import path from 'node:path'
 import { test } from 'node:test'
 import { decide, resetHandlers } from '@strata/substrate/decide'
 import { importAll, rebuild, resetProjections } from '@strata/substrate/projection'
+import { resetEvaluators } from '@strata/substrate/evidence'
+import { explain, formatExplanation, runCheck } from '@strata/substrate/check'
 import { readAll } from '@strata/substrate/log'
 import { registerTheme } from '../src/theme/handlers'
 import { readLedger, LEDGER_PATH, SEMANTIC_PATH, TOKENS_PATH } from '../src/theme/emit'
@@ -16,6 +18,7 @@ const REPO = path.join(path.dirname(new URL(import.meta.url).pathname), '..')
 function world() {
   resetHandlers()
   resetProjections()
+  resetEvaluators()
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'strata-theme-'))
   fs.mkdirSync(path.join(dir, 'src/theme'), { recursive: true })
   fs.mkdirSync(path.join(dir, 'src/tokens'), { recursive: true })
@@ -103,4 +106,39 @@ test('the ledger imports onto the record once and rebuilds from it byte for byte
   assert.deepEqual(rebuild(dir, { dryRun: true }).changed, [], 'a decision through decide() leaves the projections already rebuilt')
   fs.appendFileSync(path.join(dir, SEMANTIC_PATH), '/* by hand */\n')
   assert.deepEqual(rebuild(dir, { dryRun: true }).changed, [SEMANTIC_PATH], 'a hand edit is drift from the record')
+})
+
+test('the theme evaluators: invariants hold on this repo, a raw colour is a policy finding with the way to declare it, and a token explains itself', () => {
+  const { dir, ctx } = world()
+  importAll(dir)
+  rebuild(dir)
+  fs.mkdirSync(path.join(dir, 'src/site'), { recursive: true })
+  fs.writeFileSync(path.join(dir, 'src/site/site.css'), '.a { color: var(--accent-strong); background: #fff; }\n.b { color: var(--ink); }\n.c {\n  /* deviation: the wheel paints itself */\n  color: oklch(0.5 0 0);\n}\n.d { border: 1px solid var(--nope); }\n')
+  fs.mkdirSync(path.join(dir, 'grammar'))
+  fs.copyFileSync(path.join(REPO, 'grammar/rules.json'), path.join(dir, 'grammar/rules.json'))
+  const r = runCheck(dir)
+  assert.deepEqual(r.invariants.map((i) => [i.rule, i.ok]), [['record.parses', true], ['projections.match-record', true], ['fallbacks.total-acyclic', true], ['css.vars-defined', false]])
+  assert.match(r.invariants[3].findings[0].message, /var\(--nope\) names a custom property nothing defines/)
+  const policy = r.findings.filter((f) => f.authority === 'policy')
+  assert.equal(policy.length, 1, 'the declared one is not a violation')
+  assert.match(policy[0].message, /strata deviate src\/site\/site\.css:1 --why/)
+  assert.ok(r.findings.some((f) => f.rule === 'deviation.declared' && /wheel/.test(f.message)))
+  assert.ok(r.findings.some((f) => f.rule === 'token.unused' && f.where === '--positive'))
+
+  const cut = decide({ kind: 'token', token: '--accent-strong', action: 'cut', reason: 'one filled action per surface' }, ctx())
+  assert.ok(cut.ok)
+  const e = explain(dir, 'token:--accent-strong')!
+  const names = e.evidence.map((f) => f.name)
+  assert.ok(names.includes('consumers') && names.includes('usage concentration') && names.includes('duplicate visual role'))
+  assert.equal(e.evidence.find((f) => f.name === 'consumers')!.value, 1)
+  assert.ok(e.evidence.some((f) => /contrast on dark/.test(f.name) && /:1 · (pass|fail)/.test(String(f.value))))
+  assert.ok(e.context.some((f) => f.name === 'superseded' && /keep --accent-strong/.test(String(f.value))))
+  const text = formatExplanation(e)
+  assert.match(text, /DECISION[\s\S]*Token: --accent-strong\nAction: cut[\s\S]*CONTEXT[\s\S]*EVIDENCE[\s\S]*consumers: 1[\s\S]*CONSEQUENCE[\s\S]*fallback → --accent/)
+
+  resetEvaluators()
+  resetProjections()
+  registerTheme({ root: REPO })
+  const real = runCheck(REPO)
+  assert.deepEqual(real.invariants.filter((i) => !i.ok && i.rule !== 'projections.match-record').map((i) => i.rule), [], 'the real repo holds every invariant this projection can speak for')
 })
