@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { applyTheme, OBSIDIAN, type ThemeSeeds } from './generateTheme'
+import LEDGER from './ledger.json'
+import type { Ledger } from './ledger'
 
 interface ThemeContextValue {
   seeds: ThemeSeeds
@@ -31,7 +33,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [seeds, setSeeds] = useState<ThemeSeeds>(() => seedsFromHash() ?? OBSIDIAN)
 
   useEffect(() => {
-    applyTheme(seeds)
+    applyTheme(seeds, document.documentElement, LEDGER as Ledger)
     window.history.replaceState(null, '', hashFromSeeds(seeds))
   }, [seeds])
 

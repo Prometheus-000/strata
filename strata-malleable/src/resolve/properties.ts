@@ -6,6 +6,7 @@
  * honest direct manipulation at this size, and a colour picker is a panel.
  */
 import { PRIMITIVES } from '../engine/scales'
+import type { CssControl } from '../schema'
 
 export interface PropertySpec {
   key: string
@@ -72,6 +73,22 @@ export const PROPERTIES: Record<string, PropertySpec> = {
     gain: 1,
     snapTo: SPACE_TOKENS,
   },
+}
+
+/**
+ * The spec a node actually gets: the registry's, narrowed or widened by what
+ * the component declared for itself. `false` takes the handle away.
+ */
+export function specFor(property: string, control?: CssControl | false): PropertySpec | null {
+  const base = PROPERTIES[property]
+  if (!base) return null
+  if (control === false) return null
+  if (!control) return base
+  return {
+    ...base,
+    ...(control.range ? { range: control.range } : {}),
+    ...(control.snap ? { snapTo: control.snap } : {}),
+  }
 }
 
 /** CSS declaration → malleable property key. Used by the manifest reader. */

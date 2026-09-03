@@ -1,0 +1,107 @@
+{
+  "$description": "Every token the engine proposes, and what people decided. The engine adds `proposed` lines (npm run tokens) and never edits a decision; a person or an agent makes each one `kept` or `cut` (npm run ledger -- cut <token> --why \"…\"). A cut token collapses to its fallback in every projection — semantic.css, tokens.json, the runtime — and every usage is logged by npm run validate. Nothing here is deleted: a stale decision about a token the engine no longer emits is reported, not removed.",
+  "tokens": {
+    "--surface-page": {
+      "status": "proposed"
+    },
+    "--surface-sunken": {
+      "status": "proposed"
+    },
+    "--surface-raised": {
+      "status": "proposed"
+    },
+    "--surface-overlay": {
+      "status": "proposed"
+    },
+    "--surface-veil": {
+      "status": "proposed"
+    },
+    "--ink": {
+      "status": "proposed"
+    },
+    "--ink-muted": {
+      "status": "proposed"
+    },
+    "--ink-faint": {
+      "status": "proposed"
+    },
+    "--ink-inverse": {
+      "status": "proposed"
+    },
+    "--accent": {
+      "status": "proposed"
+    },
+    "--accent-strong": {
+      "status": "proposed"
+    },
+    "--accent-ink": {
+      "status": "proposed"
+    },
+    "--accent-soft": {
+      "status": "proposed"
+    },
+    "--accent-line": {
+      "status": "proposed"
+    },
+    "--line": {
+      "status": "proposed"
+    },
+    "--line-strong": {
+      "status": "proposed"
+    },
+    "--focus-ring": {
+      "status": "proposed"
+    },
+    "--positive": {
+      "status": "proposed"
+    },
+    "--warning": {
+      "status": "proposed"
+    },
+    "--danger": {
+      "status": "proposed"
+    },
+    "--positive-soft": {
+      "status": "proposed"
+    },
+    "--warning-soft": {
+      "status": "proposed"
+    },
+    "--danger-soft": {
+      "status": "proposed"
+    },
+    "--shadow-color": {
+      "status": "proposed"
+    },
+    "--motion-instant": {
+      "status": "proposed"
+    },
+    "--motion-fast": {
+      "status": "proposed"
+    },
+    "--motion-base": {
+      "status": "proposed"
+    },
+    "--motion-slow": {
+      "status": "proposed"
+    },
+    "--motion-ease": {
+      "status": "proposed"
+    },
+    "--motion-ease-emphasis": {
+      "status": "proposed"
+    },
+    "--density": {
+      "status": "proposed"
+    },
+    "--radius-interactive": {
+      "status": "proposed"
+    },
+    "--radius-surface": {
+      "status": "proposed"
+    },
+    "--radius-overlay": {
+      "status": "proposed"
+    }
+  }
+}

@@ -108,15 +108,6 @@ body {
   accent-color: var(--accent);
 }
 
-.hx__stage {
-  display: flex;
-  flex-direction: column;
-  gap: var(--strata-space-8);
-  padding: var(--strata-space-8) var(--strata-space-6) 14rem;
-  max-width: 74rem;
-  margin: 0 auto;
-}
-
 /* ---------- manipulation surface ---------- */
 
 .mv {
@@ -449,4 +440,97 @@ body {
   .mv__step-note {
     display: none;
   }
+}
+
+/* ---------- the move gesture ---------- */
+
+body[data-malleable-moving] {
+  user-select: none;
+  cursor: grabbing;
+}
+.mv__container {
+  position: fixed;
+  pointer-events: none;
+  outline: var(--strata-border-hair) dashed var(--accent-line);
+  outline-offset: 4px;
+  border-radius: var(--radius-surface);
+}
+.mv__container .mv__label {
+  color: var(--ink-muted);
+  background: var(--surface-overlay);
+  border: var(--strata-border-hair) solid var(--line);
+}
+.mv__line {
+  position: fixed;
+  pointer-events: none;
+  background: var(--accent);
+  border-radius: 2px;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.mv__ghost {
+  position: fixed;
+  pointer-events: none;
+  transform: translate(12px, 12px);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent-ink);
+  background: var(--accent);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--strata-radius-1);
+  white-space: nowrap;
+}
+.mv__status {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%);
+  pointer-events: none;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink);
+  background: var(--surface-overlay);
+  border: var(--strata-border-hair) solid var(--line);
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-interactive);
+  max-width: 60ch;
+  white-space: pre-wrap;
+}
+.mv__status.is-error {
+  color: var(--danger);
+}
+.hx__btn.is-done {
+  color: var(--positive);
+}
+
+/* ---------- prop controls ---------- */
+.mv__props {
+  position: fixed;
+  transform: translateY(-100%);
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.3rem 0.45rem;
+  background: var(--surface-overlay);
+  border: var(--strata-border-hair) solid var(--line);
+  border-radius: var(--radius-interactive);
+  box-shadow: var(--shadow-floating);
+}
+.mv__props-note {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--ink-faint);
+  font-style: normal;
+}
+
+/* The group a list pick lands on: every instance, outlined together. */
+.mv__box--group {
+  outline: var(--strata-border-hair) dashed var(--accent-line);
+  outline-offset: 3px;
+}
+
+.mv__seg--scrub {
+  cursor: ew-resize;
+  min-width: 3ch;
+  touch-action: none;
 }

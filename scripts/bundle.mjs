@@ -31,6 +31,8 @@ const SYSTEM = [
   ['src/tokens/primitives.css', 'Tier 1. Raw, context-free scales. Components never reference these.'],
   ['src/tokens/semantic.css', 'GENERATED from the engine. Tier 2 — the only vocabulary components may speak.'],
   ['src/theme/generateTheme.ts', 'THE ENGINE. Six seeds in, the whole semantic tier out, in OKLCH.'],
+  ['src/theme/ledger.ts', 'THE LEDGER. Every generated token is a proposal; a cut one collapses to a declared fallback, never vanishes.'],
+  ['src/theme/ledger.json', 'AUTHORED. What people decided about each token: proposed, kept, or cut — with a reason and a name.'],
   ['src/theme/color.ts', 'OKLCH ↔ sRGB and WCAG contrast, used for the live contrast receipts.'],
   ['src/theme/compilePrompt.ts', 'Prose → seeds, with a receipt per word. The phrase is the record.'],
   ['src/theme/imageSeeds.ts', 'An image → seeds, sampled in the browser.'],

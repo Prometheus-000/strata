@@ -67,7 +67,6 @@ function TopBar() {
           <a className="topbar__link" href="#console">Console</a>
           <a className="topbar__link" href="#grammar">Grammar</a>
           <a className="topbar__link" href="#components">Reference</a>
-          <a className="topbar__link" href={`${BASE}slots.html`}>Slots</a>
           <a className="topbar__link" href={`${BASE}malleable.html`}>Malleable</a>
           <Switch
             checked={seeds.appearance === 'dark'}
@@ -186,14 +185,8 @@ const SURFACES = [
     cta: 'open',
   },
   {
-    tag: 'SLOT LAYER',
-    what: 'Press a feature and its legal positions appear. Every slot is priced before the drag begins; the drop lands anyway and the cost travels into source.',
-    href: `${BASE}slots.html`,
-    cta: 'open',
-  },
-  {
     tag: 'MALLEABLE LAYER',
-    what: 'Drag a padding or a radius on a live node, then answer one question — how far does this go — in four words. Un-promoted drift is the finding, and it is counted.',
+    what: 'Drag a corner or an edge on a live node and answer one question — how far does this go — in four words. Drag a region into another landmark and the JSX rewrites itself; the diff is the record. Un-promoted drift is the finding, and it is counted.',
     href: `${BASE}malleable.html`,
     cta: 'open',
   },
@@ -203,7 +196,7 @@ function Surfaces() {
   return (
     <Section
       kicker="Surfaces"
-      title="Four instruments. One record."
+      title="Three instruments. One record."
       sub="Each surface is a host for one library, and each library is provable without a browser. This page is the one place they are all reachable from."
       id="surfaces"
     >

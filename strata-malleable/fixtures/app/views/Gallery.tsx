@@ -19,7 +19,7 @@ const RELEASES = [
 
 export function Gallery() {
   return (
-    <section data-sid="Gallery.section.gallery" data-view="gallery" className="gallery">
+    <section data-region="Gallery" data-sid="Gallery.section.gallery" data-view="gallery" className="gallery">
       <header data-sid="Gallery.header.gallery__head" className="gallery__head">
         <h2 data-sid="Gallery.h2.gallery__title" className="gallery__title">Presets</h2>
         <Badge tone="accent">six seeds each</Badge>

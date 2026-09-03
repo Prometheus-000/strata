@@ -12,11 +12,24 @@
  *      designer reads in the drift report, and a report full of hashes is a
  *      report nobody reads.
  *
+ * Three attributes, one splice per element:
+ *
+ *   - `data-sid` on every styled node — an intrinsic element with a className —
+ *     and on every landmark element (`<main>`, `<div role="dialog">`) whether or
+ *     not it has a class, because a landmark is a container regions move into
+ *     and a container has to be addressable by name, never by position.
+ *   - `data-view` on a view root, so instance addresses have a scope.
+ *   - `data-region="<Component>"` on the root host element of every component
+ *     definition. A composed `<TopBar />` has no DOM node of its own; this is
+ *     the handle the move gesture picks it up by.
+ *
  * The transform splices attribute text at byte offsets rather than re-printing
  * the AST, because a codemod that reformats the file every run is a codemod
  * people turn off.
  */
 import ts from 'typescript'
+import type { Landmark } from '../schema'
+import { landmarkOf } from '../structure/landmarks'
 
 export interface StyledNode {
   nodeId: string
@@ -24,13 +37,23 @@ export interface StyledNode {
   tag: string
   classes: string[]
   isViewRoot: boolean
+  landmark?: Landmark
   /** Offset just past the tag name, where attributes are spliced in. */
   insertAt: number
   existingId?: string
 }
 
+/** The root host element of a component definition — what `data-region` names. */
+export interface RegionRoot {
+  component: string
+  insertAt: number
+  /** Present when the element already carries `data-region`. */
+  existing?: string
+}
+
 export interface ScanResult {
   nodes: StyledNode[]
+  regions: RegionRoot[]
   /** Ids already pinned in this file. */
   pinned: string[]
 }
@@ -60,6 +83,9 @@ const attrNamed = (el: ts.JsxOpeningLikeElement, name: string) =>
     (p): p is ts.JsxAttribute => ts.isJsxAttribute(p) && p.name.getText() === name,
   )
 
+const stringOf = (attr: ts.JsxAttribute | undefined): string | undefined =>
+  attr?.initializer && ts.isStringLiteral(attr.initializer) ? attr.initializer.text : undefined
+
 /** `st-card--interactive` is a modifier; the primary class is the first that is not. */
 const primaryOf = (classes: string[]) =>
   classes.find((c) => !c.includes('--')) ?? classes[0] ?? ''
@@ -76,27 +102,63 @@ function componentOf(node: ts.Node): string {
   return 'Anonymous'
 }
 
+/** The opening tag of each top-level component's root element, when that root is a host element. */
+function rootElementsOf(sf: ts.SourceFile): Map<ts.JsxOpeningLikeElement, string> {
+  const out = new Map<ts.JsxOpeningLikeElement, string>()
+  const firstJsx = (body: ts.Node): ts.Node | null => {
+    let found: ts.Node | null = null
+    const visit = (n: ts.Node) => {
+      if (found) return
+      if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n) || ts.isJsxFragment(n)) {
+        found = n
+        return
+      }
+      ts.forEachChild(n, visit)
+    }
+    visit(body)
+    return found
+  }
+  const consider = (name: string, body: ts.Node) => {
+    if (!/^[A-Z]/.test(name)) return
+    const root = firstJsx(body)
+    const el = root && ts.isJsxElement(root) ? root.openingElement : root && ts.isJsxSelfClosingElement(root) ? root : null
+    if (el && /^[a-z]/.test(el.tagName.getText(sf))) out.set(el, name)
+  }
+  for (const st of sf.statements) {
+    if (ts.isFunctionDeclaration(st) && st.name && st.body) consider(st.name.text, st.body)
+    if (ts.isVariableStatement(st))
+      for (const d of st.declarationList.declarations)
+        if (
+          ts.isIdentifier(d.name) &&
+          d.initializer &&
+          (ts.isArrowFunction(d.initializer) || ts.isFunctionExpression(d.initializer))
+        )
+          consider(d.name.text, d.initializer.body)
+  }
+  return out
+}
+
 export function scan(filePath: string, source: string, isView: boolean): ScanResult {
   const sf = ts.createSourceFile(filePath, source, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TSX)
   const nodes: StyledNode[] = []
+  const regions: RegionRoot[] = []
   const pinned: string[] = []
   const seenRootFor = new Set<string>()
+  const roots = rootElementsOf(sf)
 
   const visit = (node: ts.Node) => {
     if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
       const tag = node.tagName.getText(sf)
       const isIntrinsic = /^[a-z]/.test(tag)
       const className = attrNamed(node, 'className')
+      const landmark = isIntrinsic ? landmarkOf(node, sf) : null
       // A styled node is an intrinsic element carrying a className. A component
       // element is not styled here — its styling lives inside its own recipe.
-      if (isIntrinsic && className) {
+      // A landmark is identified whether or not it is styled: it is a container.
+      if (isIntrinsic && (className || landmark)) {
         const classes = classesOf(className)
         const component = componentOf(node)
-        const existing = attrNamed(node, 'data-sid')
-        const existingId =
-          existing && existing.initializer && ts.isStringLiteral(existing.initializer)
-            ? existing.initializer.text
-            : undefined
+        const existingId = stringOf(attrNamed(node, 'data-sid'))
         if (existingId) pinned.push(existingId)
         const primary = primaryOf(classes)
         const isViewRoot = isView && !seenRootFor.has(component)
@@ -107,20 +169,30 @@ export function scan(filePath: string, source: string, isView: boolean): ScanRes
           tag,
           classes,
           isViewRoot,
+          ...(landmark ? { landmark } : {}),
           insertAt: node.tagName.getEnd(),
           existingId,
         })
       }
+      const region = roots.get(node)
+      if (region)
+        regions.push({
+          component: region,
+          insertAt: node.tagName.getEnd(),
+          existing: stringOf(attrNamed(node, 'data-region')),
+        })
     }
     ts.forEachChild(node, visit)
   }
   visit(sf)
-  return { nodes, pinned }
+  return { nodes, regions, pinned }
 }
 
 export interface StampResult {
   source: string
   assigned: Array<{ nodeId: string; component: string; tag: string }>
+  /** Component roots that received `data-region` on this run. */
+  regions: string[]
   unchanged: number
 }
 
@@ -137,9 +209,12 @@ export function stamp(
   isView: boolean,
   taken: Set<string>,
 ): StampResult {
-  const { nodes } = scan(filePath, source, isView)
-  const splices: Array<{ at: number; text: string }> = []
+  const { nodes, regions } = scan(filePath, source, isView)
+  // One splice per element: two splices at one offset would land reversed.
+  const splices = new Map<number, string>()
+  const add = (at: number, text: string) => splices.set(at, (splices.get(at) ?? '') + text)
   const assigned: StampResult['assigned'] = []
+  const regionsAssigned: string[] = []
   let unchanged = 0
 
   for (const n of nodes) {
@@ -152,13 +227,18 @@ export function stamp(
     while (taken.has(id)) id = `${n.nodeId}#${k++}`
     taken.add(id)
     const view = n.isViewRoot ? ` data-view="${kebab(n.component)}"` : ''
-    splices.push({ at: n.insertAt, text: ` data-sid="${id}"${view}` })
+    add(n.insertAt, ` data-sid="${id}"${view}`)
     assigned.push({ nodeId: id, component: n.component, tag: n.tag })
+  }
+  for (const r of regions) {
+    if (r.existing) continue
+    add(r.insertAt, ` data-region="${r.component}"`)
+    regionsAssigned.push(r.component)
   }
 
   // Descending, so earlier offsets stay valid as later ones are spliced.
-  splices.sort((a, b) => b.at - a.at)
+  const ordered = [...splices.entries()].sort((a, b) => b[0] - a[0])
   let out = source
-  for (const s of splices) out = out.slice(0, s.at) + s.text + out.slice(s.at)
-  return { source: out, assigned, unchanged }
+  for (const [at, text] of ordered) out = out.slice(0, at) + text + out.slice(at)
+  return { source: out, assigned, regions: regionsAssigned, unchanged }
 }

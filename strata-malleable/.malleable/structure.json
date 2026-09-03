@@ -1,0 +1,309 @@
+{
+  "version": 1,
+  "generatedFrom": [
+    "fixtures/app/recipes/Badge.tsx",
+    "fixtures/app/recipes/Button.tsx",
+    "fixtures/app/recipes/Card.tsx",
+    "fixtures/app/views/Filters.tsx",
+    "fixtures/app/views/Gallery.tsx",
+    "fixtures/app/views/Page.tsx",
+    "fixtures/app/views/PublishDialog.tsx",
+    "fixtures/app/views/Settings.tsx",
+    "fixtures/app/views/TopBar.tsx"
+  ],
+  "roots": [
+    {
+      "component": "Page",
+      "file": "fixtures/app/views/Page.tsx",
+      "sid": "Page.div.page"
+    }
+  ],
+  "containers": [
+    {
+      "sid": "Page.div.page",
+      "landmark": "root",
+      "tag": "div",
+      "component": "Page",
+      "via": [
+        "Page"
+      ],
+      "file": "fixtures/app/views/Page.tsx",
+      "line": 28,
+      "range": [
+        1036,
+        1619
+      ],
+      "open": [
+        1036,
+        1119
+      ],
+      "close": 1613,
+      "children": [
+        {
+          "kind": "component",
+          "component": "TopBar",
+          "ordinal": 0,
+          "line": 29,
+          "range": [
+            1126,
+            1136
+          ],
+          "host": "TopBar",
+          "importedFrom": "./TopBar"
+        }
+      ]
+    },
+    {
+      "sid": "TopBar.header.topbar",
+      "landmark": "banner",
+      "tag": "header",
+      "component": "TopBar",
+      "via": [
+        "Page",
+        "TopBar"
+      ],
+      "file": "fixtures/app/views/TopBar.tsx",
+      "line": 10,
+      "range": [
+        308,
+        880
+      ],
+      "open": [
+        308,
+        408
+      ],
+      "close": 871,
+      "children": []
+    },
+    {
+      "sid": "TopBar.nav.topbar__nav",
+      "landmark": "navigation",
+      "tag": "nav",
+      "component": "TopBar",
+      "via": [
+        "Page",
+        "TopBar"
+      ],
+      "file": "fixtures/app/views/TopBar.tsx",
+      "line": 14,
+      "range": [
+        521,
+        866
+      ],
+      "open": [
+        521,
+        606
+      ],
+      "close": 860,
+      "children": [
+        {
+          "kind": "component",
+          "component": "Badge",
+          "ordinal": 0,
+          "line": 17,
+          "range": [
+            815,
+            853
+          ],
+          "host": "Badge",
+          "importedFrom": "../recipes/Badge"
+        }
+      ]
+    },
+    {
+      "sid": "Page.main.page__main",
+      "landmark": "main",
+      "tag": "main",
+      "component": "Page",
+      "via": [
+        "Page"
+      ],
+      "file": "fixtures/app/views/Page.tsx",
+      "line": 30,
+      "range": [
+        1143,
+        1279
+      ],
+      "open": [
+        1143,
+        1204
+      ],
+      "close": 1272,
+      "children": [
+        {
+          "kind": "component",
+          "component": "Filters",
+          "ordinal": 0,
+          "line": 31,
+          "range": [
+            1213,
+            1224
+          ],
+          "host": "Filters",
+          "importedFrom": "./Filters"
+        },
+        {
+          "kind": "component",
+          "component": "Gallery",
+          "ordinal": 0,
+          "line": 32,
+          "range": [
+            1233,
+            1244
+          ],
+          "host": "Gallery",
+          "importedFrom": "./Gallery"
+        },
+        {
+          "kind": "component",
+          "component": "Settings",
+          "ordinal": 0,
+          "line": 33,
+          "range": [
+            1253,
+            1265
+          ],
+          "host": "Settings",
+          "importedFrom": "./Settings"
+        }
+      ]
+    },
+    {
+      "sid": "Filters.form.filters",
+      "landmark": "search",
+      "tag": "form",
+      "component": "Filters",
+      "via": [
+        "Page",
+        "Filters"
+      ],
+      "file": "fixtures/app/views/Filters.tsx",
+      "line": 9,
+      "range": [
+        243,
+        640
+      ],
+      "open": [
+        243,
+        394
+      ],
+      "close": 633,
+      "children": [
+        {
+          "kind": "component",
+          "component": "Button",
+          "ordinal": 0,
+          "line": 11,
+          "range": [
+            555,
+            628
+          ],
+          "host": "Button",
+          "importedFrom": "../recipes/Button"
+        }
+      ]
+    },
+    {
+      "sid": "Page.aside.page__aside",
+      "landmark": "complementary",
+      "tag": "aside",
+      "component": "Page",
+      "via": [
+        "Page"
+      ],
+      "file": "fixtures/app/views/Page.tsx",
+      "line": 35,
+      "range": [
+        1286,
+        1410
+      ],
+      "open": [
+        1286,
+        1351
+      ],
+      "close": 1402,
+      "children": [
+        {
+          "kind": "component",
+          "component": "Notes",
+          "ordinal": 0,
+          "line": 36,
+          "range": [
+            1360,
+            1369
+          ],
+          "host": "Notes"
+        },
+        {
+          "kind": "component",
+          "component": "PublishDialog",
+          "ordinal": 0,
+          "line": 37,
+          "range": [
+            1378,
+            1395
+          ],
+          "host": "PublishDialog",
+          "importedFrom": "./PublishDialog"
+        }
+      ]
+    },
+    {
+      "sid": "PublishDialog.div.publish__dialog",
+      "landmark": "dialog",
+      "tag": "div",
+      "component": "PublishDialog",
+      "via": [
+        "Page",
+        "PublishDialog"
+      ],
+      "file": "fixtures/app/views/PublishDialog.tsx",
+      "line": 16,
+      "range": [
+        557,
+        1112
+      ],
+      "open": [
+        557,
+        837
+      ],
+      "close": 1106,
+      "children": [
+        {
+          "kind": "component",
+          "component": "Button",
+          "ordinal": 0,
+          "line": 26,
+          "range": [
+            999,
+            1097
+          ],
+          "host": "Button",
+          "importedFrom": "../recipes/Button"
+        }
+      ]
+    },
+    {
+      "sid": "Page.footer.page__foot",
+      "landmark": "contentinfo",
+      "tag": "footer",
+      "component": "Page",
+      "via": [
+        "Page"
+      ],
+      "file": "fixtures/app/views/Page.tsx",
+      "line": 39,
+      "range": [
+        1417,
+        1608
+      ],
+      "open": [
+        1417,
+        1482
+      ],
+      "close": 1599,
+      "children": []
+    }
+  ],
+  "unaddressable": []
+}

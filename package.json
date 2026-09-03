@@ -8,6 +8,8 @@
     "dev": "vite",
     "tokens": "tsx scripts/emit-tokens.ts",
     "validate": "node scripts/validate-tokens.mjs",
+    "ledger": "tsx scripts/ledger.ts",
+    "test": "node --import tsx/esm --test scripts/*.test.ts",
     "build": "npm run tokens && npm run validate && tsc -b && vite build",
     "preview": "vite preview",
     "bundle": "node scripts/bundle.mjs"

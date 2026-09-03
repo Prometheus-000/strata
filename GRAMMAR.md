@@ -85,11 +85,18 @@ never granted by proposal.
 
 ## The machine layer
 
-- `npm run tokens` — regenerate all Layer 0 projections from the engine.
+- `npm run tokens` — regenerate all Layer 0 projections from the engine, through the
+  ledger. Adds a `proposed` line for any new token; never edits a decision.
+- `npm run ledger -- cut|keep --<token> --why "…"` — decide one generated token. A cut
+  token collapses to its fallback (`src/theme/ledger.ts`, beside the engine, with a reason
+  per entry) in every projection, and the decision is emitted beside the declaration.
+  Omitting the property instead would fail every `var()` that names it, silently, at the
+  consumer — which is the behaviour this repo calls the worst available.
 - `npm run validate` — fails undeclared color literals in `src/components` and `src/site`;
-  prints declared deviations as telemetry. Runs in `npm run build`.
+  prints declared deviations as telemetry; counts every consumer of a cut token and names
+  every token nothing uses. Runs in `npm run build`.
 - `src/tokens/tokens.json` — the agent-readable contract: seeds, ranges, and the *reasons*
-  for each dial, alongside compiled values.
+  for each dial, alongside compiled values; each token carries its ledger decision.
 - Next, in order of leverage: a precedent index over Layer 3, an MCP server exposing live
   token values + `ds.precedent(q)`, and code→Figma regeneration on CI (the current Figma
   library was pushed by hand once and is already a stale projection — see

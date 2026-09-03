@@ -6,11 +6,12 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { OBSIDIAN } from '../engine/generateTheme'
-import type { Manifest, Store } from '../schema'
+import type { Manifest, Store, Structure } from '../schema'
 import { emptyStore } from './store'
 
 export const STORE_PATH = '.malleable/overrides.json'
 export const MANIFEST_PATH = '.malleable/manifest.json'
+export const STRUCTURE_PATH = '.malleable/structure.json'
 
 export function readStore(root = process.cwd()): Store {
   const p = path.join(root, STORE_PATH)
@@ -36,4 +37,10 @@ export function writeManifest(manifest: Manifest, root = process.cwd()) {
   const p = path.join(root, MANIFEST_PATH)
   fs.mkdirSync(path.dirname(p), { recursive: true })
   fs.writeFileSync(p, JSON.stringify(manifest, null, 2) + '\n')
+}
+
+export function writeStructure(structure: Structure, root = process.cwd()) {
+  const p = path.join(root, STRUCTURE_PATH)
+  fs.mkdirSync(path.dirname(p), { recursive: true })
+  fs.writeFileSync(p, JSON.stringify(structure, null, 2) + '\n')
 }

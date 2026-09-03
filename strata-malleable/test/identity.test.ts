@@ -66,7 +66,65 @@ test('a view root carries the view id; nothing else does', () => {
 
 test('splicing preserves the rest of the file byte for byte', () => {
   const { source } = stampAll(SRC)
-  assert.equal(source.replace(/ data-sid="[^"]*"/g, ''), SRC)
+  assert.equal(source.replace(/ data-(sid|region)="[^"]*"/g, ''), SRC)
+})
+
+/* ---------------- regions and landmarks ---------------- */
+
+const PAGE = `
+import { useState } from 'react'
+export function Page() {
+  return (
+    <div className="page">
+      <TopBar />
+      <main>
+        <Filters />
+      </main>
+      <div role="dialog" aria-modal="true">
+        <p>dialog</p>
+      </div>
+    </div>
+  )
+}
+function TopBar() {
+  return <header className="top">top</header>
+}
+const Frag = () => <><p>a</p></>
+const Wrapped = () => <TopBar />
+function Plain() {
+  return <span>no class, no landmark</span>
+}
+`
+
+test('data-region lands on the root host element of every component, once', () => {
+  const { source, regions } = stamp('Page.tsx', PAGE, false, new Set())
+  assert.deepEqual(regions, ['Page', 'TopBar', 'Plain'])
+  assert.match(source, /<div data-sid="Page.div.page" data-region="Page" className="page">/)
+  assert.match(source, /<header data-sid="TopBar.header.top" data-region="TopBar" className="top">/)
+  assert.match(source, /<span data-region="Plain">/)
+  // A fragment root and a component root have no host element to carry it.
+  assert.ok(!/data-region="Frag"/.test(source))
+  assert.ok(!/data-region="Wrapped"/.test(source))
+  assert.equal(source.match(/data-region=/g)!.length, 3)
+})
+
+test('a landmark is identified without a className; a plain element still is not', () => {
+  const { source, assigned } = stamp('Page.tsx', PAGE, false, new Set())
+  assert.ok(assigned.some((a) => a.nodeId === 'Page.main'))
+  assert.match(source, /<main data-sid="Page.main">/)
+  assert.match(source, /<div data-sid="Page.div" role="dialog"/)
+  assert.ok(!/<span data-sid/.test(source))
+  assert.ok(!/<p data-sid/.test(source))
+})
+
+test('the three attributes land in one order, and stamping twice changes nothing', () => {
+  const once = stamp('Page.tsx', PAGE, true, new Set()).source
+  assert.match(once, /<div data-sid="Page.div.page" data-view="page" data-region="Page" className="page">/)
+  const taken = new Set(scan('Page.tsx', once, true).pinned)
+  const twice = stamp('Page.tsx', once, true, taken)
+  assert.equal(twice.source, once)
+  assert.deepEqual(twice.regions, [])
+  assert.deepEqual(twice.assigned, [])
 })
 
 test('the stylesheet reader accepts only what ship can write back', () => {

@@ -4,6 +4,4 @@ strata.md
 .DS_Store
 *.tsbuildinfo
 .claude/launch.json.bak
-strata-slots/.slots/preview/
-strata-slots/.slots/ready.json
-.slots/
+strata-malleable/.malleable/ready.json

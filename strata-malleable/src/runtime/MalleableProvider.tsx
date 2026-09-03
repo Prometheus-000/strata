@@ -18,7 +18,7 @@ import {
 } from 'react'
 import { applyTheme, type ThemeSeeds } from '../engine/generateTheme'
 import { resolve, effectiveSeeds } from '../resolve/resolve'
-import type { Manifest, NodeAddress, Resolution, Scope, Store, Value } from '../schema'
+import type { Manifest, NodeAddress, Resolution, Scope, Store, Structure, Value } from '../schema'
 import { emptyStore, put, setScope, type ScopeChange } from '../store/store'
 import { compileStyleSheet } from './styleSheet'
 import { stampInstances } from './instancePaths'
@@ -37,6 +37,10 @@ interface MalleableApi {
   reset: () => void
   /** Bumped whenever the DOM is restamped, so overlays reposition. */
   epoch: number
+  /** The page's containers and regions, as last read. What the move gesture names things by. */
+  structure: Structure | null
+  /** Re-read the structure from the dev server — after a move has rewritten source. */
+  refreshStructure: () => Promise<void>
 }
 
 const Ctx = createContext<MalleableApi | null>(null)
@@ -85,16 +89,31 @@ export function MalleableProvider({
   manifest,
   seeds,
   initialStore,
+  structure: initialStructure = null,
   children,
 }: {
   manifest: Manifest
   seeds: ThemeSeeds
   initialStore?: Store
+  /** From `.malleable/structure.json`; refreshed from the dev server after a move. */
+  structure?: Structure | null
   children: ReactNode
 }) {
   const [store, setStore] = useState<Store>(() => load(initialStore ?? emptyStore(seeds)))
   const [epoch, setEpoch] = useState(0)
+  const [structure, setStructure] = useState<Structure | null>(initialStructure)
   const rootRef = useRef<HTMLDivElement>(null)
+
+  const refreshStructure = useCallback(async () => {
+    try {
+      const res = await fetch('/__malleable/structure')
+      if (!res.ok) return
+      const next = (await res.json()) as Structure
+      if (next && next.version === 1) setStructure(next)
+    } catch {
+      /* no dev server — the bundled structure stands */
+    }
+  }, [])
 
   const commit = useCallback((next: Store) => {
     setStore(next)
@@ -121,6 +140,13 @@ export function MalleableProvider({
     mo.observe(rootRef.current, { childList: true, subtree: true })
     return () => mo.disconnect()
   }, [])
+
+  // The DOM changed, so source may have: a move from the terminal, an edit
+  // under HMR. Re-read the structure so the next gesture names things as they
+  // are now, not as they were when the page loaded.
+  useEffect(() => {
+    void refreshStructure()
+  }, [epoch, refreshStructure])
 
   const css = useMemo(() => compileStyleSheet(store, manifest), [store, manifest])
 
@@ -152,8 +178,10 @@ export function MalleableProvider({
         return change
       },
       reset: () => commit(emptyStore(seeds)),
+      structure,
+      refreshStructure,
     }),
-    [store, manifest, active, epoch, baseOf, commit, seeds],
+    [store, manifest, active, epoch, baseOf, commit, seeds, structure, refreshStructure],
   )
 
   return (

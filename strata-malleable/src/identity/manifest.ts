@@ -8,8 +8,11 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import type { Manifest, ManifestNode, Value } from '../schema'
+import ts from 'typescript'
+import type { Manifest, ManifestNode, Structure, Value } from '../schema'
+import { readControls } from '../controls/read'
 import { CSS_TO_PROPERTY } from '../resolve/properties'
+import { readStructureFrom } from '../structure/read'
 import { parseRules, readValue, simpleClass, type Rule } from './css'
 import { scan, stamp } from './codemod'
 
@@ -30,6 +33,7 @@ const isViewFile = (file: string) => file.split(path.sep).includes('views')
 export function assignIdentity(root: string): {
   written: string[]
   assigned: Array<{ file: string; nodeId: string }>
+  regions: Array<{ file: string; component: string }>
   unchanged: number
 } {
   const files = walk(root, /\.tsx$/)
@@ -41,6 +45,7 @@ export function assignIdentity(root: string): {
 
   const written: string[] = []
   const assigned: Array<{ file: string; nodeId: string }> = []
+  const regions: Array<{ file: string; component: string }> = []
   let unchanged = 0
   for (const f of files) {
     const src = fs.readFileSync(f, 'utf8')
@@ -51,8 +56,18 @@ export function assignIdentity(root: string): {
       written.push(f)
     }
     for (const a of res.assigned) assigned.push({ file: f, nodeId: a.nodeId })
+    for (const r of res.regions) regions.push({ file: f, component: r })
   }
-  return { written, assigned, unchanged }
+  return { written, assigned, regions, unchanged }
+}
+
+/** The page's containers and regions, read from the tree as it is now. */
+export function buildStructure(root: string): Structure {
+  const files = walk(root, /\.tsx$/)
+  return readStructureFrom(files, {
+    read: (f) => (fs.existsSync(f) && fs.statSync(f).isFile() ? fs.readFileSync(f, 'utf8') : null),
+    relative: (f) => path.relative(process.cwd(), f),
+  })
 }
 
 /**
@@ -87,11 +102,22 @@ export function buildManifest(root: string): Manifest {
   )
 
   const nodes: ManifestNode[] = []
+  const problems: string[] = []
   for (const file of tsxFiles) {
     const isView = isViewFile(file)
     const rel = path.relative(process.cwd(), file)
-    for (const n of scan(file, fs.readFileSync(file, 'utf8'), isView).nodes) {
+    const text = fs.readFileSync(file, 'utf8')
+    const scanned = scan(file, text, isView)
+    // What each component declared about itself, attached to its root node —
+    // the node the codemod named with data-region.
+    const declared = readControls(
+      ts.createSourceFile(file, text, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TSX),
+      problems,
+    )
+    const rootInsertAt = new Map(scanned.regions.map((r) => [r.insertAt, r.component]))
+    for (const n of scanned.nodes) {
       if (!n.existingId) continue // not yet stamped — run `npm run id` first
+      const controls = declared.get(rootInsertAt.get(n.insertAt) ?? '')
       const primary = n.classes.find((c) => !c.includes('--')) ?? ''
       const base: Record<string, Value> = {}
       const baseFrom: Record<string, { selector: string; file: string }> = {}
@@ -111,11 +137,19 @@ export function buildManifest(root: string): Manifest {
         tag: n.tag,
         classes: n.classes,
         viewId: n.isViewRoot ? kebab(n.component) : undefined,
+        ...(n.landmark ? { landmark: n.landmark } : {}),
+        ...(controls ? { controls } : {}),
         base,
         baseFrom,
       })
+      for (const key of Object.keys(controls?.css ?? {}))
+        if (controls!.css[key] !== false && !base[key])
+          problems.push(
+            `${rel}: ${n.component} declares a ${key} control, but its stylesheet gives the root node no ${key} to move — declare one in CSS first`,
+          )
     }
   }
+  for (const p of problems) console.error(`  ! ${p}`)
 
   return {
     version: 1,

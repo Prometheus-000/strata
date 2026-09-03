@@ -8,6 +8,7 @@
  * This is the "AI-native" contract: an agent (or a human, or a
  * slider) retunes the whole system by emitting a new seed set.
  */
+import { applyLedger, type Ledger } from './ledger'
 
 export interface ThemeSeeds {
   /** Accent hue, 0–360 (OKLCH hue wheel) */
@@ -157,10 +158,18 @@ export function generateTheme(seeds: ThemeSeeds): Record<string, string> {
   return t
 }
 
-/** Apply a seed set to the document root. Respects prefers-reduced-motion. */
-export function applyTheme(seeds: ThemeSeeds, root: HTMLElement = document.documentElement) {
+/**
+ * Apply a seed set to the document root. Respects prefers-reduced-motion, and
+ * the ledger when given one — a cut token collapses here exactly as it does in
+ * the stylesheet, so the Theme Lab never shows a token the build decided against.
+ */
+export function applyTheme(
+  seeds: ThemeSeeds,
+  root: HTMLElement = document.documentElement,
+  ledger?: Ledger,
+) {
   root.dataset.theme = seeds.appearance
-  const tokens = generateTheme(seeds)
+  const tokens = ledger ? applyLedger(generateTheme(seeds), ledger).tokens : generateTheme(seeds)
   const reduced =
     typeof window !== 'undefined' &&
     window.matchMedia?.('(prefers-reduced-motion: reduce)').matches

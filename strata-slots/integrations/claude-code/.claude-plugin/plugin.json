@@ -1,5 +1,0 @@
-{
-  "name": "strata-slots",
-  "description": "Structural design loop: Claude generates screens into a slot grammar, a designer moves features by hand in a live preview, Claude reviews what changed and commits.",
-  "version": "0.1.0"
-}

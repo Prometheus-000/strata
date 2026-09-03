@@ -1,7 +1,7 @@
-# Builds the four surfaces into one static site and publishes it at
+# Builds the three surfaces into one static site and publishes it at
 # https://prometheus-000.github.io/strata/. The write-through endpoints are
-# dev-server only; on the static site the harnesses fall back to localStorage,
-# which is what their providers already do when no server answers.
+# dev-server only; on the static site the harness falls back to localStorage,
+# which is what its provider already does when no server answers.
 name: pages
 on:
   push:

@@ -10,7 +10,7 @@ import { Card } from '../recipes/Card'
 
 export function Settings() {
   return (
-    <section data-sid="Settings.section.settings" data-view="settings" className="settings">
+    <section data-region="Settings" data-sid="Settings.section.settings" data-view="settings" className="settings">
       <header data-sid="Settings.header.settings__head" className="settings__head">
         <h2 data-sid="Settings.h2.settings__title" className="settings__title">Workspace</h2>
         <Badge tone="neutral">two cards</Badge>

@@ -4,8 +4,12 @@
     "fixtures/app/recipes/Badge.tsx",
     "fixtures/app/recipes/Button.tsx",
     "fixtures/app/recipes/Card.tsx",
+    "fixtures/app/views/Filters.tsx",
     "fixtures/app/views/Gallery.tsx",
+    "fixtures/app/views/Page.tsx",
+    "fixtures/app/views/PublishDialog.tsx",
     "fixtures/app/views/Settings.tsx",
+    "fixtures/app/views/TopBar.tsx",
     "fixtures/app/recipes/recipes.css",
     "fixtures/app/views/views.css"
   ],
@@ -20,6 +24,31 @@
         "st-badge",
         "st-badge--"
       ],
+      "controls": {
+        "css": {
+          "radius": {
+            "range": [
+              0,
+              24
+            ],
+            "snap": [
+              "--radius-pill",
+              "--radius-interactive",
+              "--strata-radius-1"
+            ]
+          }
+        },
+        "props": {
+          "tone": {
+            "kind": "options",
+            "options": [
+              "neutral",
+              "accent",
+              "positive"
+            ]
+          }
+        }
+      },
       "base": {
         "radius": {
           "token": "--radius-pill"
@@ -49,6 +78,21 @@
         "st-button",
         "st-button--"
       ],
+      "controls": {
+        "css": {
+          "padding": false
+        },
+        "props": {
+          "variant": {
+            "kind": "options",
+            "options": [
+              "primary",
+              "secondary",
+              "ghost"
+            ]
+          }
+        }
+      },
       "base": {
         "radius": {
           "token": "--radius-interactive"
@@ -77,6 +121,35 @@
       "classes": [
         "st-card"
       ],
+      "controls": {
+        "css": {
+          "radius": {
+            "range": [
+              4,
+              40
+            ],
+            "snap": [
+              "--radius-interactive",
+              "--radius-surface",
+              "--radius-overlay"
+            ]
+          }
+        },
+        "props": {
+          "interactive": {
+            "kind": "toggle",
+            "default": false
+          },
+          "lines": {
+            "kind": "number",
+            "range": [
+              1,
+              6
+            ],
+            "step": 1
+          }
+        }
+      },
       "base": {
         "radius": {
           "token": "--radius-surface"
@@ -182,6 +255,50 @@
       }
     },
     {
+      "nodeId": "Filters.form.filters",
+      "file": "fixtures/app/views/Filters.tsx",
+      "component": "Filters",
+      "layer": "local",
+      "tag": "form",
+      "classes": [
+        "filters"
+      ],
+      "viewId": "filters",
+      "landmark": "search",
+      "base": {
+        "gap": {
+          "token": "--strata-space-3"
+        }
+      },
+      "baseFrom": {
+        "gap": {
+          "selector": ".filters",
+          "file": "fixtures/app/views/views.css"
+        }
+      }
+    },
+    {
+      "nodeId": "Filters.input.filters__input",
+      "file": "fixtures/app/views/Filters.tsx",
+      "component": "Filters",
+      "layer": "local",
+      "tag": "input",
+      "classes": [
+        "filters__input"
+      ],
+      "base": {
+        "radius": {
+          "token": "--radius-interactive"
+        }
+      },
+      "baseFrom": {
+        "radius": {
+          "selector": ".filters__input",
+          "file": "fixtures/app/views/views.css"
+        }
+      }
+    },
+    {
       "nodeId": "Gallery.section.gallery",
       "file": "fixtures/app/views/Gallery.tsx",
       "component": "Gallery",
@@ -212,6 +329,7 @@
       "classes": [
         "gallery__head"
       ],
+      "landmark": "banner",
       "base": {
         "gap": {
           "token": "--strata-space-3"
@@ -258,6 +376,204 @@
       }
     },
     {
+      "nodeId": "Notes.div.notes",
+      "file": "fixtures/app/views/Page.tsx",
+      "component": "Notes",
+      "layer": "local",
+      "tag": "div",
+      "classes": [
+        "notes"
+      ],
+      "viewId": "notes",
+      "base": {
+        "gap": {
+          "token": "--strata-space-3"
+        }
+      },
+      "baseFrom": {
+        "gap": {
+          "selector": ".notes",
+          "file": "fixtures/app/views/views.css"
+        }
+      }
+    },
+    {
+      "nodeId": "Notes.h3.notes__title",
+      "file": "fixtures/app/views/Page.tsx",
+      "component": "Notes",
+      "layer": "local",
+      "tag": "h3",
+      "classes": [
+        "notes__title"
+      ],
+      "base": {},
+      "baseFrom": {}
+    },
+    {
+      "nodeId": "Notes.p.notes__body",
+      "file": "fixtures/app/views/Page.tsx",
+      "component": "Notes",
+      "layer": "local",
+      "tag": "p",
+      "classes": [
+        "notes__body"
+      ],
+      "base": {},
+      "baseFrom": {}
+    },
+    {
+      "nodeId": "Page.div.page",
+      "file": "fixtures/app/views/Page.tsx",
+      "component": "Page",
+      "layer": "local",
+      "tag": "div",
+      "classes": [
+        "page"
+      ],
+      "viewId": "page",
+      "base": {},
+      "baseFrom": {}
+    },
+    {
+      "nodeId": "Page.main.page__main",
+      "file": "fixtures/app/views/Page.tsx",
+      "component": "Page",
+      "layer": "local",
+      "tag": "main",
+      "classes": [
+        "page__main"
+      ],
+      "landmark": "main",
+      "base": {
+        "gap": {
+          "token": "--strata-space-8"
+        }
+      },
+      "baseFrom": {
+        "gap": {
+          "selector": ".page__main",
+          "file": "fixtures/app/views/views.css"
+        }
+      }
+    },
+    {
+      "nodeId": "Page.aside.page__aside",
+      "file": "fixtures/app/views/Page.tsx",
+      "component": "Page",
+      "layer": "local",
+      "tag": "aside",
+      "classes": [
+        "page__aside"
+      ],
+      "landmark": "complementary",
+      "base": {
+        "gap": {
+          "token": "--strata-space-6"
+        }
+      },
+      "baseFrom": {
+        "gap": {
+          "selector": ".page__aside",
+          "file": "fixtures/app/views/views.css"
+        }
+      }
+    },
+    {
+      "nodeId": "Page.footer.page__foot",
+      "file": "fixtures/app/views/Page.tsx",
+      "component": "Page",
+      "layer": "local",
+      "tag": "footer",
+      "classes": [
+        "page__foot"
+      ],
+      "landmark": "contentinfo",
+      "base": {},
+      "baseFrom": {}
+    },
+    {
+      "nodeId": "Page.span.page__note",
+      "file": "fixtures/app/views/Page.tsx",
+      "component": "Page",
+      "layer": "local",
+      "tag": "span",
+      "classes": [
+        "page__note"
+      ],
+      "base": {},
+      "baseFrom": {}
+    },
+    {
+      "nodeId": "PublishDialog.div.publish",
+      "file": "fixtures/app/views/PublishDialog.tsx",
+      "component": "PublishDialog",
+      "layer": "local",
+      "tag": "div",
+      "classes": [
+        "publish"
+      ],
+      "viewId": "publish-dialog",
+      "base": {
+        "gap": {
+          "token": "--strata-space-3"
+        }
+      },
+      "baseFrom": {
+        "gap": {
+          "selector": ".publish",
+          "file": "fixtures/app/views/views.css"
+        }
+      }
+    },
+    {
+      "nodeId": "PublishDialog.div.publish__dialog",
+      "file": "fixtures/app/views/PublishDialog.tsx",
+      "component": "PublishDialog",
+      "layer": "local",
+      "tag": "div",
+      "classes": [
+        "publish__dialog"
+      ],
+      "landmark": "dialog",
+      "base": {
+        "radius": {
+          "token": "--radius-surface"
+        },
+        "padding": {
+          "token": "--surface-pad"
+        },
+        "gap": {
+          "token": "--strata-space-3"
+        }
+      },
+      "baseFrom": {
+        "radius": {
+          "selector": ".publish__dialog",
+          "file": "fixtures/app/views/views.css"
+        },
+        "padding": {
+          "selector": ".publish__dialog",
+          "file": "fixtures/app/views/views.css"
+        },
+        "gap": {
+          "selector": ".publish__dialog",
+          "file": "fixtures/app/views/views.css"
+        }
+      }
+    },
+    {
+      "nodeId": "PublishDialog.p.publish__body",
+      "file": "fixtures/app/views/PublishDialog.tsx",
+      "component": "PublishDialog",
+      "layer": "local",
+      "tag": "p",
+      "classes": [
+        "publish__body"
+      ],
+      "base": {},
+      "baseFrom": {}
+    },
+    {
       "nodeId": "Settings.section.settings",
       "file": "fixtures/app/views/Settings.tsx",
       "component": "Settings",
@@ -288,6 +604,7 @@
       "classes": [
         "settings__head"
       ],
+      "landmark": "banner",
       "base": {
         "gap": {
           "token": "--strata-space-3"
@@ -332,6 +649,87 @@
           "file": "fixtures/app/views/views.css"
         }
       }
+    },
+    {
+      "nodeId": "TopBar.header.topbar",
+      "file": "fixtures/app/views/TopBar.tsx",
+      "component": "TopBar",
+      "layer": "local",
+      "tag": "header",
+      "classes": [
+        "topbar"
+      ],
+      "viewId": "top-bar",
+      "landmark": "banner",
+      "base": {
+        "gap": {
+          "token": "--strata-space-4"
+        }
+      },
+      "baseFrom": {
+        "gap": {
+          "selector": ".topbar",
+          "file": "fixtures/app/views/views.css"
+        }
+      }
+    },
+    {
+      "nodeId": "TopBar.a.topbar__logo",
+      "file": "fixtures/app/views/TopBar.tsx",
+      "component": "TopBar",
+      "layer": "local",
+      "tag": "a",
+      "classes": [
+        "topbar__logo"
+      ],
+      "base": {},
+      "baseFrom": {}
+    },
+    {
+      "nodeId": "TopBar.nav.topbar__nav",
+      "file": "fixtures/app/views/TopBar.tsx",
+      "component": "TopBar",
+      "layer": "local",
+      "tag": "nav",
+      "classes": [
+        "topbar__nav"
+      ],
+      "landmark": "navigation",
+      "base": {
+        "gap": {
+          "token": "--strata-space-4"
+        }
+      },
+      "baseFrom": {
+        "gap": {
+          "selector": ".topbar__nav",
+          "file": "fixtures/app/views/views.css"
+        }
+      }
+    },
+    {
+      "nodeId": "TopBar.a.topbar__link",
+      "file": "fixtures/app/views/TopBar.tsx",
+      "component": "TopBar",
+      "layer": "local",
+      "tag": "a",
+      "classes": [
+        "topbar__link"
+      ],
+      "base": {},
+      "baseFrom": {}
+    },
+    {
+      "nodeId": "TopBar.a.topbar__link#2",
+      "file": "fixtures/app/views/TopBar.tsx",
+      "component": "TopBar",
+      "layer": "local",
+      "tag": "a",
+      "classes": [
+        "topbar__link"
+      ],
+      "base": {},
+      "baseFrom": {}
     }
   ]
 }

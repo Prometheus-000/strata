@@ -1,0 +1,6 @@
+{
+  "name": "strata-malleable",
+  "version": "0.2.0",
+  "description": "Strata's malleable layer for Claude Code: generate pages whose regions can be moved and whose properties can be dragged, and review the designer's handoff by adapting code to the design.",
+  "author": { "name": "Strata" }
+}

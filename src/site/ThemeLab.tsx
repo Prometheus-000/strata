@@ -1,6 +1,15 @@
 import { useMemo, useRef, useState } from 'react'
 import { generateTheme, PRESETS, type ThemeSeeds } from '../theme/generateTheme'
+import { themeTokens, type Ledger } from '../theme/ledger'
+import LEDGER from '../theme/ledger.json'
 import { hashFromSeeds, useTheme } from '../theme/ThemeContext'
+
+/**
+ * The engine's output with the ledger applied, resolved to values. The page
+ * is styled through `applyTheme`, which collapses cut tokens the same way; a
+ * receipt computed from the raw engine would describe a theme nobody is seeing.
+ */
+const compiled = (seeds: ThemeSeeds) => themeTokens(generateTheme(seeds), LEDGER as Ledger, 'value')
 import { compilePrompt, type Receipt } from '../theme/compilePrompt'
 import { seedsFromImage } from '../theme/imageSeeds'
 import { contrastRatio } from '../theme/color'
@@ -104,7 +113,7 @@ export function ThemeLab() {
     [hashFromSeeds(seeds), temperature, wanderTick],
   )
 
-  const t = useMemo(() => generateTheme(seeds), [seeds])
+  const t = useMemo(() => compiled(seeds), [seeds])
 
   const contrastRows = [
     { pair: 'ink on page', a: t['--ink'], b: t['--surface-page'] },
@@ -215,7 +224,7 @@ export function ThemeLab() {
           </div>
           <div className="lab-wander__grid">
             {neighbors.map((n, i) => {
-              const nt = generateTheme(n)
+              const nt = compiled(n)
               return (
                 <button
                   key={i}
@@ -244,7 +253,7 @@ export function ThemeLab() {
                   onClick={() => setSeeds(k.seeds)}
                   title={k.label}
                 >
-                  <span className="lab-keeper__dot" style={{ background: generateTheme(k.seeds)['--accent'] }} />
+                  <span className="lab-keeper__dot" style={{ background: compiled(k.seeds)['--accent'] }} />
                   {k.label.length > 22 ? k.label.slice(0, 22) + '…' : k.label}
                 </button>
               ))}

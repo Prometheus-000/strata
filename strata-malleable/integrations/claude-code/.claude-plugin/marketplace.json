@@ -1,0 +1,11 @@
+{
+  "name": "strata",
+  "owner": { "name": "Strata" },
+  "plugins": [
+    {
+      "name": "strata-malleable",
+      "source": "./",
+      "description": "Generate movable pages, review a designer's moves, and adapt the code to the design."
+    }
+  ]
+}

@@ -1,7 +1,9 @@
 /* ============================================================
    STRATA · TIER 2 — SEMANTIC ROLES · GENERATED FILE
    Do not edit. This file is a projection of src/theme/generateTheme.ts
-   compiled from the Obsidian (dark) and Gallery (light) seed sets.
+   compiled from the Obsidian (dark) and Gallery (light) seed sets,
+   through the decisions in src/theme/ledger.json — a cut token is
+   emitted as its fallback, with the decision beside it.
    Regenerate with: npm run tokens
    ============================================================ */
 
