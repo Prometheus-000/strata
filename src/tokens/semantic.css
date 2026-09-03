@@ -77,20 +77,17 @@
   --radius-surface: 0.759rem;
   --radius-overlay: var(--radius-surface); /* cut by human prometheus-000: Two radii, not three: a control and a panel. The engine gave overlays 2.4× the control radius, which at calm energy is a 19px dialog — the one soft shape on an otherwise architectural page. An overlay is a panel; it rounds like one. */
 
-  /* ---- Static roles (not seed-derived) ---- */
-  --radius-pill: var(--strata-radius-round);
-
+  /* ---- Roles the engine holds against a Tier 1 primitive ---- */
   --control-h-sm: calc(2rem * var(--density));
   --control-h-md: calc(2.5rem * var(--density));
   --control-h-lg: calc(3rem * var(--density));
   --control-pad-x: calc(var(--strata-space-4) * var(--density));
   --surface-pad: calc(var(--strata-space-5) * var(--density));
   --stack-gap: calc(var(--strata-space-4) * var(--density));
-
+  --radius-pill: var(--strata-radius-round);
   --font-display: var(--strata-font-display);
   --font-body: var(--strata-font-body);
   --font-mono: var(--strata-font-mono);
-
   --shadow-raised: var(--strata-shadow-1) var(--shadow-color);
   --shadow-floating: var(--strata-shadow-2) var(--shadow-color);
   --shadow-overlay: var(--strata-shadow-3) var(--shadow-color);

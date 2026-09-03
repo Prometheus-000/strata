@@ -100,7 +100,26 @@ export const FALLBACKS: Record<string, Fallback> = {
   '--motion-ease-emphasis': t('--motion-ease', 'An emphasis curve without its own personality is the ordinary curve.'),
   '--motion-ease': t('ease', 'The user agent’s default curve.'),
 
+  /* rhythm: a role that scales a primitive with density collapses to the primitive, unscaled */
+  '--control-h-sm': t('2rem', 'A small control without its own role is the height it was scaling; density stops reaching it.'),
+  '--control-h-md': t('2.5rem', 'As the small one. This is the ordinary control, so its floor is the ordinary height.'),
+  '--control-h-lg': t('3rem', 'As the small one.'),
+  '--control-pad-x': t('var(--strata-space-4)', 'The primitive it was multiplying. A control still has padding; it stops answering the density dial.'),
+  '--surface-pad': t('var(--strata-space-5)', 'As control-pad-x.'),
+  '--stack-gap': t('var(--strata-space-4)', 'As control-pad-x. A stack still has a gap.'),
+
+  /* type: a face that is not distinguished is the body face, and mono stays mono */
+  '--font-display': t('--font-body', 'One family is the house rule anyway; a display face that is not distinguished is the body face.'),
+  '--font-body': t('var(--strata-font-body)', 'The primitive stack. Below it there is only the user agent.'),
+  '--font-mono': t('monospace', 'A mono role must stay mono — a tabular number set in the body face is a bug, not a preference. The generic family is the honest floor.'),
+
+  /* elevation: each level falls to the one below, ending at nothing */
+  '--shadow-overlay': t('--shadow-floating', 'An overlay without its own elevation sits at the floating one.'),
+  '--shadow-floating': t('--shadow-raised', 'Floating falls to raised.'),
+  '--shadow-raised': t('none', 'No shadow. Which is already what this repo decided by cutting --shadow-color; this is the floor if the recipe is cut too.'),
+
   /* rhythm and shape */
+  '--radius-pill': t('var(--strata-radius-round)', 'The primitive. A pill is a shape decision the primitive already holds.'),
   '--density': t('1', 'Unit density: every control and gap at its declared size.'),
   '--radius-overlay': t('--radius-surface', 'An overlay without its own radius rounds like a surface.'),
   '--radius-surface': t('--radius-interactive', 'A surface without its own radius rounds like a control.'),

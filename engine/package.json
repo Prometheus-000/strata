@@ -1,0 +1,11 @@
+{
+  "name": "@strata/engine",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The semantic compiler — a theme is six numbers, and every semantic role is derived from them. One module, imported by every consumer; a vendored copy is a second author.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  }
+}

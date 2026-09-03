@@ -26,13 +26,13 @@ export const AUTHORITIES: readonly Authority[] = ['invariant', 'policy', 'prefer
  * replaced. The distinction is not decoration: a reader who cannot tell them
  * apart reads this product's preference for two radii as the system's law.
  */
-export type Scope = 'system' | 'product'
+export type RuleScope = 'system' | 'product'
 
 export interface Rule {
   id: string
   authority: Exclude<Authority, 'precedent'>
   /** Defaults to `system` — a rule says so when it is only this product's. */
-  scope?: Scope
+  scope?: RuleScope
   statement: string
   reason: string
   incident?: string
@@ -51,7 +51,7 @@ export interface Rule {
 /** A rule nothing can evaluate — stated, so silence is never mistaken for a pass. */
 export const isCitedOnly = (r: Rule) => r.check === undefined || r.check === 'none'
 
-export const scopeOf = (r: Rule): Scope => r.scope ?? 'system'
+export const scopeOf = (r: Rule): RuleScope => r.scope ?? 'system'
 
 export const RULES_PATH = 'grammar/rules.json'
 
@@ -85,7 +85,7 @@ export const rulesFor = (rules: readonly Rule[], ids: readonly string[]): Rule[]
 
 export const byAuthority = (rules: readonly Rule[], authority: Authority): Rule[] => rules.filter((r) => r.authority === authority)
 
-export const byScope = (rules: readonly Rule[], scope: Scope): Rule[] => rules.filter((r) => scopeOf(r) === scope)
+export const byScope = (rules: readonly Rule[], scope: RuleScope): Rule[] => rules.filter((r) => scopeOf(r) === scope)
 
 /** A preference's number, or the default when the grammar does not say. */
 export function preference<T>(rules: readonly Rule[], id: string, fallback: T): T {

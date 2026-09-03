@@ -21,6 +21,7 @@ import { FALLBACKS, type Ledger, type TokenDecision, type TokenStatus } from './
 import { emitTokens, readLedger, writeLedger, LEDGER_PATH } from './emit'
 import { registerState } from '@strata/substrate/skills'
 import { consumers, registerThemeEvaluators } from './evaluators'
+import { registerGrammarEvaluators } from './grammar'
 
 export type TokenRequest = Request & { kind: 'token'; token: string; action: 'propose' | 'keep' | 'cut' }
 export type DeviationRequest = Request & { kind: 'deviation'; file: string; line: number; value?: string }
@@ -35,6 +36,7 @@ export function registerTheme(home: { root: string }): void {
   registerHandler<DeviationRequest>('deviation', (req, ctx) => deviationHandler(req, ctx, home.root))
   registerProjection({ name: LEDGER_PATH, import: importLedger, project: projectTheme })
   registerThemeEvaluators(home)
+  registerGrammarEvaluators(home)
   registerState('tokens', () => {
     const ledger = readLedger(home.root)
     return Object.keys(generateTheme(OBSIDIAN))

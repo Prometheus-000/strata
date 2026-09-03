@@ -9,12 +9,19 @@ import { emptyStore, put, setScope } from '../src/store/store'
 import { ship, rewriteSeedConstant, FROZEN_PATH, SEEDS_SOURCE } from '../src/ship/collapse'
 import type { NodeAddress, Store } from '../src/schema'
 
-/** A throwaway copy of the tree, so ship can write for real and be read back. */
+/**
+ * A throwaway copy of the tree, so ship can write for real and be read back.
+ * The engine sits *beside* the package, as it does in the workspace: one
+ * module, imported by both consumers, and the only place the seeds are
+ * declared.
+ */
 function sandbox(): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'malleable-'))
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'malleable-'))
+  const dir = path.join(tmp, 'lib')
+  fs.mkdirSync(dir)
   fs.cpSync('fixtures', path.join(dir, 'fixtures'), { recursive: true })
-  fs.mkdirSync(path.join(dir, 'src/engine'), { recursive: true })
-  fs.cpSync(SEEDS_SOURCE, path.join(dir, SEEDS_SOURCE))
+  fs.mkdirSync(path.join(tmp, 'engine/src'), { recursive: true })
+  fs.cpSync(path.join('..', 'engine/src/generateTheme.ts'), path.join(dir, SEEDS_SOURCE))
   return dir
 }
 

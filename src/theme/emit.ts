@@ -15,7 +15,7 @@
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { generateTheme, OBSIDIAN, PRESETS, type ThemeSeeds } from './generateTheme'
+import { generateTheme, OBSIDIAN, PRESETS, ROLES_AGAINST_PRIMITIVES, SEED_RANGE, type ThemeSeeds } from './generateTheme'
 import { applyLedger, emptyLedger, FALLBACKS, reconcileLedger, summarise, type Ledger, type TokenStatus } from './ledger'
 import { handText, type Hand } from '@strata/substrate/decision'
 
@@ -48,8 +48,15 @@ export function emitTokens(root: string, opts: { dryRun?: boolean; ledger?: Ledg
   const DARK = OBSIDIAN
   const LIGHT = PRESETS.Gallery
 
+  // These used to be written out here by hand, which made the emitter a second
+  // author of ten semantic roles: they had no origin in the engine, no line in
+  // the ledger, and no way to be cut, kept or explained. They are the engine's
+  // now, and this only decides where they sit in the file.
+  const againstPrimitive = (prop: string) => ROLES_AGAINST_PRIMITIVES.includes(prop)
+
+  // `--surface-pad` is not a colour, whatever its prefix says.
   const isColor = (prop: string) =>
-    /^--(surface|ink|accent|line|focus|positive|warning|danger|shadow-color)/.test(prop)
+    !againstPrimitive(prop) && /^--(surface|ink|accent|line|focus|positive|warning|danger|shadow-color)/.test(prop)
 
   /* ---- the ledger: reconcile, never edit a decision ---- */
   const engineTokens = Object.keys(generateTheme(DARK))
@@ -94,25 +101,10 @@ ${block(light.tokens, isColor)}
 
 :root {
   /* ---- Engine-derived rhythm, motion, shape (Obsidian defaults) ---- */
-${block(dark.tokens, (p) => !isColor(p))}
+${block(dark.tokens, (p) => !isColor(p) && !againstPrimitive(p))}
 
-  /* ---- Static roles (not seed-derived) ---- */
-  --radius-pill: var(--strata-radius-round);
-
-  --control-h-sm: calc(2rem * var(--density));
-  --control-h-md: calc(2.5rem * var(--density));
-  --control-h-lg: calc(3rem * var(--density));
-  --control-pad-x: calc(var(--strata-space-4) * var(--density));
-  --surface-pad: calc(var(--strata-space-5) * var(--density));
-  --stack-gap: calc(var(--strata-space-4) * var(--density));
-
-  --font-display: var(--strata-font-display);
-  --font-body: var(--strata-font-body);
-  --font-mono: var(--strata-font-mono);
-
-  --shadow-raised: var(--strata-shadow-1) var(--shadow-color);
-  --shadow-floating: var(--strata-shadow-2) var(--shadow-color);
-  --shadow-overlay: var(--strata-shadow-3) var(--shadow-color);
+  /* ---- Roles the engine holds against a Tier 1 primitive ---- */
+${block(dark.tokens, againstPrimitive)}
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -168,7 +160,7 @@ ${block(dark.tokens, (p) => !isColor(p))}
         $description:
           'The single source of the semantic tier. generateTheme(seeds) derives every color, radius, rhythm and easing in OKLCH. Ranges are clamped by the engine.',
         seeds: {
-          $ranges: { hue: [0, 360], chroma: [0, 0.25], warmth: [-1, 1], energy: [0, 1], density: [0.85, 1.15] },
+          $ranges: SEED_RANGE,
           $reasons: {
             hue: 'Accent hue on the OKLCH wheel — perceptually uniform, so any hue yields the same apparent vividness.',
             chroma: 'Muted ↔ electric. 0 is monochrome — the house default — and a monochrome accent compiles to ink, not grey. Light appearances compile at 0.87× and lower lightness to hold AA contrast.',

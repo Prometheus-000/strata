@@ -102,7 +102,12 @@ test('the ledger imports onto the record once and rebuilds from it byte for byte
   assert.deepEqual(check.changed, [LEDGER_PATH, SEMANTIC_PATH, TOKENS_PATH], 'the ledger gains ids; the projections did not exist yet')
   rebuild(dir)
   const ledger = readLedger(dir)
-  assert.ok(Object.values(ledger.tokens).every((l) => l.id && imported.some((d) => d.id === l.id)))
+  // Every *decided* line points at the decision that set it. The ten roles the
+  // engine holds against a primitive arrived unreviewed, so they are proposals
+  // with no decision to point at, which is what a proposal is.
+  const decided = Object.values(ledger.tokens).filter((l) => l.status !== 'proposed')
+  assert.equal(decided.length, 34)
+  assert.ok(decided.every((l) => l.id && imported.some((d) => d.id === l.id)))
   assert.deepEqual(rebuild(dir, { dryRun: true }).changed, [])
   assert.equal(fs.readFileSync(path.join(dir, SEMANTIC_PATH), 'utf8'), fs.readFileSync(path.join(REPO, SEMANTIC_PATH), 'utf8'), 'the same record projects the same stylesheet')
 
@@ -123,7 +128,7 @@ test('the theme evaluators: invariants hold on this repo, a raw colour is a poli
   const r = runCheck(dir)
   assert.deepEqual(r.invariants.map((i) => [i.rule, i.ok]), [['record.parses', true], ['projections.match-record', true], ['fallbacks.total-acyclic', true], ['css.vars-defined', false]])
   assert.match(r.invariants[3].findings[0].message, /var\(--nope\) names a custom property nothing defines/)
-  const policy = r.findings.filter((f) => f.authority === 'policy')
+  const policy = r.findings.filter((f) => f.rule === 'layer0.semantic-names-only')
   assert.equal(policy.length, 1, 'the declared one is not a violation')
   assert.match(policy[0].message, /strata deviate src\/site\/site\.css:1 --why/)
   assert.ok(r.findings.some((f) => f.rule === 'deviation.declared' && /wheel/.test(f.message)))
@@ -145,4 +150,16 @@ test('the theme evaluators: invariants hold on this repo, a raw colour is a poli
   registerTheme({ root: REPO })
   const real = runCheck(REPO)
   assert.deepEqual(real.invariants.filter((i) => !i.ok && i.rule !== 'projections.match-record').map((i) => i.rule), [], 'the real repo holds every invariant this projection can speak for')
+
+  // One engine, imported by both consumers. This is the rule that was cited
+  // and unevaluated while a vendored copy sat 134 diff lines away from it.
+  assert.deepEqual(real.findings.filter((f) => f.rule === 'layer0.engine-only-author'), [])
+  assert.deepEqual(real.findings.filter((f) => f.rule === 'layer1.reduced-motion-both-layers'), [])
+  assert.deepEqual(real.findings.filter((f) => f.rule === 'voice.two-radii'), [], 'two radius scales are live; the third is cut')
+  // And the rules nothing can speak for are counted rather than passed over.
+  assert.ok(real.cited.length > 0)
+  // Cited means one of two things, and both are said out loud: the rule names
+  // no evaluator, or it names one nothing here registered.
+  assert.ok(real.cited.every((r) => r.check === 'none' || !r.check), 'every cited rule says so, rather than naming an evaluator that never ran')
+  assert.ok(!real.cited.some((r) => r.id === 'layer0.engine-only-author'), 'a rule with an evaluator is not cited-only')
 })

@@ -442,6 +442,45 @@
       },
       "reason": "Two radii, not three: a control and a panel. The engine gave overlays 2.4× the control radius, which at calm energy is a 19px dialog — the one soft shape on an otherwise architectural page. An overlay is a panel; it rounds like one.",
       "id": "d0mtlvzac0-ed0m"
+    },
+    "--control-h-sm": {
+      "status": "proposed"
+    },
+    "--control-h-md": {
+      "status": "proposed"
+    },
+    "--control-h-lg": {
+      "status": "proposed"
+    },
+    "--control-pad-x": {
+      "status": "proposed"
+    },
+    "--surface-pad": {
+      "status": "proposed"
+    },
+    "--stack-gap": {
+      "status": "proposed"
+    },
+    "--radius-pill": {
+      "status": "proposed"
+    },
+    "--font-display": {
+      "status": "proposed"
+    },
+    "--font-body": {
+      "status": "proposed"
+    },
+    "--font-mono": {
+      "status": "proposed"
+    },
+    "--shadow-raised": {
+      "status": "proposed"
+    },
+    "--shadow-floating": {
+      "status": "proposed"
+    },
+    "--shadow-overlay": {
+      "status": "proposed"
     }
   }
 }

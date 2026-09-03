@@ -25,11 +25,23 @@ import type { Manifest, Override, Store } from '../schema'
 import { driftReport, formatDrift } from './drift'
 
 export const FROZEN_PATH = 'fixtures/app/frozen.css'
-export const SEEDS_SOURCE = 'src/engine/generateTheme.ts'
+/**
+ * Where the seed constant lives, relative to the app root ship is given.
+ *
+ * A system promotion does not write a token — it moves a seed, and the seeds
+ * are declared once, in the engine module both this layer and its host
+ * import. That module is `@strata/engine`, which sits beside this package in
+ * the workspace; a product that installs the library from a registry passes
+ * `seedsSource` pointing at wherever it declares its own seeds, because a
+ * dependency's source is not a place to write.
+ */
+export const SEEDS_SOURCE = '../engine/src/generateTheme.ts'
 
 export interface ShipOptions {
   dryRun?: boolean
   root?: string
+  /** Overrides SEEDS_SOURCE — see there for why a host may need to. */
+  seedsSource?: string
 }
 
 export interface ShipResult {
@@ -54,15 +66,15 @@ export function ship(store: Store, manifest: Manifest, opts: ShipOptions = {}): 
   let seeds = store.seeds
   if (report.promoted.system.length) {
     seeds = effectiveSeeds(store.seeds, store.overrides)
-    const p = path.join(root, SEEDS_SOURCE)
+    const p = path.join(root, opts.seedsSource ?? SEEDS_SOURCE)
     const src = fs.readFileSync(p, 'utf8')
     const next = rewriteSeedConstant(src, 'OBSIDIAN', seeds)
-    if (next === src) refusals.push(`could not find the OBSIDIAN seed constant in ${SEEDS_SOURCE}`)
+    if (next === src) refusals.push(`could not find the OBSIDIAN seed constant in ${opts.seedsSource ?? SEEDS_SOURCE}`)
     else {
       if (!dry) fs.writeFileSync(p, next)
       for (const o of report.promoted.system)
         edits.push({
-          file: SEEDS_SOURCE,
+          file: opts.seedsSource ?? SEEDS_SOURCE,
           what: `seed ${o.target.selector} → ${'literal' in o.value ? o.value.literal : ''} (from ${o.property})`,
         })
     }
