@@ -5,7 +5,6 @@ import path from 'node:path'
 import { test } from 'node:test'
 import { applyMove } from '../src/structure/apply'
 import { planMove } from '../src/structure/move'
-import { readReceipt } from '../src/structure/receipt'
 import { readStructureFrom } from '../src/structure/read'
 import type { MoveRequest } from '../src/schema'
 
@@ -346,7 +345,7 @@ test('every original line of both files survives a move; stamps travel inside th
 
 /* ---------------- on disk ---------------- */
 
-test('applyMove writes only the files that changed, appends the receipt, and a dry run writes nothing', () => {
+test('applyMove writes only the files that changed, and a dry run writes nothing', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'malleable-move-'))
   for (const [f, t] of Object.entries(PAGES())) {
     fs.mkdirSync(path.dirname(path.join(dir, 'app', f)), { recursive: true })
@@ -365,22 +364,17 @@ test('applyMove writes only the files that changed, appends the receipt, and a d
     assert.ok(real.ok)
     assert.deepEqual(real.written.sort(), ['app/views/Page.tsx', 'app/views/TopBar.tsx'])
     assert.equal(fs.readFileSync(path.join(dir, 'app/views/Gallery.tsx'), 'utf8'), GALLERY)
-    const receipt = readReceipt(dir)
-    assert.equal(receipt.moves.length, 1)
-    assert.equal(receipt.moves[0].by, 'agent')
-    assert.equal(receipt.moves[0].what, 'Filters')
+    assert.deepEqual([real.record.by, real.record.what], ['agent', 'Filters'])
 
     const again = applyMove('app', { what: from(NAV, 'Filters'), to: { container: NAV, end: true } }, 'agent', 'now', { root: dir })
     assert.ok(again.ok && again.unchanged)
     assert.deepEqual(again.written, [])
-    assert.equal(readReceipt(dir).moves.length, 1)
 
-    // Moving it back restores both files and is a change of mind, not a second move.
+    // Moving it back restores both files byte for byte.
     const back = applyMove('app', { what: from(NAV, 'Filters'), to: { container: PMAIN, before: at('Gallery') } }, 'agent', 'now', { root: dir })
     assert.ok(back.ok && !back.unchanged)
     assert.equal(fs.readFileSync(path.join(dir, 'app/views/Page.tsx'), 'utf8'), PAGE)
     assert.equal(fs.readFileSync(path.join(dir, 'app/views/TopBar.tsx'), 'utf8'), TOPBAR)
-    assert.deepEqual(readReceipt(dir).moves, [])
   } finally {
     process.chdir(cwd)
   }

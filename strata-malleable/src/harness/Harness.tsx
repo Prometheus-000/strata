@@ -11,7 +11,7 @@ import { useMemo, useState } from 'react'
 import { Page } from '../../fixtures/app/views/Page'
 import { OBSIDIAN } from '../engine/generateTheme'
 import { Overlay } from '../manipulate/Overlay'
-import { MalleableProvider, useMalleable } from '../runtime/MalleableProvider'
+import { decideFromOverlay, MalleableProvider, useMalleable } from '../runtime/MalleableProvider'
 import { driftReport } from '../ship/drift'
 import manifestJson from '../../.malleable/manifest.json'
 import storeJson from '../../.malleable/overrides.json'
@@ -41,17 +41,12 @@ function Chrome({ enabled, onToggle }: { enabled: boolean; onToggle: (v: boolean
   const { store, manifest, seeds, reset } = useMalleable()
   const report = useMemo(() => driftReport(store, manifest), [store, manifest])
   const [ready, setReady] = useState<string | null>(null)
-  // "Ready" commits nothing. The moves are already in source; this stamps the
-  // receipt and starts the review.
+  // "Ready" commits nothing. The moves are already in source; this records
+  // the handoff as a decision and starts the review.
   const handOff = async () => {
     try {
-      const res = await fetch('/__malleable/ready', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ by: 'human', at: new Date().toISOString() }),
-      })
-      const r = (await res.json()) as { ok: boolean; moves?: number; error?: string }
-      setReady(r.ok ? `handed off · ${r.moves} move(s) · next: /malleable-review` : (r.error ?? 'could not hand off'))
+      const r = await decideFromOverlay({ kind: 'ready' })
+      setReady(r.ok ? `handed off · ${r.decision.consequence.affected ?? 0} change(s) · next: /malleable-review` : r.error)
     } catch {
       setReady('no dev server — nothing to hand off to')
     }

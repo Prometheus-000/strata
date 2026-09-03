@@ -4,4 +4,3 @@ strata.md
 .DS_Store
 *.tsbuildinfo
 .claude/launch.json.bak
-strata-malleable/.malleable/ready.json

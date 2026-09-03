@@ -8,7 +8,6 @@ import { applyProp, resolveCallSite, siteFor } from '../src/controls/apply'
 import { callSitesOf, readControls, setProp } from '../src/controls/read'
 import { buildManifest } from '../src/identity/manifest'
 import { specFor } from '../src/resolve/properties'
-import { appendProp, emptyReceipt, readReceipt } from '../src/structure/receipt'
 
 const parse = (text: string) => ts.createSourceFile('X.tsx', text, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TSX)
 
@@ -121,16 +120,7 @@ test('a pick replaces a literal, adds a missing attribute, drops one, and leaves
   assert.ok('error' in expr && /the code decides it/.test(expr.error))
 })
 
-test('picks on one attribute collapse in the receipt; picking the start value back is a change of mind', () => {
-  const pick = (from: string | null, to: string | null) => ({ kind: 'prop' as const, what: 'Badge', prop: 'tone', from, to, file: 'G.tsx', line: 4, by: 'human' as const, at: 'now' })
-  let r = appendProp(emptyReceipt(), pick('accent', 'positive'))
-  r = appendProp(r, pick('positive', 'neutral'))
-  assert.deepEqual(r.props.map((p) => [p.from, p.to]), [['accent', 'neutral']])
-  r = appendProp(r, pick('neutral', 'accent'))
-  assert.deepEqual(r.props, [])
-})
-
-test('applyProp writes the attribute, receipts it, and a dry run writes nothing', () => {
+test('applyProp writes the attribute, returns the record, and a dry run writes nothing', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'malleable-prop-'))
   fs.mkdirSync(path.join(dir, 'views'))
   fs.writeFileSync(path.join(dir, 'views/G.tsx'), GALLERY)
@@ -143,9 +133,7 @@ test('applyProp writes the attribute, receipts it, and a dry run writes nothing'
   assert.ok(real.ok)
   assert.deepEqual(real.written, ['views/G.tsx'])
   assert.match(fs.readFileSync(path.join(dir, 'views/G.tsx'), 'utf8'), /<Badge tone="positive">six/)
-  const receipt = readReceipt(dir)
-  assert.equal(receipt.props.length, 1)
-  assert.deepEqual([receipt.props[0].from, receipt.props[0].to, receipt.props[0].by], ['accent', 'positive', 'agent'])
+  assert.deepEqual([real.record.from, real.record.to, real.record.by], ['accent', 'positive', 'agent'])
   const again = applyProp(req, 'agent', 'now', { root: dir })
   assert.ok(again.ok && again.unchanged)
 })

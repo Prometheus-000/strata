@@ -23,9 +23,9 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { PROPERTIES, specFor, type PropertySpec } from '../resolve/properties'
 import { tokenTable } from '../resolve/resolve'
 import { addressOfElement, SID_ATTR } from '../runtime/instancePaths'
-import { useMalleable } from '../runtime/MalleableProvider'
-import type { MoveRequest, MoveResult, NodeAddress, PropRequest, PropResult, PropValue } from '../schema'
-import { describeMove } from '../structure/move'
+import { decideFromOverlay, useMalleable } from '../runtime/MalleableProvider'
+import type { MoveRequest, NodeAddress, PropRequest, PropValue } from '../schema'
+import { describe } from '@strata/substrate/format'
 import { deltaFor, snap, ticksFor, SNAP_PX } from './handles'
 import { dropUnder, instanceUnder, isNoop, thingUnder, type Drop, type Instance, type Thing } from './moveTarget'
 import { Promote } from './Promote'
@@ -123,19 +123,13 @@ export function Overlay({ enabled }: { enabled: boolean }) {
       const req: MoveRequest = {
         what: { container: m.thing.container.sid, region: m.thing.child.component, ordinal: m.thing.ordinal },
         to,
-        by: 'human',
       }
       try {
-        const res = await fetch('/__malleable/move', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(req),
-        })
-        const result = (await res.json()) as MoveResult
+        const result = await decideFromOverlay({ kind: 'move', request: req })
         if (!result.ok) setStatus({ text: result.error, error: true })
         else if (result.unchanged) setStatus({ text: `<${m.thing.child.component} /> is already there` })
         else {
-          setStatus({ text: describeMove(result.record) })
+          setStatus({ text: describe(result.decision) })
           await refreshStructure()
         }
       } catch {
@@ -485,12 +479,11 @@ function PropControls({ element, onStatus }: { element: HTMLElement; onStatus: (
 
   const pick = async (prop: string, value: PropValue) => {
     if (!site) return
-    const req: PropRequest = { file: site.file, component: instance.component, parent: site.parent, ordinal: site.ordinal, prop, value, by: 'human' }
+    const req: PropRequest = { file: site.file, component: instance.component, parent: site.parent, ordinal: site.ordinal, prop, value }
     try {
-      const res = await fetch('/__malleable/prop', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(req) })
-      const r = (await res.json()) as PropResult
+      const r = await decideFromOverlay({ kind: 'prop', request: req })
       if (!r.ok) return setNote(r.error)
-      if (!r.unchanged) onStatus({ text: r.edit })
+      if (!r.unchanged) onStatus({ text: r.decision.consequence.note ?? describe(r.decision) })
       setSite((c) => (c ? { ...c, attrs: { ...c.attrs, [prop]: req.value } } : c))
     } catch {
       setNote('no dev server — picks write to source, and only the dev server can')

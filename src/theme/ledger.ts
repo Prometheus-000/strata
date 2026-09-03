@@ -24,12 +24,15 @@
  */
 
 export type TokenStatus = 'proposed' | 'kept' | 'cut'
-export type Author = 'human' | 'agent'
+export type { Author } from '@strata/substrate/decision'
+import type { Author } from '@strata/substrate/decision'
 
 export interface TokenDecision {
   status: TokenStatus
   by?: Author
   reason?: string
+  /** The decision in `.strata/decisions.jsonl` that set this line. The ledger is a projection of the record. */
+  id?: string
 }
 
 export interface Ledger {

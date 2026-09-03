@@ -37,6 +37,9 @@ export interface ShipResult {
   log: string
   edits: Array<{ file: string; what: string }>
   refusals: string[]
+  /** What went where, as counts — the body of the ship decision. */
+  promoted: { system: number; component: number }
+  frozen: number
 }
 
 export function ship(store: Store, manifest: Manifest, opts: ShipOptions = {}): ShipResult {
@@ -161,7 +164,14 @@ ${body || '/* none */'}
     '',
   ].join('\n')
 
-  return { store: dry ? store : next, log, edits, refusals }
+  return {
+    store: dry ? store : next,
+    log,
+    edits,
+    refusals,
+    promoted: { system: report.promoted.system.length, component: report.promoted.component.length },
+    frozen: kept.length,
+  }
 }
 
 /** Rewrite the seed literal in the engine source, preserving its formatting. */

@@ -1,0 +1,14 @@
+{
+  "name": "@strata/substrate",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The decision substrate — one record of what a product decided, with provenance, intent and consequence. Everything else is a projection.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "test": "node --import tsx/esm --test test/*.test.ts"
+  }
+}

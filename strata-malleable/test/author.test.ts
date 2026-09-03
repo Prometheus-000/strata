@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { authorFrom } from '../src/author'
 import { OBSIDIAN } from '../src/engine/generateTheme'
 import { driftReport, formatDrift } from '../src/ship/drift'
 import { describe, emptyStore, put } from '../src/store/store'
@@ -24,20 +23,6 @@ const MANIFEST: Manifest = {
   ],
 }
 const at = (instancePath: string): NodeAddress => ({ nodeId: CARD, viewId: 'gallery', instancePath })
-
-test('the author is decided explicitly, with a printed reason', () => {
-  assert.deepEqual(authorFrom(['--by', 'agent'], {}), {
-    author: 'agent',
-    because: 'by agent — --by agent on the command line',
-  })
-  const env = authorFrom([], { CLAUDECODE: '1' })
-  assert.equal('author' in env && env.author, 'agent')
-  const flag = authorFrom(['--by', 'human'], { CLAUDECODE: '1', MALLEABLE_AUTHOR: 'agent' })
-  assert.equal('author' in flag && flag.author, 'human')
-  const none = authorFrom([], {})
-  assert.equal('author' in none && none.author, 'human')
-  assert.ok('error' in authorFrom(['--by', 'robot'], {}))
-})
 
 test('an agent override is a real row: described, grouped, counted', () => {
   let store = put(emptyStore(OBSIDIAN), {

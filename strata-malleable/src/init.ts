@@ -1,14 +1,12 @@
 /**
  * `malleable init` — put the Claude Code half of the loop into a project.
  *
- * Copies the skill and the two commands into `.claude/` and ignores the
- * receipt. Nothing else: no hook, no settings, nothing that runs while
- * someone is mid-design. Everything it writes is additive and shown; it
- * merges rather than overwrites.
+ * Copies the skills and the commands into `.claude/`. Nothing else: no hook,
+ * no settings, nothing that runs while someone is mid-design. Everything it
+ * writes is additive and shown; it merges rather than overwrites.
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import { READY_PATH } from './structure/receipt'
 
 export interface InitResult {
   wrote: string[]
@@ -40,18 +38,9 @@ export function init(root: string, packageRoot: string): InitResult {
   copyTree(path.join(integration, 'skills'), path.join(root, '.claude/skills'), wrote, skipped, root)
   copyTree(path.join(integration, 'commands'), path.join(root, '.claude/commands'), wrote, skipped, root)
 
-  const gitignore = path.join(root, '.gitignore')
-  const existing = fs.existsSync(gitignore) ? fs.readFileSync(gitignore, 'utf8') : ''
-  if (!existing.split('\n').includes(READY_PATH)) {
-    fs.writeFileSync(
-      gitignore,
-      existing + (existing && !existing.endsWith('\n') ? '\n' : '') + READY_PATH + '\n',
-    )
-    wrote.push('.gitignore')
-  } else skipped.push('.gitignore')
-
   notes.push(
     'commit .malleable/manifest.json, .malleable/structure.json and .malleable/overrides.json — build output, but the overrides are design decisions',
+    'commit .strata/decisions.jsonl — it is the record; everything else is a projection of it',
   )
   return { wrote, skipped, notes }
 }

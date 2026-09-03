@@ -4,6 +4,13 @@
  * these types. Nothing here imports anything that touches a DOM or a clock.
  */
 
+import type { Author, PropValue, Scope, ThemeSeeds, Value } from '@strata/substrate/decision'
+import { SCOPES } from '@strata/substrate/decision'
+
+/** The types every projection shares are declared once, in the substrate, and re-exported here. */
+export type { Author, PropValue, Scope, ThemeSeeds, Value }
+export { SCOPES }
+
 /* ---------------- Identity ---------------- */
 
 /**
@@ -28,19 +35,11 @@ export interface NodeAddress {
 
 /* ---------------- Store ---------------- */
 
-/**
- * Narrowest to widest. The order is load-bearing: SCOPES.indexOf is the
- * precedence comparison, and promotion walks this array.
+/*
+ * `Scope`, `SCOPES` and `Value` come from the substrate: narrowest to widest,
+ * the order is load-bearing; snapped to a token or drifted to a literal, the
+ * distinction is the point.
  */
-export const SCOPES = ['instance', 'view', 'component', 'system'] as const
-export type Scope = (typeof SCOPES)[number]
-
-/**
- * Snapped to a token, or drifted to a literal. The distinction is the point:
- * a token override still follows a retheme, a literal one is frozen at the
- * value it was dragged to. The UI shows which, and ship reports which.
- */
-export type Value = { token: string } | { literal: string }
 
 export interface Override {
   id: string
@@ -54,13 +53,13 @@ export interface Override {
    * this, so "how much of this drift did the agent make" is a line, not a
    * question.
    */
-  author: 'human' | 'agent'
+  author: Author
   ts: number
 }
 
 export interface Store {
   version: 1
-  seeds: import('../engine/generateTheme').ThemeSeeds
+  seeds: ThemeSeeds
   overrides: Override[]
 }
 
@@ -109,8 +108,6 @@ export interface CssControl {
   range?: [number, number]
   snap?: string[]
 }
-/** A prop value as source can state it: a string, a number, a boolean, or null when it is an expression the code decides. */
-export type PropValue = string | number | boolean | null
 
 export type PropControl =
   /** A fixed set of strings, picked. */
@@ -149,7 +146,7 @@ export interface PropRequest {
   prop: string
   /** null removes the attribute — back to the component's default. */
   value: PropValue
-  by?: 'human' | 'agent'
+  by?: Author
 }
 
 export interface PropRecord {
@@ -160,7 +157,7 @@ export interface PropRecord {
   to: PropValue
   file: string
   line: number
-  by: 'human' | 'agent'
+  by: Author
   at: string
 }
 
@@ -241,14 +238,14 @@ export interface MoveRequest {
     | { container: string; before: Anchor }
     | { container: string; after: Anchor }
     | { container: string; end: true }
-  by?: 'human' | 'agent'
+  by?: Author
 }
 
 export interface MoveRecord {
   what: string
   from: { file: string; line: number; container: string }
   to: { file: string; line: number; container: string; index: number }
-  by: 'human' | 'agent'
+  by: Author
   at: string
   /** Identifiers the moved element still needs from where it came. Wired at review. */
   adapt?: string[]
@@ -263,15 +260,6 @@ export type MoveResult =
       record: MoveRecord
     }
   | { ok: false; error: string }
-
-/** The handoff. The JSX is the record; this is who moved what, for the reviewer. */
-export interface Receipt {
-  version: 1
-  ready: { by: 'human' | 'agent'; at: string } | null
-  moves: MoveRecord[]
-  /** Prop picks written to call sites. Same standing as a move: a diff, receipted. */
-  props: PropRecord[]
-}
 
 /* ---------------- Resolution ---------------- */
 

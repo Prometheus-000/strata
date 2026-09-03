@@ -2,17 +2,18 @@
   "name": "strata",
   "private": true,
   "version": "0.1.0",
-  "description": "Strata \u2014 an adaptive, AI-native design system. Themes are data; components are instruments.",
+  "description": "Strata — an adaptive, AI-native design system. Themes are data; components are instruments.",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "tokens": "tsx scripts/emit-tokens.ts",
     "validate": "node scripts/validate-tokens.mjs",
-    "ledger": "tsx scripts/ledger.ts",
-    "test": "node --import tsx/esm --test scripts/*.test.ts",
+    "ledger": "node --import tsx/esm bin/strata.mjs",
+    "test": "node --import tsx/esm --test scripts/*.test.ts && npm test --prefix substrate && npm test --prefix strata-malleable",
     "build": "npm run tokens && npm run validate && tsc -b && vite build",
     "preview": "vite preview",
-    "bundle": "node scripts/bundle.mjs"
+    "bundle": "node scripts/bundle.mjs",
+    "strata": "node --import tsx/esm bin/strata.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -24,6 +25,13 @@
     "@vitejs/plugin-react": "^4.3.4",
     "tsx": "^4.23.12",
     "typescript": "~5.6.2",
-    "vite": "^6.0.3"
+    "vite": "^6.0.3",
+    "@types/node": "^22.0.0"
+  },
+  "workspaces": [
+    "substrate"
+  ],
+  "bin": {
+    "strata": "bin/strata.mjs"
   }
 }

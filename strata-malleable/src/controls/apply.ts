@@ -1,12 +1,12 @@
 /**
  * A prop pick, on disk. Finds the call site by (file, parent, component,
- * ordinal) against a fresh parse, writes the one attribute, appends the receipt.
+ * ordinal) against a fresh parse and writes the one attribute. The decision
+ * that records who picked it wraps this call — see `decide/`.
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import ts from 'typescript'
 import type { CallSite, PropRecord, PropRequest, PropResult } from '../schema'
-import { appendProp, readReceipt, writeReceipt } from '../structure/receipt'
 import { callSitesOf, setProp } from './read'
 
 export const parseTsx = (file: string, text: string) =>
@@ -81,6 +81,5 @@ export function applyProp(
   if (result.text === text) return { ok: true, unchanged: true, edit: '', record, written: [] }
   if (opts.dryRun) return { ok: true, edit: result.what, record, written: [] }
   fs.writeFileSync(abs, result.text)
-  writeReceipt(appendProp(readReceipt(root), record), root)
   return { ok: true, edit: result.what, record, written: [req.file] }
 }

@@ -10,10 +10,11 @@ import { malleableDevPlugin } from './strata-malleable/src/store/server'
  *
  * Two things make that safe. React is deduped, because the library carries
  * its own node_modules and a harness resolving a second React copy breaks
- * every hook it calls. And the write-through plugin is the library's own: a
- * property drag writes `strata-malleable/.malleable/overrides.json`, the file
- * its CLI ships from; a region move rewrites `strata-malleable/fixtures/app`
- * in place; "ready" drops the receipt at `strata-malleable/.malleable/ready.json`.
+ * every hook it calls. And the write-through plugin is the library's own: every
+ * write from the overlay is one request to `/__strata/decide`; the handler
+ * writes `strata-malleable/.malleable/overrides.json` or rewrites
+ * `strata-malleable/fixtures/app` in place, and the decision is appended to
+ * this repo's `.strata/decisions.jsonl` — one record for the whole product.
  *
  * BASE_PATH exists for a static host that serves the site under a sub-path
  * (GitHub Pages serves a project at /<repo>/); links in the site read
@@ -21,7 +22,7 @@ import { malleableDevPlugin } from './strata-malleable/src/store/server'
  */
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
-  plugins: [react(), malleableDevPlugin(resolve(__dirname, 'strata-malleable'))],
+  plugins: [react(), malleableDevPlugin(resolve(__dirname, 'strata-malleable'), 'fixtures/app', __dirname)],
   resolve: { dedupe: ['react', 'react-dom'] },
   build: {
     rollupOptions: {

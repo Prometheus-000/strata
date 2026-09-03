@@ -1,7 +1,8 @@
 /**
  * The move, on disk. Reads the structure fresh, plans against the text it is
- * about to edit, writes only the files whose text changed, and appends the
- * receipt. The plan is pure; this is the one place it meets the filesystem.
+ * about to edit, and writes only the files whose text changed. The plan is
+ * pure; this is the one place it meets the filesystem. Who moved it, and why,
+ * is the decision that wraps this call — see `decide/`.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -9,7 +10,6 @@ import type { MoveRequest, MoveResult } from '../schema'
 import { buildStructure } from '../identity/manifest'
 import { writeStructure } from '../store/persist'
 import { planMove } from './move'
-import { appendMove, readReceipt, writeReceipt } from './receipt'
 
 export function applyMove(
   source: string,
@@ -35,7 +35,6 @@ export function applyMove(
     fs.writeFileSync(abs(rel), text)
     written.push(rel)
   }
-  writeReceipt(appendMove(readReceipt(root), plan.result.record), root)
   // The committed structure follows the source it describes.
   writeStructure(buildStructure(source), root)
   return { ...plan.result, written }

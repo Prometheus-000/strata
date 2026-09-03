@@ -20,6 +20,7 @@ import { applyTheme, type ThemeSeeds } from '../engine/generateTheme'
 import { resolve, effectiveSeeds } from '../resolve/resolve'
 import type { Manifest, NodeAddress, Resolution, Scope, Store, Structure, Value } from '../schema'
 import { emptyStore, put, setScope, type ScopeChange } from '../store/store'
+import type { DecideResult, Request } from '@strata/substrate/decide'
 import { compileStyleSheet } from './styleSheet'
 import { stampInstances } from './instancePaths'
 
@@ -52,25 +53,32 @@ export const useMalleable = () => {
 
 const STORAGE_KEY = 'strata.malleable.store'
 
-async function persist(store: Store) {
+function remember(store: Store) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
   } catch {
-    /* private mode, quota, a browser that blocks storage — the file write below still runs */
-  }
-  try {
-    // The dev server writes .malleable/overrides.json, so `npm run ship` acts on
-    // the same decisions the designer made — "come back later" has to survive a
-    // restarted machine, not just a reloaded tab.
-    await fetch('/__malleable/store', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(store),
-    })
-  } catch {
-    /* no dev server — localStorage alone still round-trips the session */
+    /* private mode, quota, a browser that blocks storage — the decision below still posts */
   }
 }
+
+/**
+ * Every write the overlay makes is one request to the one endpoint, as
+ * `human`, because a pointer is a hand. The dev server applies it to
+ * `.malleable/overrides.json` or to source and appends the decision, so
+ * `ship` and the reviewer act on the same record the designer made —
+ * "come back later" has to survive a restarted machine, not a reloaded tab.
+ * Throws when no server answers; the caller decides what that means.
+ */
+export async function decideFromOverlay(request: Request): Promise<DecideResult> {
+  const res = await fetch('/__strata/decide', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ request, by: 'human', via: 'overlay' }),
+  })
+  return (await res.json()) as DecideResult
+}
+
+const post = (request: Request) => decideFromOverlay(request).catch(() => null)
 
 function load(initial: Store): Store {
   try {
@@ -115,9 +123,11 @@ export function MalleableProvider({
     }
   }, [])
 
+  // The browser applies the same pure operation the server will, so the page
+  // answers the hand at once and the file catches up.
   const commit = useCallback((next: Store) => {
     setStore(next)
-    void persist(next)
+    remember(next)
   }, [])
 
   const active = useMemo(() => effectiveSeeds(store.seeds, store.overrides), [store])
@@ -168,16 +178,24 @@ export function MalleableProvider({
         if (!base) return null
         return resolve({ seeds: store.seeds, overrides: store.overrides, address, property, base })
       },
-      write: (address, property, value) =>
-        commit(put(store, { address, property, value, author: 'human', ts: Date.now() })),
+      write: (address, property, value) => {
+        commit(put(store, { address, property, value, author: 'human', ts: Date.now() }))
+        void post({ kind: 'override', action: 'set', address, property, value })
+      },
       previewScope: (address, property, scope) =>
         setScope(store, manifest, address, property, scope, 'human', Date.now()),
       rescope: (address, property, scope) => {
         const change = setScope(store, manifest, address, property, scope, 'human', Date.now())
-        if (!change.refused) commit(change.store)
+        if (!change.refused) {
+          commit(change.store)
+          void post({ kind: 'override', action: 'rescope', address, property, scope })
+        }
         return change
       },
-      reset: () => commit(emptyStore(seeds)),
+      reset: () => {
+        for (const o of store.overrides) void post({ kind: 'override', action: 'remove', id: o.id })
+        commit(emptyStore(seeds))
+      },
       structure,
       refreshStructure,
     }),
