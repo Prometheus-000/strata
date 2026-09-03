@@ -46,6 +46,8 @@ const help = () => {
     ready [--why …]             hand off what changed since the last ready
     import                      bring the old ledger and store onto the record, once
     rebuild [--check]           write every projection from the record; --check only says which differ
+    precedent [words] [--property p] [--value v] [--component C] [--token --x] [--author a] [--kind k] [--since iso] [--unpromoted] [--at n]
+                                what has been decided before, with convergence counted
 
   tokens (Layer 0)
     list · cut · keep · propose --<token> [--why …]

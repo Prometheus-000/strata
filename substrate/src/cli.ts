@@ -9,8 +9,10 @@ import { authorFrom } from './author'
 import { describe, formatDecision } from './format'
 import { byId, history, readAll } from './log'
 import { importAll, rebuild, registeredProjections } from './projection'
+import { buildIndex, search, PROMOTION_CANDIDATE_AT } from './precedent'
+import type { Author, Kind } from './decision'
 
-export const SUBSTRATE_COMMANDS = ['log', 'history', 'show', 'ready', 'import', 'rebuild'] as const
+export const SUBSTRATE_COMMANDS = ['log', 'history', 'show', 'ready', 'import', 'rebuild', 'precedent'] as const
 
 export interface CliIo {
   out: (s: string) => void
@@ -92,6 +94,30 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
         return 1
       }
       io.out(check ? '\n  every projection matches the record\n' : `\n  ${r.written.length} file(s) rewritten from the record\n`)
+      return 0
+    }
+
+    case 'precedent': {
+      const q = {
+        kind: flag('kind') as Kind | undefined,
+        property: flag('property'),
+        value: flag('value'),
+        component: flag('component'),
+        token: flag('token'),
+        author: flag('author') as Author | undefined,
+        since: flag('since'),
+        unpromoted: has('unpromoted'),
+        text: positional.join(' ') || undefined,
+      }
+      const r = search(buildIndex(readAll(home.root)), q, { candidateAt: flag('at') ? Number(flag('at')) : PROMOTION_CANDIDATE_AT })
+      io.out('')
+      if (!r.decisions.length) io.out('  no precedent on the record for that')
+      for (const line of r.lines) io.out(`  ${line}`)
+      if (r.lines.length) io.out('')
+      const limit = Number(flag('limit') ?? 40)
+      for (const d of r.decisions.slice(-limit)) io.out(`  ${d.id}  ${d.at.slice(0, 10)}  ${describe(d)}`)
+      if (r.decisions.length > limit) io.out(`  … ${r.decisions.length - limit} earlier`)
+      io.out(r.decisions.length ? `\n  ${r.decisions.length} decision(s)\n` : '')
       return 0
     }
 

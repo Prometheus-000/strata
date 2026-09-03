@@ -7,6 +7,7 @@
  * to everyone. Counts are the whole point. One is taste; nine of the same shape
  * is a missing token, and the report is where that becomes visible.
  */
+import { PROMOTION_CANDIDATE_AT } from '@strata/substrate/precedent'
 import { effectiveSeeds, evaluate, tokenTable } from '../resolve/resolve'
 import { reconcile } from '../store/store'
 import type { Manifest, Override, Store } from '../schema'
@@ -113,7 +114,7 @@ export function formatDrift(r: DriftReport): string {
       .join(' + ')
     line(`  ${String(g.count).padStart(3)} × ${g.property} = ${g.value}  (${g.kind})`)
     line(`        ${where} · ${g.nodes.join(', ')}`)
-    if (g.count >= 3)
+    if (g.count >= PROMOTION_CANDIDATE_AT)
       line(`        ${g.count} appearances — promotion candidate`)
   }
 
