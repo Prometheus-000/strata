@@ -16,7 +16,10 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { generateTheme, OBSIDIAN, PRESETS, ROLES_AGAINST_PRIMITIVES, SEED_RANGE, type ThemeSeeds } from './generateTheme'
-import { applyLedger, emptyLedger, FALLBACKS, reconcileLedger, summarise, type Ledger, type TokenStatus } from './ledger'
+import { applyLedger, emptyLedger, fallbacksFor, reconcileLedger, summarise, type Ledger, type TokenStatus } from './ledger'
+import { readAll } from '@strata/substrate/log'
+import { current } from '@strata/substrate/fold'
+import type { Decision } from '@strata/substrate/decision'
 import { handText, type Hand } from '@strata/substrate/decision'
 
 export const LEDGER_PATH = 'src/theme/ledger.json'
@@ -43,27 +46,45 @@ export interface EmitResult {
  * writes nothing; `ledger` projects a ledger that is not on disk yet — the
  * one the record says — instead of reading the file.
  */
-export function emitTokens(root: string, opts: { dryRun?: boolean; ledger?: Ledger } = {}): EmitResult {
+/**
+ * The roles a hand coined, from the record. The engine derives everything it
+ * can from six numbers; these are the names usage earned that no seed
+ * produces, and the record is their source — which is why they arrive here
+ * rather than from `generateTheme`.
+ */
+export function mintedRoles(log: readonly Decision[]): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const d of current(log).values()) {
+    if (d.kind !== 'token' || d.action !== 'mint' || !d.value) continue
+    out[d.token] = 'token' in d.value ? `var(${d.value.token})` : d.value.literal
+  }
+  return out
+}
+
+export function emitTokens(root: string, opts: { dryRun?: boolean; ledger?: Ledger; log?: readonly Decision[] } = {}): EmitResult {
 
   const DARK = OBSIDIAN
   const LIGHT = PRESETS.Gallery
+  const minted = mintedRoles(opts.log ?? readAll(root))
+  const fallbacks = fallbacksFor(minted)
+  const theme = (seeds: ThemeSeeds) => ({ ...generateTheme(seeds), ...minted })
 
   // These used to be written out here by hand, which made the emitter a second
   // author of ten semantic roles: they had no origin in the engine, no line in
   // the ledger, and no way to be cut, kept or explained. They are the engine's
   // now, and this only decides where they sit in the file.
-  const againstPrimitive = (prop: string) => ROLES_AGAINST_PRIMITIVES.includes(prop)
+  const againstPrimitive = (prop: string) => ROLES_AGAINST_PRIMITIVES.includes(prop) || prop in minted
 
   // `--surface-pad` is not a colour, whatever its prefix says.
   const isColor = (prop: string) =>
     !againstPrimitive(prop) && /^--(surface|ink|accent|line|focus|positive|warning|danger|shadow-color)/.test(prop)
 
   /* ---- the ledger: reconcile, never edit a decision ---- */
-  const engineTokens = Object.keys(generateTheme(DARK))
+  const engineTokens = Object.keys(theme(DARK))
   const { ledger, added, stale } = reconcileLedger(engineTokens, opts.ledger ?? readLedger(root))
 
-  const dark = applyLedger(generateTheme(DARK), ledger)
-  const light = applyLedger(generateTheme(LIGHT), ledger)
+  const dark = applyLedger(theme(DARK), ledger, { mode: 'var', fallbacks })
+  const light = applyLedger(theme(LIGHT), ledger, { mode: 'var', fallbacks })
   const cutNote = new Map(dark.receipts.map((r) => [r.token, r]))
 
   /** A declaration, with the decision beside it when the token was cut. */
@@ -103,7 +124,7 @@ ${block(light.tokens, isColor)}
   /* ---- Engine-derived rhythm, motion, shape (Obsidian defaults) ---- */
 ${block(dark.tokens, (p) => !isColor(p) && !againstPrimitive(p))}
 
-  /* ---- Roles the engine holds against a Tier 1 primitive ---- */
+  /* ---- Roles held against a Tier 1 primitive, and the names usage earned ---- */
 ${block(dark.tokens, againstPrimitive)}
 }
 
@@ -137,7 +158,7 @@ ${block(dark.tokens, againstPrimitive)}
         ...(d.written ? { written: d.written } : {}),
         ...(d.reason ? { reason: d.reason } : {}),
         ...(cut ? { fallback: cut.to } : {}),
-        collapsesTo: FALLBACKS[p]?.to,
+        collapsesTo: fallbacks[p]?.to,
       },
     }
   }

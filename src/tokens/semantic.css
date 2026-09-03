@@ -77,7 +77,7 @@
   --radius-surface: 0.759rem;
   --radius-overlay: var(--radius-surface); /* cut by human prometheus-000: Two radii, not three: a control and a panel. The engine gave overlays 2.4× the control radius, which at calm energy is a 19px dialog — the one soft shape on an otherwise architectural page. An overlay is a panel; it rounds like one. */
 
-  /* ---- Roles the engine holds against a Tier 1 primitive ---- */
+  /* ---- Roles held against a Tier 1 primitive, and the names usage earned ---- */
   --control-h-sm: calc(2rem * var(--density));
   --control-h-md: calc(2.5rem * var(--density));
   --control-h-lg: calc(3rem * var(--density));

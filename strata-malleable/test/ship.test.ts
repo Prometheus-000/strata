@@ -118,13 +118,16 @@ test('un-promoted overrides ship frozen and are counted, never dropped', () => {
   assert.match(result.log, /2 instances/)
 })
 
-test('three of the same shape is called out as a promotion candidate', () => {
+test('three of the same shape is called out as a candidate, and promoting it is named as a decision', () => {
   const m = manifest()
   let store = emptyStore(OBSIDIAN)
   for (const k of ['ember', 'meadow', 'glacier'])
     store = drag(store, { ...EMBER, instancePath: k }, { literal: '20px' })
   const result = ship(store, m, { dryRun: true })
-  assert.match(result.log, /3 appearances — promotion candidate/)
+  assert.match(result.log, /3 appearances — a candidate\. Promoting it is a decision:/)
+  // Counted by the report; coined by a hand. The report offers the two ways
+  // and takes neither.
+  assert.match(result.log, /strata mint --<name> --value/)
 })
 
 test('a dry run writes nothing', () => {

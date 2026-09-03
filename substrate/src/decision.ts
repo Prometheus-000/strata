@@ -104,7 +104,22 @@ export interface Consequence {
 /* ---- the body, one variant per kind ---- */
 
 export type DecisionBody =
-  | { kind: 'token'; token: string; action: 'propose' | 'keep' | 'cut' }
+  | {
+      kind: 'token'
+      token: string
+      /**
+       * `mint` is the edge that lets usage add to the language rather than
+       * only choose within it. The engine proposes what it derives; a hand
+       * keeps or cuts those. Minting is the other direction: a name coined
+       * for a value the record shows was reached over and over, which no seed
+       * produces and no existing name covers.
+       */
+      action: 'propose' | 'keep' | 'cut' | 'mint'
+      /** What the minted name is worth. Only a mint carries one. */
+      value?: Value
+      /** The decisions whose convergence earned the name — the evidence, by id. */
+      from?: string[]
+    }
   | {
       kind: 'override'
       action: 'set' | 'remove' | 'rescope'
@@ -212,7 +227,10 @@ export function problemsWith(x: unknown): string[] {
   switch (kind) {
     case 'token':
       if (!isStr(x.token) || !x.token.startsWith('--')) p.push('token must be a custom property name')
-      if (!['propose', 'keep', 'cut'].includes(String(x.action))) p.push('token action must be propose, keep or cut')
+      if (!['propose', 'keep', 'cut', 'mint'].includes(String(x.action))) p.push('token action must be propose, keep, cut or mint')
+      if (x.action === 'mint' && !isValue(x.value)) p.push('a mint names what the token is worth')
+      if (x.action !== 'mint' && x.value !== undefined) p.push('only a mint carries a value; keep and cut decide a name the engine already emits')
+      if (x.from !== undefined && !(Array.isArray(x.from) && x.from.every(isStr))) p.push('from is a list of decision ids')
       break
     case 'override':
       if (!['set', 'remove', 'rescope'].includes(String(x.action))) p.push('override action must be set, remove or rescope')

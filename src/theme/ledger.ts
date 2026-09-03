@@ -129,6 +129,28 @@ export const FALLBACKS: Record<string, Fallback> = {
 const isToken = (v: string) => v.startsWith('--')
 
 /**
+ * A minted role is a name a hand coined for a value usage kept reaching. No
+ * seed produces it, so the engine cannot derive its fallback either — but the
+ * floor is not a puzzle: cutting a minted name removes the *name*, and the
+ * value it named is still what those places wanted. So it collapses to that
+ * value, and the consumers keep rendering what they rendered.
+ */
+export const mintedFallback = (value: string): Fallback =>
+  t(value, 'A minted name collapses to the value it named. The vocabulary loses the word; nothing on the screen moves.')
+
+/**
+ * The fallback table, with the minted roles the record holds folded in. The
+ * static table is derivation knowledge and lives beside the engine; a minted
+ * entry is a decision and comes from the record, which is why this is a
+ * function and not a constant.
+ */
+export function fallbacksFor(minted: Record<string, string> = {}): Record<string, Fallback> {
+  const out: Record<string, Fallback> = { ...FALLBACKS }
+  for (const [name, value] of Object.entries(minted)) out[name] = mintedFallback(value)
+  return out
+}
+
+/**
  * Cut tokens collapse; everything else passes through. `var` mode emits
  * `var(--fallback)` so the stylesheet keeps following the theme; `value` mode
  * resolves the chain to a concrete string, for contrast receipts and swatches
@@ -137,15 +159,16 @@ const isToken = (v: string) => v.startsWith('--')
 export function applyLedger(
   tokens: Record<string, string>,
   ledger: Ledger,
-  opts: { mode: 'var' | 'value' } = { mode: 'var' },
+  opts: { mode: 'var' | 'value'; fallbacks?: Record<string, Fallback> } = { mode: 'var' },
 ): { tokens: Record<string, string>; receipts: Array<{ token: string; to: string; decided?: Hand; reason?: string }> } {
   const out: Record<string, string> = {}
   const receipts: ReturnType<typeof applyLedger>['receipts'] = []
   const isCut = (name: string) => ledger.tokens[name]?.status === 'cut'
+  const table = opts.fallbacks ?? FALLBACKS
 
   /** Follow the fallback chain past every cut token to the first live one. */
   const landing = (name: string, seen = new Set<string>()): string => {
-    const fb = FALLBACKS[name]
+    const fb = table[name]
     if (!fb || seen.has(name)) return name
     seen.add(name)
     if (!isToken(fb.to)) return fb.to
@@ -153,7 +176,7 @@ export function applyLedger(
   }
 
   for (const [name, value] of Object.entries(tokens)) {
-    if (!isCut(name) || !FALLBACKS[name]) {
+    if (!isCut(name) || !table[name]) {
       out[name] = value
       continue
     }
@@ -204,4 +227,5 @@ export const themeTokens = (
   tokens: Record<string, string>,
   ledger: Ledger,
   mode: 'var' | 'value' = 'var',
-): Record<string, string> => applyLedger(tokens, ledger, { mode }).tokens
+  fallbacks?: Record<string, Fallback>,
+): Record<string, string> => applyLedger(tokens, ledger, { mode, fallbacks }).tokens

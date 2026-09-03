@@ -163,3 +163,38 @@ test('the theme evaluators: invariants hold on this repo, a raw colour is a poli
   assert.ok(real.cited.every((r) => r.check === 'none' || !r.check), 'every cited rule says so, rather than naming an evaluator that never ran')
   assert.ok(!real.cited.some((r) => r.id === 'layer0.engine-only-author'), 'a rule with an evaluator is not cited-only')
 })
+
+test('minting coins a name for a value usage kept reaching: the record is its source, rebuild emits it, and check sees it', () => {
+  const { dir, ctx } = world()
+  importAll(dir, { decided: { kind: 'human', actor: 'prometheus-000' }, written: { kind: 'agent', actor: 'claude-code' } })
+  rebuild(dir)
+
+  // A name no seed produces. The engine cannot derive it, so the record is
+  // where it lives — which is the whole point of the edge.
+  const mint = decide({ kind: 'token', token: '--radius-card', action: 'mint', value: { literal: '12px' }, from: ['d0mtlvzac0-ed0m'], reason: 'nine cards reached 12px independently; the value has a job and no name' }, ctx())
+  assert.ok(mint.ok, mint.ok ? '' : mint.error)
+  assert.equal(mint.decision.kind === 'token' && mint.decision.action, 'mint')
+
+  const css = fs.readFileSync(path.join(dir, SEMANTIC_PATH), 'utf8')
+  assert.match(css, /--radius-card: 12px;/)
+  assert.equal(readLedger(dir).tokens['--radius-card'].status, 'kept', 'coining it was the review')
+  assert.deepEqual(rebuild(dir, { dryRun: true }).changed, [], 'the record projects the minted role too')
+
+  // It is a role like any other from here: it can be cut, and it collapses to
+  // the value it named, so nothing on the screen moves.
+  const cut = decide({ kind: 'token', token: '--radius-card', action: 'cut', reason: 'the group it was for went away' }, ctx())
+  assert.ok(cut.ok)
+  assert.equal(cut.decision.consequence.collapsesTo, '12px')
+
+  // And the invariant counts it: a minted role with no fallback would be a
+  // name the stylesheet could not collapse.
+  fs.mkdirSync(path.join(dir, 'grammar'), { recursive: true })
+  fs.copyFileSync(path.join(REPO, 'grammar/rules.json'), path.join(dir, 'grammar/rules.json'))
+  const r = runCheck(dir)
+  assert.deepEqual(r.invariants.filter((i) => i.rule === 'fallbacks.total-acyclic').map((i) => i.ok), [true])
+
+  // What the engine already derives cannot be minted; that is a keep or a cut.
+  const twice = decide({ kind: 'token', token: '--accent', action: 'mint', value: { literal: 'red' }, reason: 'x' }, ctx())
+  assert.equal(twice.ok, false)
+  assert.match(twice.ok ? '' : twice.error, /already derived from the seeds/)
+})

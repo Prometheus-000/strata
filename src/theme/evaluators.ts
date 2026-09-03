@@ -15,8 +15,8 @@ import { registerEvaluator, type EvalContext, type Finding } from '@strata/subst
 import type { Fact } from '@strata/substrate/format'
 import { contrastRatio } from './color'
 import { generateTheme, OBSIDIAN, PRESETS } from './generateTheme'
-import { FALLBACKS, themeTokens } from './ledger'
-import { readLedger, SEMANTIC_PATH } from './emit'
+import { fallbacksFor, FALLBACKS, themeTokens } from './ledger'
+import { mintedRoles, readLedger, SEMANTIC_PATH } from './emit'
 import { COLOR_LITERAL } from './handlers'
 
 export const SCAN_DIRS = ['src/components', 'src/site', 'src/personalize']
@@ -131,9 +131,11 @@ export function registerThemeEvaluators(home: { root: string }): void {
 
   registerEvaluator({
     id: 'fallbacks.total-acyclic',
-    findings: () => {
+    findings: (ctx) => {
       const out: Finding[] = []
-      const engine = Object.keys(generateTheme(OBSIDIAN))
+      const minted = mintedRoles(ctx.log)
+      const FALLBACKS = fallbacksFor(minted)
+      const engine = Object.keys({ ...generateTheme(OBSIDIAN), ...minted })
       for (const t of engine) if (!FALLBACKS[t]) out.push({ rule: 'fallbacks.total-acyclic', authority: 'invariant', where: t, message: `${t} is emitted by the engine and has no fallback` })
       for (const t of Object.keys(FALLBACKS)) if (!engine.includes(t)) out.push({ rule: 'fallbacks.total-acyclic', authority: 'invariant', where: t, message: `${t} has a fallback but the engine does not emit it` })
       for (const t of engine) {

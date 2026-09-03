@@ -29,6 +29,8 @@ export function rows(d: Decision): Array<[string, string]> {
   switch (d.kind) {
     case 'token':
       r.push(['Token', d.token], ['Action', d.action])
+      if (d.value) r.push(['Value', valueText(d.value)])
+      if (d.from?.length) r.push(['Earned by', `${d.from.length} decision(s): ${d.from.join(', ')}`])
       break
     case 'override':
       r.push(['Override', `${d.property} on ${d.selector}`], ['Action', d.action], ['Scope', d.fromScope ? `${d.fromScope} → ${d.scope}` : d.scope])
@@ -89,7 +91,7 @@ export function describe(d: Decision): string {
   const who = ` · ${handText(d.decided)}${d.written.kind === d.decided.kind && d.written.actor === d.decided.actor ? '' : ` (written ${handText(d.written)})`}`
   switch (d.kind) {
     case 'token':
-      return `${d.action} ${d.token}${d.consequence.collapsesTo ? ` → ${d.consequence.collapsesTo}` : ''}${who}${d.reason ? ` · ${d.reason}` : ''}`
+      return `${d.action} ${d.token}${d.value ? ` = ${valueText(d.value)}` : ''}${d.consequence.collapsesTo ? ` → ${d.consequence.collapsesTo}` : ''}${who}${d.reason ? ` · ${d.reason}` : ''}`
     case 'override':
       return `${d.action} ${d.property}${d.value ? ` = ${valueText(d.value)}` : ''} on ${d.selector} @ ${d.scope}${who}`
     case 'move': {
