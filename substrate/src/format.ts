@@ -109,12 +109,26 @@ export function describe(d: Decision): string {
   }
 }
 
-/** The handoff: what changed since the last ready, and whether it has been handed off. */
+/**
+ * The handoff: what changed since the last ready, and whether it has been
+ * handed off.
+ *
+ * The lines are split by the hand that *chose* them. An agent typing a
+ * person's decision is the ordinary case and needs nothing; an agent that
+ * chose is the case a person has not seen yet, and those are named so a
+ * reviewer does not have to go looking for them.
+ */
 export function formatHandoff(changes: readonly Decision[], ready: Decision | null): string {
   const out: string[] = ['']
   if (!changes.length) out.push('  nothing changed since the last review')
   for (const d of changes) out.push(`  ${describe(d)}`)
   out.push('')
+  const chosen = changes.filter((d) => d.decided.kind === 'agent')
+  if (chosen.length) {
+    out.push(`${chosen.length} of these were decided by an agent, not written by one — a person reviews these before they are committed:`)
+    for (const d of chosen) out.push(`  ${d.id}  ${describe(d)}`)
+    out.push('')
+  }
   out.push(ready ? `ready for review — ${handText(ready.decided)}, ${ready.at}` : 'not yet handed off')
   out.push('')
   return out.join('\n')

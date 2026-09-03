@@ -18,7 +18,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import type { Decision } from './decision.ts'
-import { loadRules, rulesFor, type Rule } from './grammar.ts'
+import { loadRules, rulesFor, scopeOf, type Rule } from './grammar.ts'
 import { byId, readAll } from './log.ts'
 import { buildIndex, search, type PrecedentQuery, type PrecedentResult } from './precedent.ts'
 import { describe } from './format.ts'
@@ -206,7 +206,8 @@ export function formatPacket(p: Packet): string {
   }
   if (p.rules.length) {
     out.push('## Rules that bear on this', '')
-    for (const r of p.rules) out.push(`- **${r.id}** (${r.authority}) — ${r.statement}`, `  _${r.reason}_`)
+    for (const r of p.rules)
+      out.push(`- **${r.id}** (${r.authority}${scopeOf(r) === 'product' ? ", this product's own taste, not the system's" : ''}) — ${r.statement}`, `  _${r.reason}_`)
     out.push('')
   }
   if (p.precedent) {
@@ -234,6 +235,12 @@ export function formatPacket(p: Packet): string {
     out.push('')
   }
   if (p.skill.reasons) out.push('## Reasons', '', p.skill.reasons, '')
-  out.push('Every decision goes through `strata …` with `--by agent` and `--why "…"`. Nothing here is checked while you work; `strata check` says what happened when you are ready.')
+  out.push(
+    'Every decision goes through `strata …` with `--why "…"` and a hand.',
+    '',
+    'Ask who could have chosen otherwise. If the target and the value were both named to you, `--decided-by human --actor <their handle>`; if you chose either of them, `--decided-by agent`. Your shell already says who *wrote* it, and an agent writing a person\'s decision is the ordinary case — it is the deciding hand a reviewer reads.',
+    '',
+    'Nothing here is checked while you work; `strata check` says what happened when you are ready.',
+  )
   return out.join('\n')
 }

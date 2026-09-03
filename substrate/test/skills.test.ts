@@ -47,7 +47,7 @@ test('a skill parses, loads from its directory, and assembles a packet with rule
   fs.mkdirSync(path.join(dir, 'skills/cut-token'), { recursive: true })
   fs.writeFileSync(path.join(dir, 'skills/cut-token/SKILL.md'), SKILL.replace('ID_CUT', cut.id))
   fs.mkdirSync(path.join(dir, 'grammar'))
-  fs.writeFileSync(path.join(dir, RULES_PATH), JSON.stringify({ rules: [{ id: 'voice.one-filled-action', authority: 'policy', statement: 'One filled action per surface.', reason: 'when three calls to action carry the same chrome, the screen has no point', source: 'g' }] }))
+  fs.writeFileSync(path.join(dir, RULES_PATH), JSON.stringify({ rules: [{ id: 'voice.one-filled-action', authority: 'policy', statement: 'One filled action per surface.', reason: 'when three calls to action carry the same chrome, the screen has no point', source: 'g', check: 'none' }] }))
   registerState('tokens', () => '34 tokens · 31 kept · 3 cut')
 
   const skills = loadSkills(dir)

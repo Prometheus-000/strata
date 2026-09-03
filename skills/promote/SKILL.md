@@ -11,7 +11,9 @@ constraints:
   - widening is a promise — "all here" absorbs every narrower override in the new scope, including ones that disagreed; the count is printed, never hidden
   - promotion to the system moves a seed, and the seed moves every token it derives; read the proposal before accepting it
   - un-promoted overrides are never cleaned up; someone made them on purpose
-  - pass --by agent and --why on every write
+  - "say who chose: who could have chosen otherwise? if the target and the value were both named to you, --decided-by human --actor <their handle>; if you chose either, --decided-by agent. Your shell already says who wrote it"
+  - "using a token is not deciding one: nothing writes a line for a var(--x) already in a recipe. Consumers are evidence, computed on request"
+  - pass --why on every write; a decision without a sentence is a keystroke
 evidenceRequired: [reuse count, independent, promotion candidate]
 typicalDecisions: [override/rescope, override/set]
 examples: []
@@ -37,8 +39,8 @@ reasons: |
 3. Decide, on the record:
 
    ```bash
-   strata set Card.div.st-card padding 12px --scope view --view gallery --by agent --why "…"
-   strata set Card.div.st-card radius --token --radius-pill --scope component --by agent --why "…"
+   strata set Card.div.st-card padding 12px --scope view --view gallery --decided-by agent --why "…"
+   strata set Card.div.st-card radius --token --radius-pill --scope component --decided-by agent --why "…"
    ```
 
    The printed line counts what was absorbed. A refusal — a literal base no

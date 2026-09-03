@@ -54,13 +54,21 @@ whisper of hue — toward paper (95°) or slate (245°) — so even "grey" is a 
 *and* rounder corners; calm themes glide and stay architectural. Motion personality that
 stops at duration produces themes that feel mislabeled.
 
-## The voice — the house taste, as rules
+## The voice — one product's taste, as rules
 
-The default is a taste, and a taste is a set of decisions with reasons, so it is written the
-way everything else here is. It is enacted in three places, none of them a stylesheet: the
-`Obsidian` seeds in `generateTheme.ts`, the decisions in `src/theme/ledger.json`, and the
-rules below. Retune the seeds or reverse a decision and the voice follows; nothing below is
-enforced by hand.
+**Everything in this section is Strata's own taste, not Strata's rules.** The layers above and
+below are the system: what a token means, what may be forked, what never is, how a decision is
+recorded. This section is a worked example of a house voice expressed in that system, and an
+adopter is expected to replace it wholesale — different face, different radii, shadows if they
+want them. Every rule here carries `"scope": "product"` in `grammar/rules.json`, and
+`strata check` says which is which, because a reader who cannot tell them apart reads this
+product's preference for two radii as the system's law.
+
+What is worth keeping is the shape, not the content: a taste is a set of decisions with
+reasons, written the way everything else here is. It is enacted in three places, none of them
+a stylesheet: the `Obsidian` seeds in `generateTheme.ts`, the decisions in
+`src/theme/ledger.json`, and the rules below. Retune the seeds or reverse a decision and the
+voice follows; nothing below is enforced by hand.
 
 **One family. Hierarchy is weight, size and measure — never a second voice.** Display and body
 are the same system face; headings are the body face set at 600–700 and tracked tight. This
@@ -167,6 +175,46 @@ never granted by proposal.
   CONSEQUENCE. `strata precedent …` — what was decided before, with convergence counted.
 - `src/tokens/tokens.json` — the agent-readable contract: seeds, ranges, and the *reasons*
   for each dial, alongside compiled values; each token carries its ledger decision.
-- Next, in order of leverage: an MCP server over the same `decide()`, `explain()` and
-  `precedent()` the CLI calls, and code→Figma regeneration on CI (the current Figma library
-  was pushed by hand once and is already a stale projection — see `figma-library-state.json`).
+- Next, in order of leverage: code→Figma regeneration on CI (the current Figma library was
+  pushed by hand once and is already a stale projection — see `figma-library-state.json`).
+
+### Who chose, and whose hand wrote it
+
+Every decision names two hands. `decided` is who could have chosen otherwise. `written` is
+whose hand ran the command. Either may be an agent, neither outranks the other, and each
+carries an optional `actor` — a handle, an email, a harness id — which the substrate stores
+and never interprets.
+
+They are two questions, and the record used to ask one. A single `by` recorded the channel
+that ran the command, so every one of the thirty-four decisions imported in week one said
+`agent`, and not one of those decisions was an agent's. A record of judgements and a log of
+keystrokes are different objects, and only the first is worth reading a year later.
+
+The test is one question: **who could have chosen otherwise?** Four cases settle it.
+
+| What happened | `--decided-by` |
+| --- | --- |
+| A specified outcome — the target and the value were both named to you | `human`, with their `--actor` |
+| A specified intent, outcome left open | `agent`, and their instruction goes in `--why` |
+| Unprompted: wiring, cleanup, a consequence you noticed | `agent` |
+| You proposed it, they confirmed it | `human` |
+
+`--decided-by` (or `--by`) says who chose; `--written-by` says whose hand typed it, and
+`CLAUDECODE` in the environment infers that one and only that one. An agent's shell with
+nothing else stated is refused rather than guessed at: that guess is exactly the one that put
+an agent's name on this record. A missing `--actor` is noted in `because`, where it happened,
+so an unnamed hand is visible rather than assumed.
+
+At review, `written` changes nothing and `decided` changes everything: an agent typing a
+person's decision is the ordinary case and needs no second look; an agent that *chose* is a
+line a person has not seen yet, and `strata handoff` lists those separately.
+
+### Use is not a decision
+
+Nothing writes a decision for a `var(--accent)` already sitting in a recipe. The record holds
+departures and rulings — a token cut, an override, a region moved, a prop picked, a deviation
+declared, a ship, a handoff — and nothing else. Consumers are *evidence*: `strata explain` and
+`strata check` count them on request, from the source, at the moment someone asks.
+
+This is why the record is worth reading. Thirty lines of judgement can be read end to end;
+thirty thousand lines of usage cannot be read at all, and a log nobody reads is not a record.

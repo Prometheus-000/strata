@@ -16,7 +16,7 @@ const RULES = {
     { id: 'projections.match-record', authority: 'invariant', statement: 's', reason: 'a projection that differs is a decision nobody made', source: 'x', check: 'projections.match-record' },
     { id: 'floors.exist', authority: 'invariant', statement: 's', reason: 'every chain must end somewhere honest', source: 'x', check: 'floors.exist' },
     { id: 'names.semantic', authority: 'policy', statement: 's', reason: 'predictability of meaning, not sameness', source: 'x', check: 'names.semantic' },
-    { id: 'promotion.candidate-at', authority: 'preference', statement: 's', reason: 'one is taste; nine is a missing token', source: 'x', value: 2 },
+    { id: 'promotion.candidate-at', authority: 'preference', statement: 's', reason: 'one is taste; nine is a missing token', source: 'x', value: 2, check: 'none' },
   ],
 }
 

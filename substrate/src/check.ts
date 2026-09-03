@@ -15,7 +15,7 @@
 import { targetKey, type Decision } from './decision.ts'
 import { authorityOf, evalContext, evaluate, findings as allFindings, registeredEvaluators, type EvalContext, type Finding } from './evidence.ts'
 import { describe, formatDecision, formatHandoff, type Fact } from './format.ts'
-import { AUTHORITIES, byAuthority, type Authority } from './grammar.ts'
+import { AUTHORITIES, byAuthority, isCitedOnly, scopeOf, type Authority, type Rule } from './grammar.ts'
 import { byId, collapseReversals, current, history, parseLog, pending, readAll, since, LOG_PATH } from './log.ts'
 import { buildIndex, search, valueText, PROMOTION_CANDIDATE_AT } from './precedent.ts'
 import { preference } from './grammar.ts'
@@ -34,6 +34,13 @@ export interface CheckReport {
   invariants: InvariantResult[]
   /** Everything that is not an invariant, in the order found. */
   findings: Finding[]
+  /**
+   * Rules nothing here can evaluate: cited into skills, carried into packets,
+   * read by a hand. Named so that a silent rule is never mistaken for a
+   * passing one — the count is the honest measure of how much of this grammar
+   * is machine-checked.
+   */
+  cited: Rule[]
   pending: Decision[]
   ready: Decision | null
 }
@@ -48,7 +55,7 @@ export function runCheck(root: string): CheckReport {
     log = fs.existsSync(p) ? parseLog(fs.readFileSync(p, 'utf8')) : []
   } catch (err) {
     const f: Finding = { rule: 'record.parses', authority: 'invariant', message: err instanceof Error ? err.message : String(err) }
-    return { decisions: 0, invariants: [{ rule: 'record.parses', ok: false, findings: [f] }], findings: [], pending: [], ready: null }
+    return { decisions: 0, invariants: [{ rule: 'record.parses', ok: false, findings: [f] }], findings: [], cited: [], pending: [], ready: null }
   }
   const ctx = evalContext(root, log)
   const found = allFindings(ctx)
@@ -69,10 +76,12 @@ export function runCheck(root: string): CheckReport {
   const rest = found.filter((f) => !(f.authority === 'invariant' && known.has(f.rule)))
 
   const open = pending(log)
+  const cited = ctx.rules.filter((r) => r.authority !== 'invariant' && (isCitedOnly(r) || !registeredEvaluators().includes(r.check ?? '')))
   return {
     decisions: log.length,
     invariants,
     findings: rest.map((f) => ({ ...f, authority: f.authority ?? authorityOf(ctx.rules, f.rule) })),
+    cited,
     pending: collapseReversals(open),
     ready: since(log, 'ready').length === 0 ? (current(log).get('ready') ?? null) : null,
   }
@@ -98,6 +107,14 @@ export function formatCheck(r: CheckReport): string {
       out.push(`    ${f.message}`)
       for (const fact of f.facts ?? []) out.push(`      ${fact.name}: ${String(fact.value)}`)
     }
+    out.push('')
+  }
+  if (r.cited.length) {
+    out.push('CITED, NOT EVALUATED', RULE)
+    out.push(`${r.cited.length} rule(s) carry no evaluator here. They are cited into skills and read by a hand; silence about them is not a pass.`)
+    const product = r.cited.filter((x) => scopeOf(x) === 'product')
+    if (product.length) out.push(`${product.length} of them are this product's own taste, not the system's.`)
+    for (const x of r.cited) out.push(`    ${x.id}${scopeOf(x) === 'product' ? '  (this product)' : ''}`)
     out.push('')
   }
   out.push('HANDOFF', RULE, formatHandoff(r.pending, r.ready).trimEnd(), '')

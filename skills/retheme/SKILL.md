@@ -11,7 +11,9 @@ constraints:
   - the engine is the only author of the semantic tier; a retheme is seeds, never values
   - stay inside the ranges tokens.json declares under strata.themeEngine.seeds.$ranges
   - chroma 0 is the house default; colour is a choice you state a reason for
-  - pass --by agent and --why on every write
+  - "say who chose: who could have chosen otherwise? if the target and the value were both named to you, --decided-by human --actor <their handle>; if you chose either, --decided-by agent. Your shell already says who wrote it"
+  - "using a token is not deciding one: nothing writes a line for a var(--x) already in a recipe. Consumers are evidence, computed on request"
+  - pass --why on every write; a decision without a sentence is a keystroke
 evidenceRequired: [contrast on dark (vs --surface-page), contrast on light (vs --surface-page)]
 typicalDecisions: [seed]
 examples: []
@@ -41,7 +43,7 @@ reasons: |
    the engine, or the store's seeds) and record it:
 
    ```bash
-   strata decide seed --hue 250 --chroma 0.08 --warmth -0.6 --energy 0.35 --density 1 --appearance dark --why "…" --by agent
+   strata decide seed --hue 250 --chroma 0.08 --warmth -0.6 --energy 0.35 --density 1 --appearance dark --why "…" --decided-by agent
    ```
 
 4. Regenerate the projections (`npm run tokens`) and run `strata check`.

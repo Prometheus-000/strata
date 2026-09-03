@@ -221,7 +221,7 @@ test('the store is a projection: the fold of the record reproduces overrides.jso
 test('an override explains itself with precedent, and drift that converges is a precedent finding in check', () => {
   const { dir, ctx } = world()
   fs.mkdirSync(path.join(dir, 'grammar'))
-  fs.writeFileSync(path.join(dir, 'grammar/rules.json'), JSON.stringify({ rules: [{ id: 'promotion.candidate-at', authority: 'preference', statement: 's', reason: 'one is taste; three is a shape', source: 'x', value: 3 }] }))
+  fs.writeFileSync(path.join(dir, 'grammar/rules.json'), JSON.stringify({ rules: [{ id: 'promotion.candidate-at', authority: 'preference', statement: 's', reason: 'one is taste; three is a shape', source: 'x', value: 3, check: 'none' }] }))
   for (const inst of ['a', 'b', 'c']) decide({ kind: 'override', action: 'set', address: address(inst), property: 'radius', value: { literal: '20px' } }, ctx(inst === 'c' ? 'agent' : 'human'))
   const e = explain(dir, `override:instance:gallery/a::${CARD}:radius`)!
   assert.deepEqual(e.evidence.map((f) => [f.name, f.value]), [['value', 'drifted to 20px'], ['reuse count', 3], ['independent', true], ['promotion candidate', true]])

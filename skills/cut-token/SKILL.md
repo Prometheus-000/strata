@@ -11,10 +11,12 @@ constraints:
   - never edit src/tokens or src/theme/ledger.json by hand — they are projections of the record
   - a cut collapses to the fallback beside the engine; you do not choose the floor, you decide whether the token stands
   - one decision per token per reason; if the reason changes, decide again and the record keeps both
-  - pass --by agent and --why on every write
+  - "say who chose: who could have chosen otherwise? if the target and the value were both named to you, --decided-by human --actor <their handle>; if you chose either, --decided-by agent. Your shell already says who wrote it"
+  - "using a token is not deciding one: nothing writes a line for a var(--x) already in a recipe. Consumers are evidence, computed on request"
+  - pass --why on every write; a decision without a sentence is a keystroke
 evidenceRequired: [consumers, usage concentration, duplicate visual role, contrast on dark (vs --surface-page)]
 typicalDecisions: [token/cut, token/keep, token/propose]
-examples: [d0mtlrb8y8-xsnb, d0mtlrb8y8-llbi, d0mtlrb8y8-01oc]
+examples: [d0mtlvzac0-5lk7, d0mtlvzac0-fnuq, d0mtlvzac0-ed0m]
 reasons: |
   A cut token does not disappear. Fourteen sites say var(--accent-strong); a
   property that simply stopped existing would fail every one of them silently,
@@ -41,8 +43,8 @@ reasons: |
 4. Decide, on the record:
 
    ```bash
-   strata cut --<token> --why "<one sentence a reader can disagree with>" --by agent
-   strata keep --<token> --why "…" --by agent
+   strata cut --<token> --why "<one sentence a reader can disagree with>" --decided-by agent
+   strata keep --<token> --why "…" --decided-by agent
    ```
 
    The projections regenerate in the same call. Read the printed line: it

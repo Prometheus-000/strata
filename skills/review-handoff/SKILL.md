@@ -10,8 +10,12 @@ context:
 constraints:
   - never move anything back; a designer's move is never wrong at the page level
   - anything you notice against the grammar is an observation in a line, never a cost and never a violation
-  - if the handoff was pressed by an agent, say so: a person reviews before it is committed
+  - "an agent-decided line needs a person's eyes before it is committed — decided.kind, never written.kind: an agent typing a person's decision is the ordinary case and needs nothing"
+  - list the agent-decided lines in the handoff separately, and say so in the commit message
   - commit the source and the record together; there is no receipt file to delete
+  - "say who chose: who could have chosen otherwise? if the target and the value were both named to you, --decided-by human --actor <their handle>; if you chose either, --decided-by agent. Your shell already says who wrote it"
+  - "using a token is not deciding one: nothing writes a line for a var(--x) already in a recipe. Consumers are evidence, computed on request"
+  - pass --why on every write; a decision without a sentence is a keystroke
 evidenceRequired: [needs wiring]
 typicalDecisions: [move, prop, ready]
 examples: []
@@ -35,8 +39,13 @@ reasons: |
 3. Say what you noticed, as observations, one line each: a region named by
    its old position, two filled actions on one surface, a pick that made a
    group inconsistent with its data. Not as costs. Not as violations.
-4. `strata check` for the whole picture; only an invariant can fail it, and
+4. Separate the pending lines by the hand that *chose* them. Every line whose
+   `decided.kind` is `agent` is one a person has not yet seen, and those are
+   the ones to list for the designer before anything is committed. A line
+   decided by a person and written by an agent needs nothing: that is the
+   ordinary case, and the record already says which is which.
+5. `strata check` for the whole picture; only an invariant can fail it, and
    none of them is about the design.
-5. Commit the source and `.strata/decisions.jsonl` together, with a message
+6. Commit the source and `.strata/decisions.jsonl` together, with a message
    that says what the designer decided and what you wired. Do not press
    ready yourself; it is the designer's word.
