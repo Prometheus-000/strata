@@ -1,9 +1,14 @@
 /**
  * THE RECORD, on the hub. Every current decision, read from
  * `.strata/decisions.jsonl` at build time and rendered through the same
- * blocks the CLI prints — DECISION and CONSEQUENCE. The static site cannot
- * evaluate (evidence needs the filesystem) and cannot write; it shows what
- * was decided, by whom, and why, which is the part a reader came for.
+ * blocks the CLI prints — DECISION and CONSEQUENCE, two of the four.
+ *
+ * The other two are missing for a reason worth stating on the page rather
+ * than only here: CONTEXT and EVIDENCE are computed when asked, from the
+ * source, and a static host has neither the filesystem nor the record's
+ * evaluators. Precomputing them at build would freeze a number whose whole
+ * point is that it is current. So the page says which two it is showing and
+ * what to run for the rest, and does not imply four.
  */
 import raw from '../../.strata/decisions.jsonl?raw'
 import { handText, type Decision } from '@strata/substrate/decision'
@@ -39,7 +44,7 @@ export function Decisions() {
       title="What this product decided."
       sub={`${LOG.length} decisions on the record, ${CURRENT.length} current — ${Object.entries(counts)
         .map(([k, n]) => `${n} ${k}`)
-        .join(' · ')}. Each one carries a hand, a reason and what followed; the CLI prints the same blocks with evidence beside them.`}
+        .join(' · ')}. Each one names two hands — who chose and who wrote — a reason, and what followed. This is two of the four blocks: a static page cannot compute CONTEXT or EVIDENCE, because consumers, contrast and convergence are read from the source at the moment someone asks. Run \`strata explain <id>\` for all four.`}
       id="decisions"
     >
       {/* Not wrapped in a reveal: thirty-odd rows never reach the observer's threshold at once, and a list that never appears is worse than one that does not fade in. */}
