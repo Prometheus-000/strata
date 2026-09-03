@@ -9,7 +9,7 @@ import raw from '../../.strata/decisions.jsonl?raw'
 import type { Decision } from '@strata/substrate/decision'
 import { current } from '@strata/substrate/fold'
 import { describe, rows } from '@strata/substrate/format'
-import { Reveal, Section } from './Section'
+import { Section } from './Section'
 
 const LOG: Decision[] = raw
   .split('\n')
@@ -42,8 +42,8 @@ export function Decisions() {
         .join(' · ')}. Each one carries a hand, a reason and what followed; the CLI prints the same blocks with evidence beside them.`}
       id="decisions"
     >
-      <Reveal>
-        <div className="ledger decisions">
+      {/* Not wrapped in a reveal: thirty-odd rows never reach the observer's threshold at once, and a list that never appears is worse than one that does not fade in. */}
+      <div className="ledger decisions">
           {CURRENT.map((d) => (
             <details className="decisions__row" key={d.id}>
               <summary className="ledger__row decisions__summary">
@@ -88,8 +88,7 @@ export function Decisions() {
               </div>
             </details>
           ))}
-        </div>
-      </Reveal>
+      </div>
     </Section>
   )
 }
