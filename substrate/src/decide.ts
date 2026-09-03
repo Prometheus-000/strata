@@ -118,9 +118,11 @@ export function decide(req: Request, ctx: DecideContext): DecideResult {
     return { ok: false, error: outcome.refused, decision }
   }
 
-  const decision = finish(outcome.body, { ...(outcome.consequence ?? {}), ...(outcome.written?.length ? { written: outcome.written } : {}) }, outcome.unchanged)
+  // A dry run applied nothing, so it wrote nothing, whatever the handler would have.
+  const written = ctx.dryRun ? [] : (outcome.written ?? [])
+  const decision = finish(outcome.body, { ...(outcome.consequence ?? {}), ...(written.length ? { written } : {}) }, outcome.unchanged)
   if (!ctx.dryRun) append(ctx.root, decision)
-  return { ok: true, decision, written: outcome.written ?? [], ...(outcome.unchanged ? { unchanged: true } : {}) }
+  return { ok: true, decision, written, ...(outcome.unchanged ? { unchanged: true } : {}) }
 }
 
 const supersedesOf = (log: readonly Decision[], body: DecisionBody): { supersedes: string } | undefined => {

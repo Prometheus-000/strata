@@ -1112,3 +1112,75 @@ body {
 .ledger__row--link:hover .ledger__rule {
   color: var(--accent);
 }
+
+/* ---------- The record — every current decision, as the CLI prints it ---------- */
+.decisions__row {
+  border-top: 1px solid var(--line);
+}
+.decisions__row:first-child {
+  border-top: 0;
+}
+.decisions__summary {
+  cursor: pointer;
+  list-style: none;
+}
+.decisions__summary::-webkit-details-marker {
+  display: none;
+}
+.decisions__summary:hover .ledger__rule {
+  color: var(--ink);
+}
+.decisions__row[open] .decisions__summary .ledger__what {
+  color: var(--ink);
+}
+.decisions__box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--strata-space-6);
+  padding: 0 0 var(--strata-space-5) 0;
+}
+.decisions__block {
+  min-width: 0;
+}
+.decisions__head {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding-bottom: var(--strata-space-2);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--strata-space-3);
+}
+.decisions__block dl {
+  margin: 0;
+  display: grid;
+  gap: var(--strata-space-1);
+}
+.decisions__block dl > div {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: var(--strata-space-3);
+  align-items: baseline;
+}
+.decisions__block dt {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.decisions__block dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-sm);
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+@media (max-width: 720px) {
+  .decisions__box {
+    grid-template-columns: 1fr;
+  }
+}

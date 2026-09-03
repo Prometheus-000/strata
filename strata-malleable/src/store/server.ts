@@ -3,7 +3,7 @@
  * plugin so a host that serves this harness beside other surfaces mounts the
  * same writer — two copies would be two places for a file path to disagree.
  *
- *   POST /__strata/decide         every write: { request, by?, reason? } → decide()
+ *   POST /__strata/decide         every write: { request, by?, reason?, dryRun? } → decide()
  *   GET  /__malleable/structure   the page's containers and regions, read fresh
  *   GET  /__malleable/callsite    where a component instance was written, and what it is passed
  *
@@ -47,7 +47,7 @@ export function malleableDevPlugin(root = process.cwd(), source = 'fixtures/app'
         if (req.method !== 'POST') return json(res, { ok: false, error: 'POST a { request, by?, reason? }' }, 405)
         void readBody(req).then((body) => {
           try {
-            const parsed = JSON.parse(body || '{}') as { request?: Request; by?: unknown; reason?: string; via?: string }
+            const parsed = JSON.parse(body || '{}') as { request?: Request; by?: unknown; reason?: string; via?: string; dryRun?: boolean }
             if (!parsed.request?.kind) return json(res, { ok: false, error: 'a request needs a kind' }, 400)
             const by = parsed.by ?? 'human'
             if (!isAuthor(by)) return json(res, { ok: false, error: `by must be human or agent, not "${String(by)}"` }, 400)
@@ -57,6 +57,7 @@ export function malleableDevPlugin(root = process.cwd(), source = 'fixtures/app'
               by,
               via: parsed.via ?? 'overlay',
               because: parsed.by ? `by ${by} — stated by the ${parsed.via ?? 'overlay'}` : 'by human — a pointer is a hand',
+              dryRun: parsed.dryRun === true,
             })
             json(res, result, result.ok ? 200 : 200)
           } catch (err) {

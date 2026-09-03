@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Reveal, Section } from './Section'
+import { Decisions } from './Decisions'
 import {
   Avatar,
   Badge,
@@ -22,35 +24,6 @@ import { ThemeLab } from './ThemeLab'
 import { Console } from './Console'
 import './site.css'
 
-/* ---------- Reveal-on-scroll ---------- */
-function Reveal({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [inView, setInView] = useState(false)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true)
-          io.disconnect()
-        }
-      },
-      { threshold: 0.15 },
-    )
-    io.observe(el)
-    return () => io.disconnect()
-  }, [])
-  return (
-    <div
-      ref={ref}
-      className={`reveal ${inView ? 'reveal--in' : ''}`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      {children}
-    </div>
-  )
-}
 
 /* Links between pages follow the deploy base, so the same build serves at / and at /<repo>/. */
 const BASE = import.meta.env.BASE_URL
@@ -92,6 +65,7 @@ function TopBar() {
           <a className="topbar__link" href="#lab">Theme Lab</a>
           <a className="topbar__link" href="#console">Console</a>
           <a className="topbar__link" href="#grammar">Grammar</a>
+          <a className="topbar__link" href="#decisions">Record</a>
           <a className="topbar__link" href="#components">Reference</a>
           <a className="topbar__link" href={`${BASE}malleable.html`}>Malleable</a>
         </nav>
@@ -141,34 +115,6 @@ function Hero() {
 }
 
 /* ---------- Sections scaffold ---------- */
-function Section({
-  kicker,
-  title,
-  sub,
-  id,
-  children,
-}: {
-  kicker: string
-  title: string
-  sub?: string
-  id: string
-  children: ReactNode
-}) {
-  return (
-    <section className="section" id={id}>
-      <div className="wrap">
-        <Reveal>
-          <div className="section__head">
-            <span className="section__kicker">{kicker}</span>
-            <h2 className="section__title">{title}</h2>
-            {sub && <span className="section__sub">{sub}</span>}
-          </div>
-        </Reveal>
-        {children}
-      </div>
-    </section>
-  )
-}
 
 /* ---------- Surfaces — every instrument in the repo, reachable from here ---------- */
 const SURFACES = [
@@ -604,6 +550,7 @@ export default function App() {
         </Section>
         <Credo />
         <Grammar />
+        <Decisions />
         <Foundations />
         <Gallery />
       </main>

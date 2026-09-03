@@ -1,378 +1,582 @@
 # Strata
 
-**A design system that is generated, then governed — by the people who use it
-and the agents that work beside them.**
+**A persistent design decision system for humans and agents.**
+
+Strata is not a component library, a token collection, or an AI layer bolted
+onto a design system.
+
+It is a small, inspectable record of what a product has decided: its meaning,
+behavior, expression, structure, reasons, precedents, and exceptions.
+
+Everything else is a projection.
+
+CSS, tokens, components, layouts, Figma libraries, and generated screens are
+outputs of that record. They can be regenerated, replaced, or discarded
+without losing the decisions that produced them.
+
+Humans and agents operate on the same substrate. Every consequential change
+has an author, a reason, and an observable result.
+
+The system does not treat difference as failure. It records deviation,
+measures reuse, and lets evidence determine what deserves to become part of
+the shared system.
+
+**The record is the decision. Everything else is a receipt.**
+
+**See it:** [prometheus-000.github.io/strata](https://prometheus-000.github.io/strata/)
+is the hub — the showcase, the Theme Lab, the record itself, with the
+[personalizer](https://prometheus-000.github.io/strata/personalize.html) and
+the [malleable layer](https://prometheus-000.github.io/strata/malleable.html)
+one click away. The static site cannot write; it shows what was decided. The
+dev server writes through.
+
+## Thesis
 
 A design system used to be a library: a stylesheet somebody hand-tuned, a
 component set somebody maintained, and a review gate that turned "no" into a
 process. It gave nothing back to the designer, it belonged to one platform,
 and it assumed the only author was a human with a text box.
 
-Strata is an attempt at the next thing. The whole system is derived from a
-small, typed record — six numbers, a ledger of decisions, the page's own
-markup — and everything derived from that record is a projection you can throw
-away and regenerate. Humans turn dials and drag things; agents read reasons and
-write numbers; every change carries its author; and nothing, anywhere, is
-blocked or flagged while someone is still deciding.
+Three things broke that model at once. Agents started writing UI, and an
+agent with a component list generates collage while an agent with reasons
+generates coherent work. Products started needing more than one projection
+of the same intent — React, CSS, Figma, a runtime the team has not chosen
+yet. And the review gate turned out to measure the wrong moment: a design in
+progress fails any check by definition, so a tool that reports mid-drag
+reads as policing by volume, and nobody designs from inside a system that is
+waiting for them to comply.
 
-> The record is what people decided. Everything else is a receipt.
+Strata's answer is to make the decision the primitive. Not the token, not
+the component, not the theme — the decision: what changed, who changed it,
+why, and what followed. One record holds every one of them. Every file a
+build produces is derived from it and can be produced again. Every hand
+goes through the same call. And nothing in it can fail a build except a
+mechanical truth about the artifact: the record parses, the projections
+match it, every fallback chain ends, every `var()` resolves. A design that
+is different is reported, never refused.
 
-**See it:** [prometheus-000.github.io/strata](https://prometheus-000.github.io/strata/)
-is the hub — the showcase and Theme Lab, with the
-[personalizer](https://prometheus-000.github.io/strata/personalize.html) and the
-[malleable layer](https://prometheus-000.github.io/strata/malleable.html) one
-click away. The static site cannot write back to source; the harness falls back
-to your browser's storage there, and writes through only on the dev server.
+## Principles
 
-## What it gives back
+1. **Decisions are the source of truth.** A token cut, a property override,
+   a region move, a prop pick, a seed change, a declared deviation, a ship,
+   a handoff: one type, one record, appended and never rewritten.
+2. **Context precedes judgment.** Before a hand decides, the record says what
+   was decided before, how often the same value was reached independently,
+   and which rules bear on it. An agent gets environmental context, not
+   isolated rules.
+3. **Humans and agents share the substrate.** A pointer in the overlay, a
+   command in a terminal, an agent's shell: each builds the same request and
+   says who it is writing for. Nothing else about them differs, and no hand
+   gets a private door.
+4. **Everything else is a projection.** `semantic.css`, `tokens.json`,
+   `ledger.json`, the override store, a React provider, a Figma library: each
+   is what the record says, written out, and `strata rebuild` writes it again.
+5. **Deviation is evidence, not failure.** A raw value where a semantic name
+   belongs is declared, counted and reported. Nine of the same shape is a
+   missing token, and the record is where that becomes visible.
+6. **Provenance is first-class.** Every decision carries `by`, `at`, `via`,
+   and the sentence that decided the author, so a wrong default is visible
+   where it happened and readable later.
+7. **Knowledge becomes precedent through use.** Promotion into the shared
+   system is earned by count over history, computed and never declared.
+8. **Enforcement is reserved for invariants.** A build fails only when the
+   artifact is invalid, unsafe, or cannot be faithfully produced from the
+   record. Policy is evaluated. Preference carries its number. Knowledge
+   carries its source. Precedent is computed. They do not share authority.
 
-**Creativity, to the designer.** Nothing here refuses, and nothing here speaks
-until you say ready. A drag lands where it was aimed; a region moves where it
-was put; a raw value ships if you declare it; a one-off in your feature needs
-no permission. A design in progress fails any check by definition, so no check
-runs while you are designing. What the system does instead is write the
-decision into the diff and hand the review to whoever asked for it. Report,
-do not police — nobody designs from inside a system that is waiting for them
-to comply.
-
-**Portability, to the product.** The record is data, not code. A theme is six
-numbers that fit in a URL hash. A token decision is one line in a ledger. A
-page's structure is its landmarks, and a move is a diff. CSS, `tokens.json`, a
-Figma library, a React provider are projections of that data, and a projection
-is replaceable the day something serves the product better. The engine imports
-no framework; React does not appear until the runtime layer.
-
-**Provenance, to the partnership.** Every override carries
-`author: 'human' | 'agent'`; every token decision carries a name; every move is
-receipted with the hand that made it. The theme compiler itemises a receipt
-per word so a derivation is inspectable rather than trusted. The grammar ships
-every rule with the incident that earned it, because an agent with reasons
-generates novel-but-coherent work and an agent with a component list generates
-collage.
-
-## How it works
-
-### A theme is six numbers
-
-```json
-{ "hue": 250, "chroma": 0, "warmth": -0.6, "energy": 0.35, "density": 1, "appearance": "dark" }
-```
-
-From those seeds the engine (`src/theme/generateTheme.ts`) derives every
-colour, surface, stroke, radius, rhythm and easing, deterministically, in
-perceptually uniform OKLCH. `warmth` tints every neutral so no grey is
-unconsidered; `energy` buys shape as well as speed; a light appearance is not
-inverted dark, it deepens accents to hold AA on paper. Retune a seed and the
-whole product follows. The engine is the *only* author of the semantic tier:
-`src/tokens/` is generated and never edited, because the first week of this
-repo produced drift by transcription that nobody had chosen.
-
-### Layers factored by half-life
-
-Meaning, behaviour and expression change at wildly different rates, and
-governing all three at the speed of the slowest is how a system becomes a cage.
-So each layer gets its own governance:
-
-| Layer | Holds | Governance |
-| --- | --- | --- |
-| 0 · Meaning | semantic tokens, derived by the engine | strict · one author · never forked |
-| 1 · Behaviour | focus order, keyboard, dismissal, ARIA | shared · never forked — correctness is not a taste question |
-| 2 · Recipes | styled compositions of 0 + 1 | forkable by default — copy the source, keep the imports |
-| 3 · Local | your feature code | free · no permission · promotion earned by reuse |
-
-The rule that makes it a system: a recipe never references a raw value. It
-speaks the semantic vocabulary, and the vocabulary has one author.
-
-### Grammar and tokens come from the environment; people decide what stays
-
-Strata does not ask anyone to author a token set or a layout schema from a
-blank page. It reads what is already there and proposes:
-
-- **Prose → seeds.** "quiet warm library at 3am" compiles to a seed set, with a
-  receipt per word (`library → energy 0.2, warmth +0.4`). Fragments are the
-  expected input, out of order and self-correcting. The phrase is the record;
-  the seeds are its receipt.
-- **An image → seeds.** Drop a picture; its dominant hue, mean lightness and
-  neutral cast become accent, appearance and warmth.
-- **Source → manifest.** A codemod walks the real views, stamps stable identity
-  on styled nodes and on the root of every component, and reads each node's
-  base values out of the stylesheet it actually uses. A preview of a mock is a
-  mock.
-- **Source → structure.** `malleable regions` reads the page's containers out
-  of the page: its landmarks (`<header>`, `<nav>`, `<main>`, `<aside>`,
-  `<footer>`, `role="dialog"`, `<form role="search">`), looking through the
-  components that compose the page to the landmarks inside them, and lists the
-  regions each one holds in source order. Nothing declares structure; the
-  markup is the declaration.
-
-What is generated is then reviewed, edited, kept or cut by a person, and the
-system is arranged so that each of those is a gesture, not a form:
-
-| Gesture | Where |
-| --- | --- |
-| **Review** | the receipt beside every compiled word; the contrast receipts printed on every regeneration; the resolver's chain, which shows every candidate value and why it lost; the diff a move leaves |
-| **Edit** | the dials; a drag on a corner or an edge; a drag on a region; a pick, a toggle or a scrub from a component's own controls; the promote control that asks one question, *how far does this go*, in four words |
-| **Enable** | `deviation: <reason>` makes a raw value legal and logged; `kept` in the token ledger says a generated token was reviewed and wanted |
-| **Disable** | `cut` in the token ledger — the token collapses to its declared fallback in every projection, and the validator counts every consumer |
-
-### Every generated token is a proposal
-
-The engine emits thirty-four tokens. `src/theme/ledger.json` holds a line for
-each — `proposed` until someone decides, then `kept` or `cut`, with a reason
-and a name. `npm run tokens` adds proposals and never edits a decision;
-`npm run ledger -- cut --accent-strong --why "one filled action per surface"`
-makes one. A cut token does not vanish: fourteen places in `strata.css` say
-`var(--accent-strong)`, and a property that simply stopped existing would fail
-every one of them silently, at the consumer. It *collapses* instead — to a
-fallback declared beside the engine (`--accent-strong` → `--accent` → `--ink`,
-the accent gate written down), with the decision emitted where the token is
-defined:
-
-```css
---accent-strong: var(--accent); /* cut by human: one filled action per surface */
-```
-
-`tokens.json` says `cut` on the token so an agent reads a decision rather than
-a missing name; the runtime applies the same ledger so the Theme Lab never
-shows a token the build decided against; and `npm run validate` logs every
-usage that collapsed and every token nothing uses — a cut candidate, or
-headroom; only you know which.
-
-### Deviation is telemetry
-
-The validator fails an undeclared literal and *logs* a declared one. The
-malleable layer's drift report groups every un-promoted override by shape and
-counts it:
+## Architecture
 
 ```
-UNRESOLVED DRIFT — ships as-is, decided later
-    9 × padding = 12px  (drifted)
-        7 instances + 2 views · Card.root, Badge.pill
-        9 appearances — promotion candidate
-by author: 11 human · 0 agent
+                    Decision Substrate
+                           │
+          ┌────────────────┼───────────────┐
+          │                │               │
+       Context          Decisions       Evidence
+          │                │               │
+          └────────────────┼───────────────┘
+                           │
+                        Agents
+                           │
+                     Projections
+                           │
+          ┌────────────────┼───────────────┐
+          ↓                ↓               ↓
+        Code             Figma           Runtime
 ```
 
-One is taste. Nine of the same shape is a missing token, and the report is
-where that becomes visible. Promotion into the system is earned by count,
-never granted by proposal — which keeps the inventory small because everything
-in it was proven necessary. Un-promoted overrides are never cleaned up on ship:
-someone made those decisions on purpose, and dropping them silently would be
-the worst behaviour available.
+The governing arrangement is one line: report, don't police.
 
-### Structure is moved, not declared
-
-Property-level styling is governed by the engine. Structure had no equivalent
-gesture: a designer who knows the filters belong in the top bar had to write a
-prompt, or a ticket, and wait. Now a region — any component sitting under a
-landmark — is picked up by its body and put down in another landmark, before or
-after a neighbour, and the drop rewrites the JSX on the spot:
-
-```diff
- // Page.tsx
--import { Filters } from './Filters'
- import { Gallery } from './Gallery'
-       <main className="page__main">
--        <Filters />
-         <Gallery />
-
- // TopBar.tsx
- import { Badge } from '../recipes/Badge'
-+import { Filters } from './Filters'
-       <nav className="topbar__nav">
-         <Badge />
-+        <Filters />
-       </nav>
+```
+                INVARIANT
+                   │
+              enforce
+                   │
+              ─────────
+                   │
+              everything
+                 else
+                   │
+                observe
+                   │
+                record
+                   │
+               evaluate
+                   │
+              learn/promote
 ```
 
-That diff is the whole record. There is no store for structure, no declared
-list of positions, no contract a move can fail. **Designers define the UX.**
-Focus order, dismissal and keyboard handling are code, and when a region moves
-the code adapts to it — at review, by whoever generates. Nothing is priced or
-marked while a region is in the air; the only things drawn are the container
-under the pointer and one line where it would land. A move that leaves state
-behind still lands, and the receipt says what to wire. The reviewer makes the
-code fit and never moves anything back.
+And the loop the whole thing runs in:
 
-An earlier version of this repo had a *slot layer*: structure was declared as
-a list of bands, each band carried a behaviour contract, every position was
-enumerated in advance, and every drag was priced against the contract and the
-cost written into source for someone to accept. It was removed, on two
-findings. A design in progress fails any check by definition, so a tool that
-reports mid-drag is measuring the wrong moment and reads as policing by
-volume. And the premise was wrong: a designer's move does not cost the page
-anything, because the designer is the one defining what the page is; what it
-costs is code, and code is malleable to the design. What survived is the
-kernel — a move lands in source with its author and someone reviews it — and
-the reader that finds landmarks in a page, which is what makes a declaration
-unnecessary.
+```
+                       HUMAN INTENT
+                            │
+                            ▼
+                 ┌────────────────────┐
+                 │  DECISION SUBSTRATE │
+                 │                    │
+                 │  decisions         │   .strata/decisions.jsonl
+                 │  context           │   history, current, pending
+                 │  grammar           │   grammar/rules.json
+                 │  provenance        │   by · at · via · because
+                 │  precedent         │   strata precedent
+                 │  evidence          │   strata explain · strata check
+                 └─────────┬──────────┘
+                           │
+             ┌─────────────┼──────────────┐
+             │             │              │
+             ▼             ▼              ▼
+          Agent A       Agent B        Agent C
+          generate      evaluate       explore
+             │             │              │
+             └─────────────┼──────────────┘
+                           ▼
+                       DECISIONS          decide(request, { by, via })
+                           │
+                           ▼
+                 ┌────────────────────┐
+                 │    PROJECTIONS     │
+                 │                    │
+                 │ React              │   src/theme/ThemeContext.tsx
+                 │ CSS                │   src/tokens/semantic.css
+                 │ tokens.json        │   src/tokens/tokens.json
+                 │ the override store │   strata-malleable/.malleable/overrides.json
+                 │ the JSX itself     │   a move is a diff
+                 │ Figma · other      │   not built; see the end
+                 └─────────┬──────────┘
+                           │
+                           ▼
+                       REAL USE
+                           │
+                           ▼
+                    OBSERVATIONS          consumers · contrast · convergence
+                           │
+                           ▼
+                      PRECEDENT           "37 instances independently converged on 12px"
+                           │
+                           └──────────────► substrate
+```
 
-### A component says what may be changed about it
+The code is arranged the same way. `substrate/` is a package with no
+dependencies and no framework: the Decision type, the log, `decide()`,
+projections, precedent, the grammar, evaluators, `check`, skills. It imports
+nothing from the layers above it. The theme engine (`src/theme/`) and the
+malleable layer (`strata-malleable/`) are projections: each registers the
+handlers for the kinds it applies, the files it derives from the record, the
+evaluators that speak for it, and the state a skill can read. `bin/strata.mjs`
+is the one CLI, and it mounts both.
 
-The handles the overlay offers used to come from a global registry crossed
-with whatever the stylesheet happened to declare. Now a component declares its
-own controls beside itself, the way Framer's property controls sit beside a
-component — because the person who wrote `<Badge>` is the one who knows that
-`tone` has three values and that its radius should never leave the pill:
+## The Decision Model
+
+One type, discriminated on `kind`:
 
 ```ts
-export const controls = defineControls(Card, {
-  tone: { options: ['neutral', 'accent', 'positive'] },
-  interactive: { toggle: true },
-  lines: { range: [1, 6] },
-  radius: { range: [0, 24], snap: ['--radius-pill'] },
-  padding: false,
-})
+type Decision = DecisionBody & {
+  id: string            // 'd' + base36 ms + 4 chars — sorts by time
+  at: string            // ISO
+  by: 'human' | 'agent'
+  via: string           // 'cli' | 'overlay' | 'import:src/theme/ledger.json' | a harness
+  because?: string      // how `by` was determined, verbatim
+  reason?: string       // intent, in the author's words
+  supersedes?: string   // the previous decision on the same target
+  consequence: {        // what the operation already knew when it ran — recorded, never computed
+    written?: string[]; collapsesTo?: string; absorbed?: string[]
+    adapt?: string[]; affected?: number; refused?: string; note?: string
+  }
+}
+
+type DecisionBody =
+  | { kind: 'token'; token: string; action: 'propose' | 'keep' | 'cut' }
+  | { kind: 'override'; action: 'set' | 'remove' | 'rescope'; scope; selector; property; value?; fromScope?; node?; view? }
+  | { kind: 'move'; region: string; from: { container; file; line }; to: { container; file; line; index } }
+  | { kind: 'prop'; component; prop; file; line; from: PropValue; to: PropValue }
+  | { kind: 'seed'; seeds: ThemeSeeds; from?: ThemeSeeds }
+  | { kind: 'deviation'; file; line; value: string }
+  | { kind: 'ship'; promoted: { system; component }; frozen: number; seeds? }
+  | { kind: 'ready' }
 ```
 
-Two kinds, one declaration. A CSS control shapes the handle: its range, the
-tokens it snaps to, or no handle at all. A prop control sits above the
-selected instance and takes the shape of its prop — a strip of options, one
-chip that is on or off, a number you scrub sideways within the declared
-range — and a pick rewrites the attribute at the call site: `<Badge
-tone="accent">` becomes `<Badge tone="positive">`, `<Card>` becomes `<Card
-interactive lines={3}>`, in the file that uses it. That is a diff, not an
-override, receipted with its author like a move. No panel, no field: only the
-values the component allows, on the object. Six cards rendered from one
-`.map` are one line of source, so a pick on any of them is a pick on all of
-them, and every instance in the group is outlined while the strip is up.
+A region move, a token cut and a declared deviation are not special kinds of
+thing. They are all a change to the design state with provenance, intent
+and consequences, so they are one type on one record, and the same folds
+answer the same questions about each: what is current, what is its history,
+what is pending since the last handoff.
 
-## Governance is co-authored
-
-The governing artefacts of this system are written by both parties, in the
-same files, and read by both:
-
-- **The grammar** (`GRAMMAR.md`) is rules with reasons.
-  A human writes the incident — the stylesheet with thirty-four accidental
-  white alphas, the muted ink that passed on the background and failed on the
-  menu it sat on — and an agent generates from the reasoning rather than the
-  rule. The credo applies to itself: four philosophies were candidates and it
-  kept two.
-- **`tokens.json`** is the agent contract: seeds, ranges, and the *reason* for
-  each dial alongside the compiled values. An agent rethemes a product by
-  emitting a new seed set, never by editing CSS.
-- **Deviations and token decisions** live in source, next to the thing they
-  describe — a `deviation:` comment beside the literal, a `cut` beside the
-  token — so the decision and the thing decided are one diff.
-- **The loop has a division of labour.** An agent generates the page, because
-  something must exist before it can be moved. The designer moves regions and
-  drags properties, because choosing where things go needs a hand, not a
-  prompt. The agent reviews, because making code fit a design is judgement —
-  and undoing a designer's move is how a designer stops believing the tool.
-  Pressing *ready* withholds nothing; the moves are already in source.
-
-The `author` field is the hinge. An agent writes through the same operations a
-drag does — `malleable move`, `malleable prop`, `malleable set`, `malleable ready`,
-`npm run ledger -- cut` — and every one of those has to say who is writing:
-`--by`, then an environment variable, then `CLAUDECODE` (which Claude Code sets
-for every command it runs), then `human`, and the sentence that decided is
-printed on every write so a wrong default is visible where it happened. A move
-is a diff, so git already knows who committed it; what git cannot say is which
-hand made each move before the commit, and that is what the receipt is for:
+One line of the record, as it is on disk:
 
 ```json
-{ "what": "Filters", "from": { "container": "Page.main.page__main" }, "to": { "container": "TopBar.nav.topbar__nav" }, "by": "human" }
+{"kind":"token","token":"--shadow-color","action":"cut","id":"d0mtlrb8y8-xsnb","at":"2026-09-03T16:46:02.000Z","by":"agent","via":"import:src/theme/ledger.json","reason":"Lines, not shadows. The reference grammar — the portfolio and Visionary alike — draws every level with a 1px rule and an alpha wash, and paints no drop shadow anywhere; a shadow is decoration the eye pays for on every card. The elevation tokens keep their offsets and paint nothing, so the rule does the work it was already doing.","consequence":{"collapsesTo":"transparent"}}
 ```
 
-The drift report ends with *by author: 11 human · 0 agent*; the receipt names
-the mover on every line; and the plugin's skill tells the agent to pass
-`--by agent` and never to move anything back.
-
-## What is here
+The same decision, explained — the glass box. `DECISION` and `CONSEQUENCE`
+are on the record. `CONTEXT` is what the record knows about the target.
+`EVIDENCE` is what the projection's evaluators found, computed when asked
+and never on the write path:
 
 ```
-src/theme/         the engine, the prose compiler, the image sampler, a React provider
-src/tokens/        GENERATED projections — semantic.css, tokens.json; never edited
-src/behavior/      Layer 1 — useTabs, useDialog
-src/components/    Layer 2 — twelve recipes and strata.css
-src/site/          the showcase, the Theme Lab, and the hub every surface is reached from
-src/personalize/   the same engine, scaled down to the two controls an end user wants
-*.html             the three entry pages of one Vite build
-scripts/           emit-tokens · validate-tokens · ledger · bundle
-GRAMMAR.md         every rule, with the incident that earned it
+$ strata explain token:--shadow-color
 
-strata-malleable/  the malleable layer: change one thing, decide later where it
-                   belongs — overrides by scope, promotion, drift, ship; and
-                   move a region, which rewrites the JSX on the spot — with a
-                   Claude Code integration for generating and reviewing
+DECISION
+──────────────
+Token: --shadow-color
+Action: cut
+Author: agent
+Reason: Lines, not shadows. The reference grammar — the portfolio and Visionary
+alike — draws every level with a 1px rule and an alpha wash …
+Id: d0mtlrb8y8-xsnb
+At: 2026-09-03T16:46:02.000Z · via import:src/theme/ledger.json
+
+CONTEXT
+──────────────
+target: token:--shadow-color  (record)
+decisions on this target before it: 0  (record)
+
+EVIDENCE
+──────────────
+consumers: 3  (token.usage)
+usage concentration: low  (token.usage)
+surfaces: 1  (token.usage)
+consumer: src/tokens/semantic.css:85  (token.usage)
+duplicate visual role: no  (token.duplicate-role)
+
+CONSEQUENCE
+──────────────
+fallback → transparent
 ```
 
-The library is standalone: it has its own resolver, structure reader, tests
-and CLI, is provable without a browser, and depends on nothing in `src/`.
-A second instance of the framework, seeded with a shipped product's voice
-(near-black grounds, ink-alpha washes, a gated accent, contrast receipts that
-fail the build), lives outside this repo and proved the portability claim: the
-grammar carried, the engine carried, and the only thing that changed was the
-seeds and the incidents.
+A cut token does not disappear. Fourteen sites say `var(--accent-strong)`,
+and a property that simply stopped existing would fail every one of them
+silently, at the consumer. It *collapses* — to a fallback declared beside the
+engine, with the decision emitted where the token is defined:
 
-## Run it
+```css
+--shadow-color: transparent; /* cut by agent: Lines, not shadows. … */
+```
+
+Two things the model refuses to be. The log is history, not a store for
+structure: a move is on the record with its provenance, but the JSX is the
+state, and nothing replays moves into source — an earlier version of this
+repo declared structure as data and priced every drag against it, and was
+removed for it. And evidence is never computed when a decision is written:
+a drag mid-design writes a line and hears nothing, because a design in
+progress fails any check by definition.
+
+## Context & Precedent
+
+Before a rule, there is what the record shows.
+
+```
+$ strata precedent --property padding
+  5 instances independently converged on padding = 12px across 2 views (4 by hand, 1 by agent) — promotion candidate
+  1 instance converged on padding = 16px (1 by hand)
+```
+
+`strata precedent` searches every decision by property, value, component,
+token, author, time and the words in its reason, and counts how many
+distinct targets reached the same value. That count is what promotion is
+earned by. The threshold at which a convergence is called a candidate is a
+preference in the grammar — three, by default — and the drift report reads
+the same number. Nothing here has authority of its own; it is what happened.
+
+`strata history <target>` prints every decision on one target as glass
+boxes, oldest first; `strata log` prints the record one line each; `strata
+show <id>` prints one. A reversal is two lines, not a deletion. A refusal —
+a request the projection could not apply — is a line too, with the reason.
+
+## Agent Model
+
+```
+human ─┐
+       ├──► decide(request, { by, via, because }) ──► handler applies ──► record appends
+agent ─┘
+```
+
+There is one write path. The terminal, the overlay in the browser, and an
+agent's shell each build a request and say who they are writing for. The
+author is decided explicitly and never silently — `--by human|agent`, then
+`STRATA_AUTHOR`, then `CLAUDECODE` in the environment (Claude Code sets it for
+every command it runs), then `human` — and the sentence that decided is
+printed on every write and kept on the decision. The overlay writes `human`
+because a pointer is a hand. There is no API an agent has that a person
+does not, and no file an agent edits that the record does not see.
+
+An agent does not read the design system; it performs design work according
+to a **skill**. A skill is a `SKILL.md` — the convention Claude Code already
+installs — with a typed front matter the substrate reads:
+
+```yaml
+name: cut-token
+purpose: Decide whether a token the engine emits earns its place, and cut it — to its declared fallback, never to nothing — or keep it, with the reason on the record.
+inputs: [token]
+context:
+  state: [tokens, consumers]
+  precedent: { kind: token, token: $token }
+  rules: [layer0.semantic-names-only, voice.lines-not-shadows, layer2.one-filled-action, knowledge.accent-gate]
+constraints:
+  - never edit src/tokens or src/theme/ledger.json by hand — they are projections of the record
+  - pass --by agent and --why on every write
+evidenceRequired: [consumers, usage concentration, duplicate visual role]
+typicalDecisions: [token/cut, token/keep]
+examples: [d0mtlrb8y8-xsnb, d0mtlrb8y8-llbi]
+reasons: |
+  A cut token does not disappear …
+```
+
+The body is the procedure. `strata skill cut-token --token --accent-strong`
+assembles the packet: the rules cited, with their reasons and their
+authority; the precedent found; the state the projections provide; the
+examples resolved from this product's own record; the evidence a decision
+from this skill must carry. The harness's model performs the procedure.
+Strata calls no model — many harnesses, one foundation. Six skills ship
+(`cut-token`, `retheme`, `move-region`, `pick-prop`, `promote`,
+`review-handoff`), and the Claude Code plugin in
+`strata-malleable/integrations/claude-code` runs them.
+
+## Governance
+
+Four kinds of statement, and they do not carry the same authority:
+
+| | Says | Authority |
+| --- | --- | --- |
+| **Invariant** | "Every var() names a property something defines." | Enforced. The only class a build fails on. A mechanical truth about the artifact, never a design judgement. |
+| **Policy** | "Recipes speak semantic names, never a hex." | Evaluated and reported. Bent by a declared deviation, which is then knowledge. |
+| **Preference** | "A shape that appears three times is a candidate." | Carries its number. |
+| **Knowledge** | "Hand-written projections drift within a week." | Carries its source. |
+| **Precedent** | "37 instances independently converged on 12px." | Computed from the record. Never declared. |
+
+The grammar (`GRAMMAR.md`) is rules with reasons, in prose, co-authored: a
+human writes the incident — the stylesheet with thirty-four accidental white
+alphas, the muted ink that passed on the background and failed on the menu
+it sat on — and an agent generates from the reasoning rather than the rule.
+The same rules are data in `grammar/rules.json`, each with its authority,
+and that is what `strata check` runs from:
+
+```
+$ strata check
+
+INVARIANTS
+──────────────
+✓ record.parses — 34 decision(s)
+✓ projections.match-record
+✓ fallbacks.total-acyclic
+✓ css.vars-defined
+
+KNOWLEDGE
+──────────────
+deviation.declared  src/site/site.css:850
+    declared: the hue slider paints the OKLCH wheel itself — a literal spectrum is the control's value, not themable surface
+token.unused  --motion-instant
+    never used — a cut candidate, or headroom; only you know which
+
+HANDOFF
+──────────────
+  nothing changed since the last review
+not yet handed off
+
+every invariant holds; the rest is evaluation, and none of it blocks anything
+```
+
+`strata check` exits 0. `strata check --enforce` runs in `npm run build` and
+exits 1 only when an invariant does not hold. This is the distinction the
+whole system rests on:
+
+```
+EVALUATION     "Here is what happened."     always
+ENFORCEMENT    "This cannot ship."          invariants only
+```
+
+Nothing runs while someone is designing. No hook, no lint, no cost mark
+mid-drag; evaluation happens at `ready`, at `check`, and when asked. An
+earlier version of this repo had a slot layer that declared structure as
+bands, each with a behaviour contract, and priced every drag against it,
+writing the cost into source for someone to accept. It was removed on two
+findings: a design in progress fails any check by definition, so a tool that
+reports mid-drag is measuring the wrong moment; and a designer's move does
+not cost the page anything, because the designer is the one defining what
+the page is. What it costs is code, and code is malleable to the design.
+**Designers define the UX.** The reviewer makes the code fit and never moves
+anything back.
+
+## Projections
+
+Every file below is derived from the record and can be produced again.
+`strata rebuild` writes them; `strata rebuild --check` is the invariant that
+they match.
+
+| Projection | From | How |
+| --- | --- | --- |
+| `src/theme/ledger.json` | every current `token` decision | one line per engine token, with the decision's id |
+| `src/tokens/semantic.css` | the engine, through the ledger | a cut token is emitted as its fallback with the decision beside it |
+| `src/tokens/tokens.json` | the same | each token carries its decision under `$extensions["strata.ledger"]` |
+| `strata-malleable/.malleable/overrides.json` | every `override`, `seed`, `ship` decision | a fold: set and rescope upsert and drop what they absorbed; remove drops; ship drops what it collapsed |
+| the JSX | every `move` and `prop` decision | already applied when the decision was written; git is where diffs live |
+| the React provider | `ledger.json` at build | the runtime never shows a token the record decided against |
+
+A theme is six numbers — `{ hue, chroma, warmth, energy, density, appearance }`
+— and the engine (`src/theme/generateTheme.ts`) derives every colour,
+surface, stroke, radius, rhythm and easing from them, deterministically, in
+OKLCH. The engine is the only author of the semantic tier, because the first
+week of this repo produced drift by transcription that nobody had chosen.
+Layers are factored by half-life — meaning, behaviour, recipes, local — and
+each gets its own governance; the rule that makes it a system is that a
+recipe never references a raw value. The malleable layer
+(`strata-malleable/`) lets a designer change the real page by hand: a drag
+on a corner is an override, a drag on a region rewrites the JSX, a pick on a
+component's own controls rewrites the attribute, and the promote control asks
+one question — how far does this go — in four words. Every one of those is a
+decision on the same record.
+
+The Figma library was pushed by hand once and is already a stale projection.
+It is listed here so the next reader inherits the test and not the verdict.
+
+## Examples
+
+**A token is cut.** A person decides; the projections regenerate in the same
+call; the record gains a line that supersedes the import.
+
+```
+$ strata cut --accent-strong --why "one filled action per surface" --by human
+
+  --accent-strong: kept → cut
+  collapses to --accent — One filled action per surface; a second strength of accent is the first thing a small system does without.
+  by human — --by human on the command line
+  ~ src/theme/ledger.json, src/tokens/semantic.css, src/tokens/tokens.json, .strata/decisions.jsonl
+```
+
+**A region moves, by an agent, when asked.** The JSX is rewritten, imports
+follow, and the line says what the moved element still needs.
+
+```
+$ strata move Filters --to nav --by agent --why "the filters belong with navigation"
+
+  fixtures/app/views/Page.tsx: removed <Filters /> · fixtures/app/views/TopBar.tsx: inserted <Filters /> · import added
+
+  <Filters />  Page.main.page__main → TopBar.nav.topbar__nav   fixtures/app/views/TopBar.tsx:18 · agent
+  by agent — --by agent on the command line
+  ~ fixtures/app/views/Page.tsx, fixtures/app/views/TopBar.tsx, .strata/decisions.jsonl
+```
+
+**Drift converges; promotion is earned.** Three instances reach 12px by
+hand; the record says so; a person widens it.
+
+```
+$ strata check
+PRECEDENT
+──────────────
+drift.convergence  padding = 12px
+    3 instances independently converged across 2 views — promotion candidate (3 by hand, 0 by agent)
+
+$ strata set Card.div.st-card padding 12px --scope view --view gallery --by human --why "every card here"
+  padding = 12px on Card.div.st-card
+  scope: view · absorbed 3 narrower override(s)
+```
+
+**A handoff.** The designer presses ready; the reviewer reads what changed
+since the last one, with a reversal collapsed away.
+
+```
+$ strata handoff
+
+  <Badge tone>  accent → positive   fixtures/app/views/Gallery.tsx:14 · human
+  <Filters />  Page.main.page__main → TopBar.nav.topbar__nav   fixtures/app/views/TopBar.tsx:18 · agent
+      needs wiring: open
+
+ready for review — human, 2026-09-03T18:02:11.000Z
+```
+
+## CLI
+
+One interface. Every write is a decision on the record, takes `--by
+human|agent` (otherwise `STRATA_AUTHOR`, then `CLAUDECODE`, then `human`),
+`--why "…"`, and `--dry`.
+
+```
+the record
+  check [--enforce] [--json]  here is what happened: invariants, then policy, preference, knowledge, precedent, handoff
+  explain <id | targetKey>    one decision as a glass box: DECISION · CONTEXT · EVIDENCE · CONSEQUENCE
+  log [--kind k]              every decision, one line each
+  history <targetKey>         every decision on one target
+  show <id>                   one decision
+  precedent [words] [--property p] [--value v] [--component C] [--token --x] [--author a] [--unpromoted]
+  skill [name] [--<input> v]  the skills, or the packet for one
+  ready [--why …]             hand off what changed since the last ready
+  import                      bring the old ledger and store onto the record, once
+  rebuild [--check]           write every projection from the record; --check only says which differ
+
+tokens (Layer 0)
+  list · cut · keep · propose --<token> [--why …]
+  deviate <file>:<line> --why …
+
+the malleable layer
+  id · regions · manifest · resolve · reconcile · drift · handoff
+  set · remove · move · prop · ship
+```
 
 ```bash
-npm install
-npm run dev            # one server, three pages: /, /personalize.html, /malleable.html
-npm run tokens         # regenerate the Layer 0 projections through the ledger
-npm run ledger -- list # every generated token and what was decided about it
-npm run validate       # fail undeclared literals; log declared deviations and collapsed tokens
-npm run build          # all three pages into dist/; BASE_PATH=/strata/ for a sub-path host
+npm install                # links the substrate into both packages
+npm run dev                # one server, three pages: /, /personalize.html, /malleable.html
+npx strata check           # what happened
+npx strata explain token:--shadow-color
+npx strata skill           # the skills
+npm test                   # the substrate, the theme, the malleable layer
+npm run build              # tokens → check --enforce → tsc → vite; fails only on an invariant
 ```
 
-The root dev server mounts the library's write-through plugin, so on
-`/malleable.html` a property drag lands in `strata-malleable/.malleable/overrides.json`,
-a region move rewrites `strata-malleable/fixtures/app` in place, and *ready*
-drops the receipt at `strata-malleable/.malleable/ready.json` — the same files
-the library's CLI reads. The library still runs alone:
+`npm run ledger -- cut …` and `malleable move …` still work; they run the
+same functions. The library runs alone too:
 
 ```bash
 cd strata-malleable && npm install && npm test && npm run dev
 ```
 
-Every push to `main` rebuilds the site and publishes it to GitHub Pages
-(`.github/workflows/pages.yml`).
+Every push to `main` runs the tests and the build and publishes the site.
 
-## For agents
-
-You are welcome here. Read `src/tokens/tokens.json` → `strata.themeEngine` for
-the seed ranges and the reasons behind each dial, and generate from the
-reasoning. Emit a seed object, apply it with `applyTheme(seeds)`, or change the
-presets and run `npm run tokens`. Each token there carries its ledger decision
-under `$extensions["strata.ledger"]`: never reach for one marked `cut`, and
-when you cut or keep one yourself, do it with `npm run ledger` so the line
-carries your name. Build new UI in Layer 3 by default; run `npm run validate`
-before committing; never edit `src/tokens/*` by hand. In a project using the
-malleable layer, `strata-malleable/integrations/claude-code` carries the skill
-and the two commands, and no hook: generate pages whose regions sit under
-landmarks, each region a component of its own; run `malleable id` after adding
-one and never write `data-sid` or `data-region` by hand; move regions with
-`malleable move … --by agent` rather than by editing JSX, so the receipt names
-you; and at review make the code fit the design — wire what a move left
-behind, give a moved dialog its dismissal context where it now lives — and
-never move anything back.
-
-## What is not built yet
+## What's not built
 
 Stated so the next reader inherits the test and not the verdict:
 
-- A precedent index over Layer 3, an MCP server exposing live token values and
-  `ds.precedent(q)`, and code → Figma regeneration on CI. The Figma library was
-  pushed by hand once and is already a stale projection.
-- The token ledger governs the engine's output. The static roles in
-  `semantic.css` (`--control-h-*`, `--font-*`, `--shadow-raised`) are not
-  proposals yet — they are hand-written, and the ledger only decides what the
-  engine derives.
-- A move takes a region, not a landmark and not a list item. `<nav>` cannot be
-  dragged out of `<header>`, and a card rendered by `.map` stays in its data's
-  order. Both are reported by `malleable regions` where they apply.
-- A component whose root is a fragment has no host element to carry
-  `data-region`, so it can be moved from the terminal but not by hand.
-- A prop control writes literals. An attribute whose value is an expression
-  (`open={isOpen}`) is left to the code, and the strip says so.
+- An MCP server over the same `decide()`, `explain()` and `precedent()` the
+  CLI calls, so a harness reaches the substrate without a shell.
+- Code → Figma regeneration on CI. The Figma library is a stale projection.
+- The hub renders the record but cannot evaluate it: evidence needs the
+  filesystem, so the four blocks on the site are two.
+- A move takes a region, not a landmark and not a list item; a component
+  whose root is a fragment can be moved from the terminal but not by hand; a
+  prop control writes literals and leaves expressions to the code.
+- The static roles in `semantic.css` (`--control-h-*`, `--font-*`,
+  `--shadow-raised`) are hand-written and not yet proposals; the record
+  decides what the engine derives.
+- Precedent is computed over this product's record. A precedent index
+  across products — what many teams independently converged on — is the
+  same fold over a larger log, and is not here.
 
 ## Where it comes from
 
 Strata is the design-system instance of a thesis that first held in a
-generative media platform: *the user's prose is the record; everything derived
-from it is a receipt.* A prompt is a compilation target, not something a person
-writes; a stored artefact is worth nothing to the next model, but intent
-recompiles. The same argument, applied to a stylesheet, produces six seeds and
-an engine. Applied to a review process, it produces a validator that logs
-instead of failing. Applied to a layout, it produces a drag that lands, and a
-reviewer who adapts the code to it.
+generative media platform: *the user's prose is the record; everything
+derived from it is a receipt.* A prompt is a compilation target, not
+something a person writes; a stored artefact is worth nothing to the next
+model, but intent recompiles. The same argument, applied to a stylesheet,
+produces six seeds and an engine. Applied to a review process, it produces an
+evaluator that reports instead of failing. Applied to a layout, it produces a
+drag that lands, and a reviewer who adapts the code to it. Applied to all of
+them at once, it produces one record, and everything else as a projection.
