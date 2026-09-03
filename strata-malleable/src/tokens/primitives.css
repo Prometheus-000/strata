@@ -4,9 +4,10 @@
    tier over these at runtime via applyTheme().
    ============================================================ */
 :root {
-  --strata-font-display: 'Iowan Old Style', Georgia, serif;
-  --strata-font-body: 'Instrument Sans', 'Helvetica Neue', Arial, sans-serif;
-  --strata-font-mono: 'SF Mono', 'IBM Plex Mono', Menlo, monospace;
+  /* One family; mono for what is read as data. Mirrors src/tokens/primitives.css. */
+  --strata-font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif;
+  --strata-font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif;
+  --strata-font-mono: ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace;
 
   --strata-text-xs: clamp(0.694rem, 0.66rem + 0.17vw, 0.79rem);
   --strata-text-sm: clamp(0.833rem, 0.79rem + 0.21vw, 0.95rem);
@@ -15,7 +16,10 @@
   --strata-text-xl: clamp(1.44rem, 1.34rem + 0.48vw, 1.77rem);
   --strata-text-2xl: clamp(1.728rem, 1.58rem + 0.72vw, 2.22rem);
   --strata-leading-normal: 1.55;
+  --strata-tracking-tight: -0.02em;
+  --strata-tracking-normal: -0.01em;
   --strata-tracking-wide: 0.08em;
+  --strata-tracking-caps: 0.14em;
 
   --strata-space-1: 0.25rem;
   --strata-space-2: 0.5rem;

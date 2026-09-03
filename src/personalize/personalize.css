@@ -24,8 +24,8 @@
 }
 .pz__wordmark {
   font-family: var(--font-display);
-  font-size: var(--strata-text-lg);
-  font-weight: 620;
+  font-size: var(--strata-text-md);
+  font-weight: 600;
   letter-spacing: var(--strata-tracking-tight);
   color: var(--ink);
 }
@@ -79,8 +79,9 @@
 }
 .pz-panel__head h2 {
   font-family: var(--font-display);
-  font-size: var(--strata-text-xl);
-  font-weight: 540;
+  font-size: var(--strata-text-lg);
+  font-weight: 600;
+  letter-spacing: var(--strata-tracking-tight);
   margin: 0 0 var(--strata-space-2);
 }
 .pz-panel__head p {
@@ -148,6 +149,38 @@
   justify-content: space-between;
   border-top: var(--strata-border-hair) solid var(--line);
   padding-top: var(--strata-space-4);
+}
+/* Ground: two words, one chosen. A switch labelled "Dark" is a setting; two
+   grounds side by side are the same theme's two poles, which is what they are. */
+.pz-ground {
+  display: inline-flex;
+  border: var(--strata-border-hair) solid var(--line-strong);
+  border-radius: var(--radius-interactive);
+  padding: 2px;
+  gap: 2px;
+}
+.pz-ground button {
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font-family: var(--font-body);
+  font-size: var(--strata-text-xs);
+  font-weight: 600;
+  padding: calc(var(--strata-space-1) * var(--density)) calc(var(--strata-space-3) * var(--density));
+  border-radius: calc(var(--radius-interactive) - 2px);
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+}
+.pz-ground button:hover {
+  color: var(--ink);
+}
+.pz-ground button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.pz-ground button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 .pz-panel__reset {
   border: 0;

@@ -33,9 +33,9 @@ test('with no overrides the base wins and says so', () => {
   const r = run([])
   assert.equal(r.source, 'base')
   assert.equal(r.css, 'var(--radius-surface)')
-  // radius = lerp(0.375, 0.75, energy=0.5) = 0.5625rem; surface = ×1.5 = 0.844rem
-  assert.equal(generateTheme(OBSIDIAN)['--radius-surface'], '0.844rem')
-  assert.equal(r.px, 0.844 * 16)
+  // radius = lerp(0.375, 0.75, energy=0.35) = 0.50625rem; surface = ×1.5 = 0.759rem
+  assert.equal(generateTheme(OBSIDIAN)['--radius-surface'], '0.759rem')
+  assert.equal(r.px, 0.759 * 16)
 })
 
 test('narrower wins: instance ▸ view ▸ component ▸ base', () => {
@@ -150,7 +150,7 @@ test('an override equal to its base is redundant', () => {
     base: BASE,
   })
   assert.equal(isRedundant(input({ token: '--radius-surface' })), true)
-  assert.equal(isRedundant(input({ literal: '13.504px' })), true)
+  assert.equal(isRedundant(input({ literal: '12.144px' })), true)
   assert.equal(isRedundant(input({ literal: '20px' })), false)
 })
 

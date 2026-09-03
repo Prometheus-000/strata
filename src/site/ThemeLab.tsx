@@ -15,6 +15,21 @@ import { seedsFromImage } from '../theme/imageSeeds'
 import { contrastRatio } from '../theme/color'
 import { Avatar, Badge, Button, Card, Input, Progress, Switch } from '../components'
 
+function Ground({ value, onChange }: { value: ThemeSeeds['appearance']; onChange: (a: ThemeSeeds['appearance']) => void }) {
+  return (
+    <div className="lab-ground">
+      <span className="lab-ground__name">Ground</span>
+      <div className="lab-ground__switch" role="group" aria-label="Ground">
+        {(['dark', 'light'] as const).map((a) => (
+          <button key={a} type="button" aria-pressed={value === a} onClick={() => onChange(a)}>
+            {a === 'dark' ? 'Dark' : 'Light'}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 /* ---------- primitives ---------- */
 
 function Slider({
@@ -188,11 +203,7 @@ export function ThemeLab() {
         <Slider name="Energy" value={seeds.energy} min={0} max={1} step={0.05} display={seeds.energy.toFixed(2)} onChange={(energy) => set({ energy })} />
         <Slider name="Density" value={seeds.density} min={0.85} max={1.15} step={0.01} display={`×${seeds.density.toFixed(2)}`} onChange={(density) => set({ density })} />
 
-        <Switch
-          checked={seeds.appearance === 'dark'}
-          onChange={(dark) => set({ appearance: dark ? 'dark' : 'light' })}
-          label="Dark appearance"
-        />
+        <Ground value={seeds.appearance} onChange={(appearance) => set({ appearance })} />
 
         <pre className="lab__seeds" aria-label="Current theme seeds as JSON">
           {JSON.stringify(seeds, null, 2)}

@@ -23,11 +23,12 @@ export interface ThemeSeeds {
   appearance: 'dark' | 'light'
 }
 
+/* The house theme, verbatim from src/theme/generateTheme.ts: monochrome, slate-cast, calm. */
 export const OBSIDIAN: ThemeSeeds = {
-  hue: 168,
-  chroma: 0.155,
-  warmth: 0,
-  energy: 0.5,
+  hue: 250,
+  chroma: 0,
+  warmth: -0.6,
+  energy: 0.35,
   density: 1,
   appearance: 'dark',
 }
@@ -56,6 +57,11 @@ export function generateTheme(seeds: ThemeSeeds): Record<string, string> {
   const density = clamp(seeds.density, 0.85, 1.15)
   const dark = seeds.appearance === 'dark'
 
+  // A monochrome accent is ink, not grey — vendored with the engine's own
+  // reasoning: below chroma 0.04 the accent is pulled to the ink pole so the
+  // one filled action still reads as the action on either ground.
+  const mono = 1 - clamp(chroma / 0.04, 0, 1)
+
   const neutralHue = warmth >= 0 ? lerp(200, 95, warmth) : lerp(200, 260, -warmth)
   const neutralChroma = 0.006 + Math.abs(warmth) * 0.014
 
@@ -71,7 +77,7 @@ export function generateTheme(seeds: ThemeSeeds): Record<string, string> {
     t['--ink-muted'] = oklch(0.72, 0.012, neutralHue)
     t['--ink-faint'] = oklch(0.54, 0.012, neutralHue)
     t['--ink-inverse'] = oklch(0.16, 0.01, neutralHue)
-    const accentL = lerp(0.84, 0.78, chroma / 0.25)
+    const accentL = lerp(lerp(0.84, 0.78, chroma / 0.25), 0.93, mono)
     t['--accent'] = oklch(accentL, chroma, hue)
     t['--accent-strong'] = oklch(accentL + 0.06, chroma * 1.1, hue)
     t['--accent-ink'] = oklch(0.16, Math.min(chroma * 0.35, 0.06), hue)
@@ -97,7 +103,7 @@ export function generateTheme(seeds: ThemeSeeds): Record<string, string> {
     t['--ink-muted'] = oklch(0.45, 0.015, neutralHue)
     t['--ink-faint'] = oklch(0.6, 0.012, neutralHue)
     t['--ink-inverse'] = oklch(0.97, 0.005, neutralHue)
-    const accentL = lerp(0.58, 0.52, chroma / 0.25)
+    const accentL = lerp(lerp(0.58, 0.52, chroma / 0.25), 0.3, mono)
     const accentC = chroma * 0.87
     t['--accent'] = oklch(accentL, accentC, hue)
     t['--accent-strong'] = oklch(accentL - 0.08, accentC, hue)
@@ -145,9 +151,22 @@ export function generateTheme(seeds: ThemeSeeds): Record<string, string> {
   return t
 }
 
+/**
+ * The ledger's cuts, vendored. Strata's `src/theme/ledger.json` collapses these
+ * three tokens to their fallbacks in every projection; the harness renders the
+ * same page the site does, so it collapses them too. The resolver's token
+ * table is untouched — a drag can still name `--radius-overlay`, and on this
+ * page it renders as the surface radius, exactly as it does on the site.
+ */
+const LEDGER_CUTS: Record<string, string> = {
+  '--shadow-color': 'transparent', // lines, not shadows
+  '--motion-ease-emphasis': 'var(--motion-ease)', // nothing bounces
+  '--radius-overlay': 'var(--radius-surface)', // two radii, not three
+}
+
 /** Apply a seed set to a root element. */
 export function applyTheme(seeds: ThemeSeeds, root: HTMLElement) {
   root.dataset.theme = seeds.appearance
   const tokens = generateTheme(seeds)
-  for (const [prop, value] of Object.entries(tokens)) root.style.setProperty(prop, value)
+  for (const [prop, value] of Object.entries(tokens)) root.style.setProperty(prop, LEDGER_CUTS[prop] ?? value)
 }

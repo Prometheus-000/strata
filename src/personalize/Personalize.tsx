@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from 'react'
 import { PRESETS, type ThemeSeeds } from '../theme/generateTheme'
 import { useTheme } from '../theme/ThemeContext'
 import { compilePrompt, type Receipt } from '../theme/compilePrompt'
-import { Button, Switch } from '../components'
+import { Button } from '../components'
 import { Console } from '../site/Console'
 
 const STORAGE_KEY = 'visionary-theme-seeds'
@@ -17,8 +17,7 @@ const STORAGE_KEY = 'visionary-theme-seeds'
 /** End users pick moods, not tokens — presets wear product names here. */
 const MOODS: Array<{ name: string; seeds: ThemeSeeds }> = [
   { name: 'Obsidian', seeds: PRESETS.Obsidian },
-  { name: 'Midnight', seeds: PRESETS.Midnight },
-  { name: 'Polar', seeds: PRESETS.Polar },
+  { name: 'Gallery', seeds: PRESETS.Gallery },
   { name: 'Ember', seeds: PRESETS.Ember },
   { name: 'Ultraviolet', seeds: PRESETS.Ultraviolet },
   { name: 'Glacier', seeds: PRESETS.Glacier },
@@ -126,11 +125,18 @@ export function Personalize() {
             </div>
 
             <div className="pz-panel__foot">
-              <Switch
-                checked={seeds.appearance === 'dark'}
-                onChange={(dark) => setSeeds((p) => ({ ...p, appearance: dark ? 'dark' : 'light' }))}
-                label="Dark"
-              />
+              <div className="pz-ground" role="group" aria-label="Ground">
+                {(['dark', 'light'] as const).map((a) => (
+                  <button
+                    key={a}
+                    type="button"
+                    aria-pressed={seeds.appearance === a}
+                    onClick={() => setSeeds((p) => ({ ...p, appearance: a }))}
+                  >
+                    {a === 'dark' ? 'Dark' : 'Light'}
+                  </button>
+                ))}
+              </div>
               <button className="pz-panel__reset" onClick={() => { setReceipts(null); setPhrase(''); setSeeds(PRESETS.Obsidian) }}>
                 Reset
               </button>

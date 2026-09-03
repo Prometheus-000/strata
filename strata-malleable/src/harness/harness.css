@@ -16,6 +16,7 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   font-size: var(--strata-text-sm);
+  letter-spacing: var(--strata-tracking-normal);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -40,16 +41,22 @@ body {
   gap: var(--strata-space-2);
   margin-right: auto;
 }
+/* The wordmark is ink; the label beside it is microtype. The accent never
+   carries a label — see GRAMMAR.md, "The voice". */
 .hx__mark {
-  font-family: var(--font-mono);
-  font-size: var(--strata-text-xs);
-  letter-spacing: var(--strata-tracking-wide);
-  color: var(--accent);
+  font-family: var(--font-body);
+  font-size: var(--strata-text-md);
+  font-weight: 600;
+  letter-spacing: var(--strata-tracking-tight);
+  color: var(--ink);
 }
 .hx__sub {
-  font-family: var(--font-display);
-  font-size: var(--strata-text-sm);
-  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  font-weight: 500;
+  letter-spacing: var(--strata-tracking-caps);
+  text-transform: uppercase;
+  color: var(--ink-faint);
 }
 
 .hx__counts,

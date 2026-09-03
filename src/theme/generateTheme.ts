@@ -24,26 +24,26 @@ export interface ThemeSeeds {
   appearance: 'dark' | 'light'
 }
 
+/**
+ * The house theme: monochrome by default, colour by choice. Chroma 0 means
+ * the one filled action on a screen is ink, not a hue; warmth −0.6 casts the
+ * neutrals toward slate. This is the same voice as Visionary's production
+ * Midnight (web/src/theme), where applying it writes nothing and the
+ * stylesheet is the theme. Gallery is the same five numbers on paper — the
+ * inverse of a theme is one flipped bit.
+ */
 export const OBSIDIAN: ThemeSeeds = {
-  hue: 168,
-  chroma: 0.155,
-  warmth: 0,
-  energy: 0.5,
+  hue: 250,
+  chroma: 0,
+  warmth: -0.6,
+  energy: 0.35,
   density: 1,
   appearance: 'dark',
 }
 
 export const PRESETS: Record<string, ThemeSeeds> = {
   Obsidian: OBSIDIAN,
-  Gallery: { hue: 168, chroma: 0.135, warmth: 0.35, energy: 0.4, density: 1, appearance: 'light' },
-  // Midnight is Visionary's production character as seeds: achromatic
-  // (chroma 0.01), cool-cast neutrals, calm motion. The exact production
-  // theme ships inside the platform itself (web/src/theme), where applying
-  // Midnight writes nothing and the stylesheet is the theme; this preset is
-  // Strata's rendering of the same voice. Polar is the same five numbers —
-  // the inverse of a theme is one flipped bit.
-  Midnight: { hue: 250, chroma: 0.01, warmth: -0.6, energy: 0.35, density: 1, appearance: 'dark' },
-  Polar: { hue: 250, chroma: 0.01, warmth: -0.6, energy: 0.35, density: 1, appearance: 'light' },
+  Gallery: { ...OBSIDIAN, appearance: 'light' },
   Ember: { hue: 40, chroma: 0.17, warmth: 0.8, energy: 0.75, density: 1, appearance: 'dark' },
   Ultraviolet: { hue: 300, chroma: 0.2, warmth: -0.6, energy: 0.9, density: 0.95, appearance: 'dark' },
   Meadow: { hue: 135, chroma: 0.12, warmth: 0.5, energy: 0.3, density: 1.1, appearance: 'light' },
@@ -70,6 +70,14 @@ export function generateTheme(seeds: ThemeSeeds): Record<string, string> {
   const density = clamp(seeds.density, 0.85, 1.15)
   const dark = seeds.appearance === 'dark'
 
+  // A monochrome accent is ink, not grey. Below chroma 0.04 the accent is
+  // pulled toward the ink pole — near-white on dark, near-black on light — so
+  // the one filled action still reads as the action. A mid grey at the
+  // chromatic lightness fails AA on paper (0.58 L grey on white is 3.3:1) and
+  // reads as disabled everywhere; the correction lives here so no one has to
+  // remember it.
+  const mono = 1 - clamp(chroma / 0.04, 0, 1)
+
   // Neutrals inherit a whisper of hue: warm pulls toward paper (95°),
   // cool toward slate (260° — calibrated against Visionary's production
   // palette, whose neutrals sit at 260.6°), neutral rests at 200°.
@@ -89,7 +97,7 @@ export function generateTheme(seeds: ThemeSeeds): Record<string, string> {
     t['--ink-faint'] = oklch(0.54, 0.012, neutralHue)
     t['--ink-inverse'] = oklch(0.16, 0.01, neutralHue)
 
-    const accentL = lerp(0.84, 0.78, chroma / 0.25)
+    const accentL = lerp(lerp(0.84, 0.78, chroma / 0.25), 0.93, mono)
     t['--accent'] = oklch(accentL, chroma, hue)
     t['--accent-strong'] = oklch(accentL + 0.06, chroma * 1.1, hue)
     t['--accent-ink'] = oklch(0.16, Math.min(chroma * 0.35, 0.06), hue)
@@ -117,7 +125,7 @@ export function generateTheme(seeds: ThemeSeeds): Record<string, string> {
     t['--ink-inverse'] = oklch(0.97, 0.005, neutralHue)
 
     // Light appearances need darker, denser accents to hold AA contrast.
-    const accentL = lerp(0.58, 0.52, chroma / 0.25)
+    const accentL = lerp(lerp(0.58, 0.52, chroma / 0.25), 0.3, mono)
     const accentC = chroma * 0.87
     t['--accent'] = oklch(accentL, accentC, hue)
     t['--accent-strong'] = oklch(accentL - 0.08, accentC, hue)

@@ -160,8 +160,8 @@ const json = {
         $ranges: { hue: [0, 360], chroma: [0, 0.25], warmth: [-1, 1], energy: [0, 1], density: [0.85, 1.15] },
         $reasons: {
           hue: 'Accent hue on the OKLCH wheel — perceptually uniform, so any hue yields the same apparent vividness.',
-          chroma: 'Muted ↔ electric. Light appearances compile at 0.87× and lower lightness to hold AA contrast.',
-          warmth: 'Tints ALL neutrals toward paper (95°) or slate (245°). Neutrals are chosen, never default grey.',
+          chroma: 'Muted ↔ electric. 0 is monochrome — the house default — and a monochrome accent compiles to ink, not grey. Light appearances compile at 0.87× and lower lightness to hold AA contrast.',
+          warmth: 'Tints ALL neutrals toward paper (95°) or slate (260°). Neutrals are chosen, never default grey; an accent hue never reaches them.',
           energy: 'Motion personality AND shape: kinetic themes snap (spring easing, shorter durations) and round off; calm themes glide and stay architectural.',
           density: 'Scales control heights, paddings and gaps together so rhythm compresses uniformly.',
         },
@@ -177,9 +177,9 @@ const json = {
       cut: dark.receipts.map((r) => ({ token: r.token, fallback: r.to, by: r.by, reason: r.reason })),
     },
     font: {
-      display: { $value: "Fraunces, 'Iowan Old Style', Georgia, serif", $type: 'fontFamily' },
-      body: { $value: "'Instrument Sans', 'Helvetica Neue', Arial, sans-serif", $type: 'fontFamily' },
-      mono: { $value: "'IBM Plex Mono', 'SF Mono', Menlo, monospace", $type: 'fontFamily' },
+      display: { $value: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif", $type: 'fontFamily' },
+      body: { $value: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif", $type: 'fontFamily' },
+      mono: { $value: "ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace", $type: 'fontFamily' },
     },
     color: {
       $description: 'Compiled projections of the seed sets above. Semantic names only — components never see a literal.',

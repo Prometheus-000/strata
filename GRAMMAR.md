@@ -43,6 +43,61 @@ whisper of hue — toward paper (95°) or slate (245°) — so even "grey" is a 
 *and* rounder corners; calm themes glide and stay architectural. Motion personality that
 stops at duration produces themes that feel mislabeled.
 
+## The voice — the house taste, as rules
+
+The default is a taste, and a taste is a set of decisions with reasons, so it is written the
+way everything else here is. It is enacted in three places, none of them a stylesheet: the
+`Obsidian` seeds in `generateTheme.ts`, the decisions in `src/theme/ledger.json`, and the
+rules below. Retune the seeds or reverse a decision and the voice follows; nothing below is
+enforced by hand.
+
+**One family. Hierarchy is weight, size and measure — never a second voice.** Display and body
+are the same system face; headings are the body face set at 600–700 and tracked tight. This
+rule was earned in v0.2, which shipped a variable serif with italic accents and a green
+display line, and the owner's correction is the record: *"overly designed text. This does not
+meet my own design grammar."* The two references it was measured against — the portfolio and
+Visionary — set everything in one face and let scale contrast do the work: one display line,
+everything else at reading size.
+
+**Mono is for what is read as data — labels, values, receipts — and never for prose.** The
+same correction, from the other side: when Visionary's compiled prompt was dressed as a
+developer tool, the owner wrote *"I did not actually want it to look like code. My whole design
+thesis is it should not feel utilitarian."* A value in mono is honest; a paragraph in mono is a
+costume.
+
+**Labels are microtype: small, tracked caps, faint ink. The accent never carries a label.** A
+kicker in the accent colour is a second voice competing with the heading it introduces. The
+portfolio's data plates set every key at 11px, 700, tracked 0.14em, in faint ink, and the value
+beside it in full ink — the key names, the value speaks.
+
+**Monochrome by default; colour is a choice, and a monochrome accent is ink.** Chroma 0 is the
+house seed. The argument is Rams' — a tool is unobtrusive so the user's own work carries the
+colour — and the incident is Visionary's canvas, whose ground stays black even on the paper
+theme because the picture is not chrome. The engine pulls an achromatic accent to the ink pole
+(near-white on dark, near-black on light) because a mid grey at the chromatic lightness fails AA
+on paper and reads as disabled everywhere.
+
+**Lines, not shadows.** Every level in both references is a 1px rule and an alpha wash; neither
+paints a drop shadow anywhere. `--shadow-color` is cut in the ledger, so the elevation tokens
+keep their offsets and paint nothing — the rule does the work it was already doing.
+
+**Nothing bounces, and there are two radii: a control and a panel.** `--motion-ease-emphasis`
+and `--radius-overlay` are cut. The engine gives a calm theme a spring on emphasis and a 19px
+dialog; a sheet that overshoots and the one soft shape on an architectural page were both
+personality the chrome should not have. The energy dial still sets speed.
+
+**The appearance control is the mark.** A dot after the wordmark: faint ink when the theme is
+monochrome, the accent when there is one, so the door is also the state. One click flips the
+ground. This is Visionary's own control, and its reason travels with it: *"Appearance costs
+nothing and answers to nobody, so a card in there read as one more thing to decide before you
+could work."* A labelled switch in the navigation was that card. Quiet and hidden are different
+things — it is a real button with a name, reachable by tab.
+
+**Dark is the first ground; light is one flipped bit.** The portfolio's review named the baseline
+that must be preserved — *"dark theme, minimal monochrome typography, and a technical 'research
+lab' feel"* — and `Gallery` is `Obsidian` with `appearance` flipped and nothing else changed,
+because the two poles are one theme's two grounds.
+
 ## Layer 1 — Behavior (never forked)
 
 **Correctness is not a taste question.** Roving tabindex, arrow-key order, Escape and

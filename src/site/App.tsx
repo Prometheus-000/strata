@@ -15,6 +15,9 @@ import {
   useToasts,
 } from '../components'
 import { useTheme } from '../theme/ThemeContext'
+import { themeTokens, type Ledger } from '../theme/ledger'
+import { generateTheme } from '../theme/generateTheme'
+import LEDGER from '../theme/ledger.json'
 import { ThemeLab } from './ThemeLab'
 import { Console } from './Console'
 import './site.css'
@@ -53,28 +56,44 @@ function Reveal({ children, delay = 0 }: { children: ReactNode; delay?: number }
 const BASE = import.meta.env.BASE_URL
 
 /* ---------- Top bar ---------- */
-function TopBar() {
+/* Appearance, on a mark rather than a switch. The dot after the wordmark is
+   the door and the state: faint ink when the theme is monochrome, the accent
+   when there is one. One click flips the ground; the Theme Lab holds the rest. */
+function AppearanceDot() {
   const { seeds, setSeeds } = useTheme()
+  const dark = seeds.appearance === 'dark'
+  const dot = seeds.chroma > 0
+    ? themeTokens(generateTheme(seeds), LEDGER as Ledger, 'value')['--accent']
+    : undefined
+  return (
+    <button
+      className="appearance-dot"
+      type="button"
+      title={dark ? 'Appearance: dark — switch to light' : 'Appearance: light — switch to dark'}
+      aria-label={dark ? 'Switch to light appearance' : 'Switch to dark appearance'}
+      aria-pressed={!dark}
+      style={dot ? ({ ['--dot' as string]: dot } as React.CSSProperties) : undefined}
+      onClick={() => setSeeds((prev) => ({ ...prev, appearance: dark ? 'light' : 'dark' }))}
+    >
+      <span />
+    </button>
+  )
+}
+
+function TopBar() {
   return (
     <header className="topbar">
       <div className="wrap topbar__inner">
-        <a className="topbar__logo" href="#top">
-          <span className="topbar__logo-mark" aria-hidden />
-          Strata
-        </a>
+        <div className="topbar__brand">
+          <a className="topbar__logo" href="#top">Strata</a>
+          <AppearanceDot />
+        </div>
         <nav className="topbar__nav" aria-label="Sections">
           <a className="topbar__link" href="#lab">Theme Lab</a>
           <a className="topbar__link" href="#console">Console</a>
           <a className="topbar__link" href="#grammar">Grammar</a>
           <a className="topbar__link" href="#components">Reference</a>
           <a className="topbar__link" href={`${BASE}malleable.html`}>Malleable</a>
-          <Switch
-            checked={seeds.appearance === 'dark'}
-            onChange={(dark) =>
-              setSeeds((prev) => ({ ...prev, appearance: dark ? 'dark' : 'light' }))
-            }
-            label="Dark"
-          />
         </nav>
       </div>
     </header>
@@ -82,29 +101,10 @@ function TopBar() {
 }
 
 /* ---------- Hero ---------- */
-function StrataLines() {
-  // Layered sediment lines — the system's namesake, drawn with the accent token.
-  return (
-    <svg className="hero__strata-lines" viewBox="0 0 1200 240" preserveAspectRatio="none" aria-hidden>
-      {[0, 1, 2, 3, 4, 5].map((i) => (
-        <path
-          key={i}
-          d={`M0 ${70 + i * 30} C 260 ${38 + i * 32}, 480 ${102 + i * 26}, 720 ${64 + i * 30} S 1080 ${96 + i * 27}, 1200 ${58 + i * 31}`}
-          fill="none"
-          stroke="var(--accent-line)"
-          strokeWidth={1}
-          opacity={1 - i * 0.14}
-        />
-      ))}
-    </svg>
-  )
-}
-
 function Hero() {
   return (
     <section className="hero" id="top">
       <div className="hero__mesh" aria-hidden />
-      <StrataLines />
       <div className="wrap">
         <Reveal>
           <span className="hero__kicker">A design system for AI product teams · v0.2</span>
@@ -343,7 +343,7 @@ const TYPE_SCALE: Array<{ tag: string; size: string; text: string; display?: boo
   { tag: 'body/md', size: 'var(--strata-text-md)', text: 'The quick brown fox jumps over the lazy dog.' },
   { tag: 'body/sm', size: 'var(--strata-text-sm)', text: 'The quick brown fox jumps over the lazy dog.' },
   // deviation: specimen renders a token value as text content, not a style
-  { tag: 'mono/xs', size: 'var(--strata-text-xs)', text: 'oklch(0.803 0.155 168) → --accent' },
+  { tag: 'mono/xs', size: 'var(--strata-text-xs)', text: 'oklch(0.930 0.000 250) → --accent' },
 ]
 
 function TypeFoundations() {
@@ -361,7 +361,8 @@ function TypeFoundations() {
                 : t.tag.startsWith('mono')
                   ? 'var(--font-mono)'
                   : 'var(--font-body)',
-              fontWeight: t.display ? 520 : 400,
+              fontWeight: t.display ? 700 : 400,
+              letterSpacing: t.display ? 'var(--strata-tracking-tight)' : undefined,
               color: t.tag.startsWith('mono') ? 'var(--ink-muted)' : 'var(--ink)',
             }}
           >

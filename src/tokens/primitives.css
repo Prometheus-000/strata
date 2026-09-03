@@ -7,10 +7,14 @@
    ============================================================ */
 
 :root {
-  /* ---- Type families ---- */
-  --strata-font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
-  --strata-font-body: 'Instrument Sans', 'Helvetica Neue', Arial, sans-serif;
-  --strata-font-mono: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+  /* ---- Type families ----
+     One family. Display and body are the same face; hierarchy is weight,
+     size and measure, never a second voice. Mono is for labels and values —
+     the things that are read as data — and nothing else. System stacks, no
+     webfont request: the type is whatever the platform already renders best. */
+  --strata-font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif;
+  --strata-font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif;
+  --strata-font-mono: ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace;
 
   /* ---- Fluid type scale (minor third → perfect fourth as viewport grows) ---- */
   --strata-text-xs: clamp(0.694rem, 0.66rem + 0.17vw, 0.79rem);
@@ -30,7 +34,7 @@
   --strata-leading-loose: 1.75;
 
   --strata-tracking-tight: -0.02em;
-  --strata-tracking-normal: 0;
+  --strata-tracking-normal: -0.01em;
   --strata-tracking-wide: 0.08em;
   --strata-tracking-caps: 0.14em;
 

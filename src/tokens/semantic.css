@@ -10,72 +10,72 @@
 :root,
 [data-theme='dark'] {
   color-scheme: dark;
-  --surface-page: oklch(0.170 0.006 200.0);
-  --surface-sunken: oklch(0.140 0.005 200.0);
-  --surface-raised: oklch(0.210 0.007 200.0);
-  --surface-overlay: oklch(0.240 0.007 200.0);
-  --surface-veil: oklch(0.100 0.006 200.0 / 0.62);
-  --ink: oklch(0.940 0.008 200.0);
-  --ink-muted: oklch(0.720 0.012 200.0);
-  --ink-faint: oklch(0.540 0.012 200.0);
-  --ink-inverse: oklch(0.160 0.010 200.0);
-  --accent: oklch(0.803 0.155 168.0);
-  --accent-strong: oklch(0.863 0.171 168.0);
-  --accent-ink: oklch(0.160 0.054 168.0);
-  --accent-soft: oklch(0.803 0.155 168.0 / 0.14);
-  --accent-line: oklch(0.803 0.155 168.0 / 0.45);
-  --line: oklch(0.940 0.008 200.0 / 0.12);
-  --line-strong: oklch(0.940 0.008 200.0 / 0.24);
-  --focus-ring: oklch(0.803 0.155 168.0 / 0.70);
+  --surface-page: oklch(0.170 0.014 236.0);
+  --surface-sunken: oklch(0.140 0.013 236.0);
+  --surface-raised: oklch(0.210 0.016 236.0);
+  --surface-overlay: oklch(0.240 0.017 236.0);
+  --surface-veil: oklch(0.100 0.014 236.0 / 0.62);
+  --ink: oklch(0.940 0.008 236.0);
+  --ink-muted: oklch(0.720 0.012 236.0);
+  --ink-faint: oklch(0.540 0.012 236.0);
+  --ink-inverse: oklch(0.160 0.010 236.0);
+  --accent: oklch(0.930 0.000 250.0);
+  --accent-strong: oklch(0.990 0.000 250.0);
+  --accent-ink: oklch(0.160 0.000 250.0);
+  --accent-soft: oklch(0.930 0.000 250.0 / 0.14);
+  --accent-line: oklch(0.930 0.000 250.0 / 0.45);
+  --line: oklch(0.940 0.008 236.0 / 0.12);
+  --line-strong: oklch(0.940 0.008 236.0 / 0.24);
+  --focus-ring: oklch(0.930 0.000 250.0 / 0.70);
   --positive: oklch(0.780 0.160 150.0);
   --warning: oklch(0.820 0.150 80.0);
   --danger: oklch(0.680 0.190 22.0);
   --positive-soft: oklch(0.780 0.160 150.0 / 0.15);
   --warning-soft: oklch(0.820 0.150 80.0 / 0.15);
   --danger-soft: oklch(0.680 0.190 22.0 / 0.15);
-  --shadow-color: oklch(0.050 0.010 200.0 / 0.50);
+  --shadow-color: transparent; /* cut by agent: Lines, not shadows. The reference grammar — the portfolio and Visionary alike — draws every level with a 1px rule and an alpha wash, and paints no drop shadow anywhere; a shadow is decoration the eye pays for on every card. The elevation tokens keep their offsets and paint nothing, so the rule does the work it was already doing. */
 }
 
 [data-theme='light'] {
   color-scheme: light;
-  --surface-page: oklch(0.970 0.011 163.3);
-  --surface-sunken: oklch(0.940 0.012 163.3);
-  --surface-raised: oklch(0.995 0.005 163.3);
+  --surface-page: oklch(0.970 0.014 236.0);
+  --surface-sunken: oklch(0.940 0.016 236.0);
+  --surface-raised: oklch(0.995 0.007 236.0);
   --surface-overlay: oklch(1.000 0.000 0.0);
-  --surface-veil: oklch(0.300 0.010 163.3 / 0.40);
-  --ink: oklch(0.240 0.015 163.3);
-  --ink-muted: oklch(0.450 0.015 163.3);
-  --ink-faint: oklch(0.600 0.012 163.3);
-  --ink-inverse: oklch(0.970 0.005 163.3);
-  --accent: oklch(0.548 0.117 168.0);
-  --accent-strong: oklch(0.468 0.117 168.0);
-  --accent-ink: oklch(0.980 0.010 168.0);
-  --accent-soft: oklch(0.548 0.117 168.0 / 0.12);
-  --accent-line: oklch(0.548 0.117 168.0 / 0.40);
-  --line: oklch(0.240 0.015 163.3 / 0.13);
-  --line-strong: oklch(0.240 0.015 163.3 / 0.28);
-  --focus-ring: oklch(0.548 0.117 168.0 / 0.65);
+  --surface-veil: oklch(0.300 0.010 236.0 / 0.40);
+  --ink: oklch(0.240 0.015 236.0);
+  --ink-muted: oklch(0.450 0.015 236.0);
+  --ink-faint: oklch(0.600 0.012 236.0);
+  --ink-inverse: oklch(0.970 0.005 236.0);
+  --accent: oklch(0.300 0.000 250.0);
+  --accent-strong: oklch(0.220 0.000 250.0);
+  --accent-ink: oklch(0.980 0.010 250.0);
+  --accent-soft: oklch(0.300 0.000 250.0 / 0.12);
+  --accent-line: oklch(0.300 0.000 250.0 / 0.40);
+  --line: oklch(0.240 0.015 236.0 / 0.13);
+  --line-strong: oklch(0.240 0.015 236.0 / 0.28);
+  --focus-ring: oklch(0.300 0.000 250.0 / 0.65);
   --positive: oklch(0.600 0.150 150.0);
   --warning: oklch(0.660 0.140 75.0);
   --danger: oklch(0.550 0.190 22.0);
   --positive-soft: oklch(0.600 0.150 150.0 / 0.13);
   --warning-soft: oklch(0.660 0.140 75.0 / 0.15);
   --danger-soft: oklch(0.550 0.190 22.0 / 0.12);
-  --shadow-color: oklch(0.300 0.020 163.3 / 0.18);
+  --shadow-color: transparent; /* cut by agent: Lines, not shadows. The reference grammar — the portfolio and Visionary alike — draws every level with a 1px rule and an alpha wash, and paints no drop shadow anywhere; a shadow is decoration the eye pays for on every card. The elevation tokens keep their offsets and paint nothing, so the rule does the work it was already doing. */
 }
 
 :root {
   /* ---- Engine-derived rhythm, motion, shape (Obsidian defaults) ---- */
-  --motion-instant: 86ms;
-  --motion-fast: 172ms;
-  --motion-base: 280ms;
-  --motion-slow: 516ms;
+  --motion-instant: 96ms;
+  --motion-fast: 192ms;
+  --motion-base: 313ms;
+  --motion-slow: 577ms;
   --motion-ease: var(--strata-ease-out);
-  --motion-ease-emphasis: var(--strata-ease-spring);
+  --motion-ease-emphasis: var(--motion-ease); /* cut by agent: Nothing bounces. The engine gives a calm theme a spring on emphasis above energy 0.3, and a dialog that overshoots is a personality the chrome should not have. Collapses to the ordinary curve; the energy dial still sets speed. */
   --density: 1.000;
-  --radius-interactive: 0.563rem;
-  --radius-surface: 0.844rem;
-  --radius-overlay: 1.350rem;
+  --radius-interactive: 0.506rem;
+  --radius-surface: 0.759rem;
+  --radius-overlay: var(--radius-surface); /* cut by agent: Two radii, not three: a control and a panel. The engine gave overlays 2.4× the control radius, which at calm energy is a 19px dialog — the one soft shape on an otherwise architectural page. An overlay is a panel; it rounds like one. */
 
   /* ---- Static roles (not seed-derived) ---- */
   --radius-pill: var(--strata-radius-round);

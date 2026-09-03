@@ -16,7 +16,8 @@
 .settings__title {
   font-family: var(--font-display);
   font-size: var(--strata-text-xl);
-  font-weight: 560;
+  font-weight: 700;
+  letter-spacing: var(--strata-tracking-tight);
   color: var(--ink);
   margin: 0;
 }
@@ -55,7 +56,9 @@
 }
 .topbar__logo {
   font-family: var(--font-display);
-  font-size: var(--strata-text-lg);
+  font-size: var(--strata-text-md);
+  font-weight: 600;
+  letter-spacing: var(--strata-tracking-tight);
   color: var(--ink);
   text-decoration: none;
 }
@@ -119,7 +122,8 @@
 .notes__title {
   font-family: var(--font-display);
   font-size: var(--strata-text-md);
-  font-weight: 560;
+  font-weight: 600;
+  letter-spacing: var(--strata-tracking-tight);
   color: var(--ink);
   margin: 0;
 }

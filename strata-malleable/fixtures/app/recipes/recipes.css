@@ -35,7 +35,8 @@
 .st-card__title {
   font-family: var(--font-display);
   font-size: var(--strata-text-lg);
-  font-weight: 560;
+  font-weight: 600;
+  letter-spacing: var(--strata-tracking-tight);
   color: var(--ink);
   margin: 0;
 }

@@ -16,6 +16,7 @@ html {
 body {
   margin: 0;
   font-family: var(--font-body);
+  letter-spacing: var(--strata-tracking-normal);
   background: var(--surface-page);
   color: var(--ink);
   transition: background var(--motion-slow) var(--motion-ease), color var(--motion-slow) var(--motion-ease);
@@ -49,23 +50,54 @@ body {
   gap: var(--strata-space-4);
   height: 3.5rem;
 }
-.topbar__logo {
-  font-family: var(--font-display);
-  font-weight: 640;
-  font-size: var(--strata-text-md);
-  letter-spacing: 0.02em;
+.topbar__brand {
   display: flex;
   align-items: center;
-  gap: var(--strata-space-2);
+}
+.topbar__logo {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--strata-text-md);
+  letter-spacing: var(--strata-tracking-tight);
   color: var(--ink);
   text-decoration: none;
 }
-.topbar__logo-mark {
-  width: 1.1rem;
-  height: 1.1rem;
-  border-radius: 3px;
-  background: linear-gradient(160deg, var(--accent-strong), var(--accent) 55%, var(--accent-soft));
-  box-shadow: 0 0 12px var(--accent-soft);
+/* The appearance control is the mark: a dot after the wordmark. Untinted it
+   is faint ink and reads as punctuation; with an accent it carries the accent,
+   so the door is also the state. One click flips the ground. The button is
+   22px because the dot is not a target — a 7px hit area is a miss you blame
+   yourself for. Quiet and hidden are different things: it is a real button
+   with a name, reachable by tab. */
+.appearance-dot {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-left: 1px;
+  padding: 0;
+  border: 0;
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.appearance-dot > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dot, var(--ink-faint));
+  opacity: 0.7;
+  transition: opacity var(--motion-fast) var(--motion-ease), transform var(--motion-fast) var(--motion-ease);
+}
+.appearance-dot:hover > span,
+.appearance-dot:focus-visible > span {
+  opacity: 1;
+  transform: scale(1.28);
+}
+.appearance-dot:focus-visible {
+  outline: 1px solid var(--line-strong);
+  outline-offset: 2px;
+  border-radius: 50%;
 }
 .topbar__nav {
   display: flex;
@@ -103,62 +135,49 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  /* A bloom, not a glow: the portfolio's hero carries one at 8% and it reads as
+     depth, not decoration. At the accent wash's own alpha it read as a lamp. */
   background:
-    radial-gradient(42rem 30rem at 85% -10%, var(--accent-soft), transparent 60%),
-    radial-gradient(30rem 26rem at -5% 55%, var(--accent-soft), transparent 65%);
+    radial-gradient(42rem 30rem at 85% -10%, color-mix(in oklch, var(--accent-soft) 40%, transparent), transparent 60%),
+    radial-gradient(30rem 26rem at -5% 55%, color-mix(in oklch, var(--accent-soft) 30%, transparent), transparent 65%);
   transition: background var(--motion-slow) var(--motion-ease);
 }
-.hero__strata-lines {
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 45%;
-  pointer-events: none;
-  opacity: 0.5;
-  mask-image: linear-gradient(to top, black, transparent);
-}
+/* Labels are microtype: mono, small, tracked, faint. They name; they do not
+   announce. The accent never carries a label — colour on a label is a second
+   voice competing with the heading it introduces. */
 .hero__kicker {
   font-family: var(--font-mono);
   font-size: var(--strata-text-xs);
+  font-weight: 500;
   letter-spacing: var(--strata-tracking-caps);
   text-transform: uppercase;
-  color: var(--accent);
-  display: inline-flex;
-  align-items: center;
-  gap: var(--strata-space-2);
+  color: var(--ink-faint);
+  display: inline-block;
   margin-bottom: var(--strata-space-5);
 }
-[data-theme='light'] .hero__kicker {
-  color: var(--accent-strong);
-}
-.hero__kicker::before {
-  content: '';
-  width: 2rem;
-  height: 1px;
-  background: var(--accent-line);
-}
+/* One face, set heavy and tight. Scale contrast does the work — one display
+   line, everything else at reading size. */
 .hero__title {
   font-family: var(--font-display);
-  font-size: var(--strata-text-6xl);
-  font-weight: 480;
-  font-variation-settings: 'opsz' 144;
-  line-height: 0.98;
+  font-size: var(--strata-text-4xl);
+  font-weight: 700;
+  line-height: 1.06;
   letter-spacing: var(--strata-tracking-tight);
   margin: 0 0 var(--strata-space-5);
-  max-width: 18ch;
+  max-width: 24ch;
+  text-wrap: balance;
 }
 .hero__title em {
-  font-style: italic;
+  font-style: normal;
   font-weight: 400;
-  color: var(--accent);
-}
-[data-theme='light'] .hero__title em {
-  color: var(--accent-strong);
+  color: var(--ink-muted);
 }
 .hero__lede {
-  font-size: var(--strata-text-lg);
-  line-height: var(--strata-leading-normal);
+  font-size: var(--strata-text-md);
+  font-weight: 500;
+  line-height: var(--strata-leading-loose);
   color: var(--ink-muted);
-  max-width: 46ch;
+  max-width: 44ch;
   margin: 0 0 var(--strata-space-6);
 }
 .hero__cta {
@@ -181,19 +200,20 @@ body {
 .section__kicker {
   font-family: var(--font-mono);
   font-size: var(--strata-text-xs);
+  font-weight: 500;
   letter-spacing: var(--strata-tracking-caps);
   text-transform: uppercase;
-  color: var(--accent);
-}
-[data-theme='light'] .section__kicker {
-  color: var(--accent-strong);
+  color: var(--ink-faint);
 }
 .section__title {
   font-family: var(--font-display);
-  font-size: var(--strata-text-3xl);
-  font-weight: 520;
+  font-size: var(--strata-text-2xl);
+  font-weight: 700;
+  line-height: 1.15;
   letter-spacing: var(--strata-tracking-tight);
+  max-width: 28ch;
   margin: 0;
+  text-wrap: balance;
 }
 .section__sub {
   font-size: var(--strata-text-sm);
@@ -209,15 +229,14 @@ body {
 }
 .credo__item {
   margin: 0;
-  border-left: var(--strata-border-thick) solid var(--accent-line);
-  padding-left: var(--strata-space-5);
+  border-top: var(--strata-border-hair) solid var(--line-strong);
+  padding-top: var(--strata-space-4);
 }
 .credo__line {
   font-family: var(--font-display);
-  font-size: var(--strata-text-2xl);
-  font-style: italic;
-  font-weight: 460;
-  line-height: var(--strata-leading-tight);
+  font-size: var(--strata-text-xl);
+  font-weight: 600;
+  line-height: 1.25;
   letter-spacing: var(--strata-tracking-tight);
   color: var(--ink);
   margin: 0 0 var(--strata-space-4);
@@ -252,11 +271,10 @@ body {
 .ledger__tag {
   font-family: var(--font-mono);
   font-size: var(--strata-text-xs);
-  color: var(--accent);
-  letter-spacing: 0.04em;
-}
-[data-theme='light'] .ledger__tag {
-  color: var(--accent-strong);
+  font-weight: 500;
+  color: var(--ink-faint);
+  letter-spacing: var(--strata-tracking-caps);
+  text-transform: uppercase;
 }
 .ledger__what {
   font-size: var(--strata-text-sm);
@@ -296,7 +314,8 @@ body {
 .console__title {
   font-family: var(--font-display);
   font-size: var(--strata-text-lg);
-  font-weight: 540;
+  font-weight: 600;
+  letter-spacing: var(--strata-tracking-tight);
   margin: 0;
 }
 .console__meta {
@@ -746,10 +765,53 @@ body {
 .lab-slider__value {
   font-family: var(--font-mono);
   font-size: var(--strata-text-xs);
-  color: var(--accent);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
-[data-theme='light'] .lab-slider__value {
-  color: var(--accent-strong);
+/* Ground: two words, one chosen. The two poles are one theme's two grounds. */
+.lab-ground {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--strata-space-3);
+}
+.lab-ground__name {
+  font-family: var(--font-body);
+  font-size: var(--strata-text-xs);
+  font-weight: 600;
+  letter-spacing: var(--strata-tracking-wide);
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.lab-ground__switch {
+  display: inline-flex;
+  border: var(--strata-border-hair) solid var(--line-strong);
+  border-radius: var(--radius-interactive);
+  padding: 2px;
+  gap: 2px;
+}
+.lab-ground__switch button {
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font-family: var(--font-body);
+  font-size: var(--strata-text-xs);
+  font-weight: 600;
+  padding: calc(var(--strata-space-1) * var(--density)) calc(var(--strata-space-3) * var(--density));
+  border-radius: calc(var(--radius-interactive) - 2px);
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+}
+.lab-ground__switch button:hover {
+  color: var(--ink);
+}
+.lab-ground__switch button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.lab-ground__switch button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 .lab-slider input[type='range'] {
   appearance: none;
@@ -928,7 +990,8 @@ body {
 .lab-neighbor__aa {
   font-family: var(--font-display);
   font-size: var(--strata-text-sm);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: var(--strata-tracking-tight);
 }
 .lab-neighbor__tag {
   font-family: var(--font-mono);

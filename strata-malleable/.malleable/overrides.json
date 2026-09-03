@@ -1,10 +1,10 @@
 {
   "version": 1,
   "seeds": {
-    "hue": 168,
-    "chroma": 0.155,
-    "warmth": 0,
-    "energy": 0.5,
+    "hue": 250,
+    "chroma": 0,
+    "warmth": -0.6,
+    "energy": 0.35,
     "density": 1,
     "appearance": "dark"
   },

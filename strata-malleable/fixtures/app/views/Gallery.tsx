@@ -9,8 +9,8 @@ import { Button } from '../recipes/Button'
 import { Card } from '../recipes/Card'
 
 const RELEASES = [
-  { id: 'obsidian', name: 'Obsidian', meta: '168° · 0.155', note: 'The default voice. Dark, teal, architectural.' },
-  { id: 'gallery', name: 'Gallery', meta: '168° · 0.135', note: 'Paper-warm neutrals. Light is not inverted dark.' },
+  { id: 'obsidian', name: 'Obsidian', meta: '250° · mono', note: 'The house voice. Dark, monochrome, slate-cast, calm.' },
+  { id: 'gallery', name: 'Gallery', meta: '250° · mono', note: 'The same six numbers on paper. Light is one flipped bit.' },
   { id: 'ember', name: 'Ember', meta: '40° · 0.170', note: 'Kinetic and warm — energy buys shape as well as speed.' },
   { id: 'ultraviolet', name: 'Ultraviolet', meta: '300° · 0.200', note: 'Electric chroma, cool cast, spring easing throughout.' },
   { id: 'meadow', name: 'Meadow', meta: '135° · 0.120', note: 'Airy density, calm motion, green at low chroma.' },

@@ -238,7 +238,8 @@
 .st-card__title {
   font-family: var(--font-display);
   font-size: var(--strata-text-lg);
-  font-weight: 560;
+  font-weight: 600;
+  letter-spacing: var(--strata-tracking-tight);
   color: var(--ink);
   margin: 0 0 var(--strata-space-2);
 }
@@ -376,7 +377,8 @@
 .st-dialog__title {
   font-family: var(--font-display);
   font-size: var(--strata-text-xl);
-  font-weight: 560;
+  font-weight: 600;
+  letter-spacing: var(--strata-tracking-tight);
   margin: 0;
 }
 .st-dialog__body {

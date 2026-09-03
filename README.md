@@ -55,7 +55,7 @@ collage.
 ### A theme is six numbers
 
 ```json
-{ "hue": 250, "chroma": 0.01, "warmth": -0.6, "energy": 0.35, "density": 1, "appearance": "dark" }
+{ "hue": 250, "chroma": 0, "warmth": -0.6, "energy": 0.35, "density": 1, "appearance": "dark" }
 ```
 
 From those seeds the engine (`src/theme/generateTheme.ts`) derives every
