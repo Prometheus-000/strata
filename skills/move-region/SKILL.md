@@ -6,7 +6,7 @@ inputs: [region, to]
 context:
   state: [structure]
   precedent: { kind: move, component: $region }
-  rules: [knowledge.designer-defines-ux, evaluation.report-not-police, layer1.correctness-not-taste]
+  rules: [knowledge.designer-defines-ux, evaluation.report-not-police, layer1.imported-not-copied]
 constraints:
   - move through strata move, never by editing JSX by hand, so the record names you
   - never move anything back that a designer moved

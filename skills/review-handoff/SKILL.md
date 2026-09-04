@@ -6,7 +6,7 @@ inputs: []
 context:
   state: [structure, drift]
   precedent: { since: $since }
-  rules: [knowledge.designer-defines-ux, evaluation.report-not-police, layer1.correctness-not-taste, layer2.one-filled-action]
+  rules: [knowledge.designer-defines-ux, evaluation.report-not-police, layer1.imported-not-copied, layer2.one-filled-action]
 constraints:
   - never move anything back; a designer's move is never wrong at the page level
   - anything you notice against the grammar is an observation in a line, never a cost and never a violation

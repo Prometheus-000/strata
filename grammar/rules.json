@@ -148,10 +148,11 @@
       "check": "none"
     },
     {
-      "id": "layer1.correctness-not-taste",
+      "id": "layer1.imported-not-copied",
       "authority": "policy",
-      "statement": "Roving tabindex, arrow-key order, Escape and backdrop dismissal live in src/behavior and are consumed, never copied.",
-      "reason": "This is the part everyone quietly rebuilds badly when they eject from a monolithic system — so it is the part an eject must preserve.",
+      "statement": "A focus trap, roving tabindex, arrow-key order, Escape and backdrop dismissal are solved primitives. They are imported, never reimplemented — not because an arrangement of them could be incorrect, but because a second implementation is a second set of bugs.",
+      "reason": "It is the copy that rots: the original gets the fix and the fork keeps the defect, silently, for as long as nobody diffs them. It is also what lets a region move at all — behaviour travels with a component that consumed it, and stays behind when a component wrote its own.",
+      "incident": "This is the part everyone quietly rebuilds badly when they eject from a monolithic system, so it is the part an eject must preserve.",
       "source": "GRAMMAR.md › Layer 1 — Behavior",
       "check": "layer1.imported-not-copied"
     },

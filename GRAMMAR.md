@@ -119,10 +119,15 @@ because the two poles are one theme's two grounds.
 
 ## Layer 1 — Behavior (never forked)
 
-**Correctness is not a taste question.** Roving tabindex, arrow-key order, Escape and
-backdrop dismissal live in `src/behavior/` and are consumed, never copied. This is the part
-everyone quietly rebuilds badly when they eject from a monolithic system — so it is the part
-an eject must preserve.
+**A solved primitive is imported, never reimplemented.** A focus trap, roving tabindex,
+arrow-key order, Escape and backdrop dismissal live in `src/behavior/` and are consumed. Not
+because an arrangement of them could be incorrect — a designer's arrangement is the design,
+and what breaks under it is code — but because a second implementation is a second set of
+bugs, and it is the copy that rots: the original gets the fix and the fork keeps the defect
+for as long as nobody diffs them. This is also what lets a region move at all. Behaviour
+travels with a component that consumed it, and stays behind when a component wrote its own.
+It is the part everyone quietly rebuilds badly when they eject from a monolithic system, so
+it is the part an eject must preserve.
 
 **A backdrop click is a click on the `<dialog>` element itself.** Clicks inside content land
 on descendants; testing `e.target === dialog` is the whole implementation. Anything cleverer

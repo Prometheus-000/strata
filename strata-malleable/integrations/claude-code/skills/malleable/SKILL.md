@@ -5,7 +5,7 @@ purpose: Work on a page the designer can change by hand, through the same record
 inputs: []
 context:
   state: [structure, drift]
-  rules: [knowledge.designer-defines-ux, evaluation.report-not-police, layer1.correctness-not-taste]
+  rules: [knowledge.designer-defines-ux, evaluation.report-not-police, layer1.imported-not-copied]
 constraints:
   - every write is strata <verb> --by agent; never edit JSX or overrides.json by hand to change what a designer can change by hand
   - never move anything back
