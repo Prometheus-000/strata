@@ -252,6 +252,10 @@ and consequences, so they are one type on one record, and the same folds
 answer the same questions about each: what is current, what is its history,
 what is pending since the last handoff.
 
+Eight kinds, and there is no ninth for the rules themselves — see
+[the contract](#the-contract). Every one of these is an act *within* the work;
+the frame it happens inside is edited in files by people, not decided.
+
 One line of the record, as it is on disk:
 
 ```json
@@ -371,6 +375,39 @@ as one is how a system gets trusted for things it never claimed.
 | Every write through `decide()` carries who chose, who wrote, and why. | `--decided-by` says who chose, and it is answered honestly. |
 | A packet assembled from the record, the grammar and the live state, on request. | Projections and `data-*` stamps are never hand-edited. |
 | A projection can be produced again from the record, and `rebuild --check` proves it. | The packet is read before the work, not after. |
+| The eight kinds are the only things `decide()` writes. | What an agent may decide *within* the work is the harness's call, not Strata's. |
+
+**The frame is not decidable.** The eight kinds — `token`, `override`, `move`,
+`prop`, `seed`, `deviation`, `ship`, `ready` — are all acts *within* the work:
+cut a name, set a property, move a region, pick a value, move the seeds,
+declare a literal, ship, hand off. The frame the work happens inside is a
+different category of thing — `grammar/rules.json`, the skills' front matter
+and bodies, `CLAUDE.md`, which rules are invariants, what number a preference
+carries — and none of it comes through this door. There is no `rule` kind.
+Rules, skills and thresholds are not decisions; nothing writes them through
+`decide()`, and a test asserts the registry still admits exactly those eight,
+so adding a ninth is a deliberate act with an argument attached.
+
+The omission is the design, not an oversight. A decision inside a frame cannot
+license a change to the frame without the frame meaning nothing: an agent that
+can rewrite the rules it works under is not working under rules, and a grant of
+latitude on one feature is not a grant to rewrite the terms that apply to
+everything after it.
+
+Which is also why the right-hand column says what it says. **Strata does not
+decide how much autonomy an agent has** — the prompt does, and the harness
+does. The substrate records every decision and its author and limits neither;
+an agent may cut every token in the vocabulary if that is what it was asked to
+do, and the record will say who chose. Autonomy over the *frame* is not
+granted by anything here, because there is no door for it to come through.
+
+One gap, named rather than papered over: **the frame files are ordinary files.**
+Any writer with a filesystem — a person, an agent, a script — can edit
+`rules.json` or a `SKILL.md` outside `decide()`, and Strata does not currently
+notice. What holds is that such an edit is not a *decision*: it leaves no line,
+carries no author and no reason, and shows up as a diff for a reviewer like any
+other. That is a weaker guarantee than the one the record makes about
+projections, and it is stated here rather than implied away.
 
 The failure mode, in one sentence: **a hand-edited projection fails
 `projections.match-record` on the next check, and a hand-edited JSX does
