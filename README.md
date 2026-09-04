@@ -41,7 +41,8 @@ and it assumed the only author was a human with a text box.
 Three things broke that model at once. Agents started writing UI, and an
 agent with a component list generates collage while an agent with reasons
 generates coherent work — which is the founding claim, and `bench/` is where
-it is put to a test rather than repeated. Products started needing more than one projection
+it is put to a test rather than repeated. It has been run once; the result is
+narrower than the sentence, and is written up there. Products started needing more than one projection
 of the same intent — React, CSS, Figma, a runtime the team has not chosen
 yet. And the review gate turned out to measure the wrong moment: a design in
 progress fails any check by definition, so a tool that reports mid-drag
@@ -727,10 +728,16 @@ Every push to `main` runs the tests and the build and publishes the site.
 
 Stated so the next reader inherits the test and not the verdict:
 
-- **The packet claim is untested.** `bench/` sets up the experiment — the same
-  two tasks performed from a packet and from a component list, scored on what
-  reaches the record and what the tree looks like afterwards — and nobody has
-  run it. Until someone does, the sentence this README opens with is a claim.
+- **The packet claim is tested once, narrowly, and holds in a narrower form
+  than it is usually stated.** `bench/` ran two tasks from a packet and from a
+  component list. On one of the two, the arm without the record made a correct
+  decision that silently undid three house decisions it had no way to see —
+  shadows repainted, dialogs given back their overshoot, a third radius
+  returned — while the arm with the record lost nothing. On the other task the
+  arms were indistinguishable. So: *a record that carries reasons keeps
+  decisions from being undone by people who never saw them.* The broader
+  "collage versus coherent work" framing is not what was measured. One run per
+  cell, one model, and `bench/README.md` lists the rest of the limits.
 - **The record is thirty-six lines, and thirty-four of them were imported.**
   Two were decided in a live session. That is a record of a vocabulary, not
   yet a record of a product being designed.

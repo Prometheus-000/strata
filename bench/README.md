@@ -118,5 +118,82 @@ the first two is evidence that the *door* works — that a harness given the
 packet writes decisions at all — which is a weaker and more boring claim, and
 worth separating from the first.
 
-No result is on the record yet. Until one is, the claim in the README is a
-claim, and the README says so.
+## The first result
+
+Two runs, four arms each, every arm performed by a harness with no knowledge of
+this repository beyond what its prompt and its sandbox gave it.
+
+**Run 1 was void.** Both control arms went looking, found `bin/strata.mjs`, the
+skills, the ledger and the precedent, and produced work indistinguishable from
+the packet arms on every measure. The control had the answers in a directory it
+had not been pointed at, so the two arms were the same experiment. The run's
+one real output was a bug: `strata move`, `prop`, `set` and `remove` all
+crashed *after* writing, on a `const` arrow in its temporal dead zone. Four
+independent agents walked into it.
+
+**Run 2, with the frame genuinely absent, found the difference — and not where
+this bench was looking for it.**
+
+```
+cut-token                     packet      list
+decisions written                  1         1
+with a reason                      1         1
+invariants hold                  yes       yes
+undeclared literals                0         0
+reached for a cut token            0         0
+decisions silently undone          0         3
+```
+
+The control did everything right. It found the CLI unaided, wrote a proper
+decision with a reason and a named hand, hand-edited nothing, verified the
+fallback chain, and cut the same token the packet arm cut for substantially the
+same argument. It then reported, unprompted, that its one write had reverted
+three decisions it could not see:
+
+    --shadow-color         transparent            → oklch(0.050 0.010 236.0 / 0.50)
+    --motion-ease-emphasis var(--motion-ease)     → var(--strata-ease-spring)
+    --radius-overlay       var(--radius-surface)  → 1.215rem
+
+Shadows repaint. Dialogs overshoot. A third radius comes back. Three house
+decisions — argued for, written down, and *invisible in the artifact* — undone
+as a side effect of one unrelated correct decision. The packet arm performed
+the same task and lost nothing.
+
+It refused to hand-restore them, correctly, on the grounds that the next
+rebuild would undo the restoration. And it refused to invent decisions for
+them, citing `substrate/src/author.ts` on not guessing a deciding hand. It
+behaved impeccably throughout. **That is the finding: this is not about how
+careful the agent is.**
+
+### What this does and does not show
+
+The measure that caught it was not in the original six. "Reached for a cut
+token" looks for an arm that *writes* a cut name; nothing was reached for and
+nothing was written. A decision was simply lost. `decisions silently undone`
+was added afterwards, which is worth stating plainly — the bench was extended
+to describe a result it had not anticipated.
+
+Honest limits, in the order they weaken the finding:
+
+- **Part of the mechanism is the control's design.** The control has Strata's
+  machinery and no record, so a write re-emits the stylesheet from an engine
+  with no cuts to apply. A product that never installed Strata would not
+  re-emit at all. What is *not* an artifact is the reason the agent could not
+  prevent it: the stylesheet it was handed said `--radius-overlay:
+  var(--radius-surface)` with no provenance, and three deliberate decisions
+  were indistinguishable from three accidental aliases.
+- **The move-region task showed no difference at all** — 0 to 0 on every
+  measure. The claim held on one task of two.
+- **One arm per cell.** The two packet runs agreed with each other, which is
+  weak evidence of stability and no more.
+- **The same model performed every arm.** Nothing here tests whether the
+  effect survives a different harness.
+- **The arms were told not to modify anything outside their directory, but not
+  told not to read.** The real repository was on the same disk throughout. The
+  transcripts show no reads of its record, skills, grammar or prose — but the
+  instruction did not forbid it, and a future run should.
+
+The claim, then, holds in the narrow form the evidence supports: **a record
+that carries reasons keeps decisions from being undone by people who never saw
+them.** The broader "collage versus coherent work" framing is not what was
+measured, and is still a claim.

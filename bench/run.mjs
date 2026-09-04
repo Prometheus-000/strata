@@ -367,6 +367,30 @@ function scoreArm(task, arm) {
     }
   }
 
+  /**
+   * The measure this bench was missing, and the one that found the difference.
+   *
+   * "Reached for a cut token" only catches an arm that *writes* a cut name. It
+   * does not catch the thing that actually happened: the control made one
+   * correct local decision, the write re-emitted the stylesheet, and three
+   * cuts it had no way to see were silently undone — shadows repainted,
+   * dialogs given back their overshoot, a third radius returned. Nothing was
+   * reached for. A decision was simply lost, because the artifact carried no
+   * trace that it had ever been made.
+   */
+  const reverted = []
+  const armCss = path.join(dir, 'src/tokens/semantic.css')
+  const decl = (text, token) => (text.match(new RegExp(`^\\s*${token}:\\s*([^;]+);`, 'm')) ?? [])[1]?.trim()
+  if (fs.existsSync(armCss)) {
+    const before = fs.readFileSync(path.join(ROOT, 'src/tokens/semantic.css'), 'utf8')
+    const after = fs.readFileSync(armCss, 'utf8')
+    for (const token of cut) {
+      const was = decl(before, token)
+      const now = decl(after, token)
+      if (was && now && was !== now) reverted.push(`${token}: ${was} → ${now}`)
+    }
+  }
+
   const finding = (rule) => check.findings.filter((f) => f.rule === rule).length
   return {
     task: task.id,
@@ -379,6 +403,7 @@ function scoreArm(task, arm) {
     projectionsHandEdited: check.invariants.find((i) => i.rule === 'projections.match-record')?.findings.length ?? 0,
     undeclaredLiterals: finding('layer0.semantic-names-only'),
     reachedForCut,
+    reverted,
     filesChanged: changed,
   }
 }
@@ -408,6 +433,7 @@ function report(rows = JSON.parse(fs.readFileSync(path.join(BENCH, 'RESULT.json'
     ['projections hand-edited', (r) => r.projectionsHandEdited],
     ['undeclared literals', (r) => r.undeclaredLiterals],
     ['reached for a cut token', (r) => r.reachedForCut.length],
+    ['decisions silently undone', (r) => (r.reverted ?? []).length],
     ['files changed', (r) => r.filesChanged.length],
   ]
   for (const task of tasks) {
@@ -418,8 +444,9 @@ function report(rows = JSON.parse(fs.readFileSync(path.join(BENCH, 'RESULT.json'
     console.log(`  ${'─'.repeat(26 + 10 * mine.length)}`)
     for (const [name, of] of MEASURES) console.log(`  ${name.padEnd(26)}${mine.map((r) => String(of(r)).padStart(10)).join('')}`)
     for (const r of mine) for (const hit of r.reachedForCut) console.log(`    ${r.arm}: reached for a cut token — ${hit}`)
+    for (const r of mine) for (const hit of r.reverted ?? []) console.log(`    ${r.arm}: a decision was undone — ${hit}`)
   }
-  console.log('\n  A difference in the last three rows is evidence for the claim.')
+  console.log('\n  A difference in the last four rows is evidence for the claim.')
   console.log('  A difference in the first two says the door works, which is a smaller claim.\n')
 }
 
