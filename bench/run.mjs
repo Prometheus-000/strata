@@ -71,6 +71,10 @@ const tracked = () => execFileSync('git', ['ls-files'], { cwd: ROOT, encoding: '
  * components, the compiled stylesheet, the app, and names without reasons.
  */
 const FRAME = [
+  // The record itself is a tracked file, so it arrives with the copy loop
+  // unless it is named here. Leaving it out was how the first control ended
+  // up holding thirty-seven decisions it was never handed.
+  '.strata',
   'README.md',
   'GRAMMAR.md',
   'CLAUDE.md',
@@ -123,6 +127,17 @@ function stripReasons(dest) {
       .replace(/^ {3}through the decisions.*\n(?: {3}.*\n)?/m, '')
     fs.writeFileSync(css, text)
   }
+  // One copy of the record lives outside it: the harness engine vendors the
+  // three cuts so it renders the page the site renders, and the file's own
+  // comment calls it "a copy of a decision". It names exactly the tokens this
+  // bench measures reaching for, so the control cannot keep it.
+  const harness = path.join(dest, 'strata-malleable/src/engine/generateTheme.ts')
+  if (fs.existsSync(harness))
+    fs.writeFileSync(
+      harness,
+      fs.readFileSync(harness, 'utf8').replace(/export const LEDGER_CUTS[\s\S]*?\n\}/, 'export const LEDGER_CUTS: Record<string, string> = {}'),
+    )
+
   const jsonPath = path.join(dest, 'src/tokens/tokens.json')
   if (!fs.existsSync(jsonPath)) return
   const json = JSON.parse(fs.readFileSync(jsonPath, 'utf8'))

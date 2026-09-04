@@ -17,10 +17,34 @@ harness is given before it starts.
 | `packet` | `strata skill <name> …` — the rules that bear on the task with their reasons, the precedent the record holds, the state, the procedure, the constraints |
 | `list` | `bench/arms/list/BRIEF.md` — the same design system as a component and token list: every name, no reasons, no record, no rules |
 
-The `list` arm is not a straw man. It is generated from the same ledger the
-packet is built from, so both arms know exactly the same *names*. What one arm
-has and the other does not is **why** — and the record of what was decided
+The `list` arm is not a straw man. Its brief is generated from the same ledger
+the packet is built from, so both arms know exactly the same *names*. What one
+arm has and the other does not is **why** — and the record of what was decided
 before.
+
+**The control's sandbox genuinely lacks the frame**, which took two goes to get
+right. The first version copied the whole repository into both arms and
+differed only in what the prompt *mentioned*; both list arms went looking,
+found `bin/strata.mjs`, the skills, the ledger and the precedent, and produced
+work indistinguishable from the packet arms on every measure. Of course they
+did. A control that has the answers in a file it wasn't pointed at is not a
+control.
+
+So the `list` arm's copy omits `.strata/`, `grammar/`, `skills/`, `README.md`,
+`GRAMMAR.md` and `src/theme/ledger.json`, and the two projections that carry
+the record *inside* them are reduced to what a conventional design system
+ships: the `/* cut by … */` comments come out of `semantic.css`, and the
+`$extensions`, `$reasons` and ledger block come out of `tokens.json`. One more
+copy of the record lives outside it — the harness engine vendors the three
+cuts, and that file's own comment calls it "a copy of a decision" — so the
+control gets an empty table there.
+
+What remains, stated rather than pretended away: the control keeps the
+library's *source*, so evaluator files still carry some rule text, and the
+shipped stylesheet still reads `--radius-overlay: var(--radius-surface)`, which
+an observant agent could recognise as an alias standing in for a cut. That is
+the artifact speaking, and it is exactly what a real consumer of a design
+system sees, so it stays.
 
 ## The tasks
 
