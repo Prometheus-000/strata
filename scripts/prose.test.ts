@@ -191,3 +191,40 @@ test('the count the README claims about the grammar is the count the grammar has
   assert.equal(words[m[4]] ?? Number(m[4]), rest - cited, 'rules with an evaluator')
   assert.ok(readme.includes(`the other ${Object.keys(words).find((k) => words[k] === cited) ?? cited} say`), 'cited count')
 })
+
+test('the tools the MCP README lists are the tools the server has', () => {
+  // Two homes for one roster. The README's one-line summaries are for a person
+  // and the server's descriptions are for a model, so those may differ — but a
+  // seventh tool, or a renamed one, must not leave the human-facing page
+  // describing a surface that is not there.
+  const server = new Set([...read('mcp/server.mjs').matchAll(/name: '(strata_[a-z_]+)'/g)].map((m) => m[1]))
+  const readme = new Set([...read('mcp/README.md').matchAll(/`(strata_[a-z_]+)`/g)].map((m) => m[1]))
+  assert.deepEqual([...readme].sort().filter((t) => !server.has(t)), [], 'the README lists a tool the server does not serve')
+  assert.deepEqual([...server].sort().filter((t) => !readme.has(t)), [], 'the server serves a tool the README never mentions')
+})
+
+test("the bench README's measures and terms are the ones the bench runs", () => {
+  // The README explains the experiment in prose and `run.mjs` performs it. The
+  // wording is allowed to differ; the *set* of measures and the *count* of
+  // terms are not, because a scorecard pasted into a README is a copy of a run
+  // that will not be made again.
+  const src = read('bench/run.mjs')
+  const measures = [...src.matchAll(/^\s*\['([a-z][a-z -]+)', \(r\)/gm)].map((m) => m[1])
+  assert.ok(measures.length >= 8, 'the measures moved; teach this test where')
+
+  const doc = read('bench/README.md')
+  const quoted = new Set(
+    doc
+      .split('\n')
+      // A measure row, not the header row above it: the value column starts
+      // with a number or a yes/no, where the header carries arm names.
+      .map((l) => l.match(/^([a-z][a-z -]+?)\s{2,}(?=\d|yes\b|no\b)/)?.[1])
+      .filter((x): x is string => !!x),
+  )
+  assert.deepEqual([...quoted].filter((q) => !measures.includes(q)), [], 'the README shows a measure the bench does not compute')
+
+  const terms = (src.match(/const TERMS = \[([\s\S]*?)\]\.join/)?.[1] ?? '').match(/^\s*'\d\./gm)?.length ?? 0
+  assert.ok(terms > 0, 'the terms moved; teach this test where')
+  const claimed = doc.match(/The `held` terms are: ([^]*?)\n\n/)?.[1] ?? ''
+  assert.equal(claimed.split(',').length, terms, `the README summarises ${claimed.split(',').length} terms; the bench states ${terms}`)
+})
