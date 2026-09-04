@@ -1,0 +1,16 @@
+/**
+ * The lab, alone. Imported last so it lands after site.css in dev and in the
+ * build alike — an inline <style> in the entry HTML comes before the injected
+ * stylesheet and loses the tie.
+ *
+ * Two differences from the hub. There is no topbar here, so the panel has
+ * nothing to stick under. And the frame around this page is the only padding
+ * it needs.
+ */
+body {
+  margin: 0;
+  padding: clamp(20px, 3vw, 32px);
+}
+.lab__panel {
+  position: static;
+}

@@ -4,9 +4,10 @@ import react from '@vitejs/plugin-react'
 import { malleableDevPlugin } from './strata-malleable/src/store/server'
 
 /**
- * One server, three surfaces: the showcase, the personalizer, and the
- * malleable layer's harness. They used to be separate dev servers on separate
- * ports, which is several places to find the same idea.
+ * One server, four surfaces: the showcase, the personalizer, the malleable
+ * layer's harness, and the lab on its own for embedding. They used to be
+ * separate dev servers on separate ports, which is several places to find the
+ * same idea.
  *
  * Two things make that safe. React is deduped, because the library carries
  * its own node_modules and a harness resolving a second React copy breaks
@@ -30,6 +31,7 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         personalize: resolve(__dirname, 'personalize.html'),
         malleable: resolve(__dirname, 'malleable.html'),
+        lab: resolve(__dirname, 'lab.html'),
       },
     },
   },

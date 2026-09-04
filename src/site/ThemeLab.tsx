@@ -142,10 +142,21 @@ export function ThemeLab() {
       kind === 'seeds'
         ? JSON.stringify(seeds, null, 2)
         : `:root {\n${Object.entries(t).map(([k, v]) => `  ${k}: ${v};`).join('\n')}\n}`
-    await navigator.clipboard.writeText(text)
+    // In a cross-origin frame without clipboard-write permission this rejects.
+    // A button that reports nothing is worse than one that says it failed.
+    try {
+      await navigator.clipboard.writeText(text)
+    } catch {
+      setCopied(`${kind}:failed`)
+      window.setTimeout(() => setCopied(null), 1400)
+      return
+    }
     setCopied(kind)
     window.setTimeout(() => setCopied(null), 1400)
   }
+
+  const label = (kind: 'seeds' | 'css', idle: string) =>
+    copied === kind ? 'Copied' : copied === `${kind}:failed` ? 'Blocked' : idle
 
   const activePreset = Object.entries(PRESETS).find(
     ([, p]) => JSON.stringify(p) === JSON.stringify(seeds),
@@ -210,10 +221,10 @@ export function ThemeLab() {
         </pre>
         <div className="lab__export">
           <Button size="sm" variant="secondary" onClick={() => copy('seeds')}>
-            {copied === 'seeds' ? 'Copied' : 'Copy seeds'}
+            {label('seeds', 'Copy seeds')}
           </Button>
           <Button size="sm" variant="secondary" onClick={() => copy('css')}>
-            {copied === 'css' ? 'Copied' : 'Copy CSS'}
+            {label('css', 'Copy CSS')}
           </Button>
           <Button size="sm" variant="ghost" onClick={() => keep(seeds, `${seeds.hue}° ${seeds.appearance}`)}>
             Keep
