@@ -43,7 +43,7 @@ reasons: |
    the engine, or the store's seeds) and record it:
 
    ```bash
-   strata decide seed --hue 250 --chroma 0.08 --warmth -0.6 --energy 0.35 --density 1 --appearance dark --why "…" --decided-by agent
+   strata retheme --hue 250 --chroma 0.08 --warmth -0.6 --energy 0.35 --density 1 --appearance dark --why "…" --decided-by agent
    ```
 
 4. Regenerate the projections (`npm run tokens`) and run `strata check`.

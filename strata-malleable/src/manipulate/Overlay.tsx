@@ -8,7 +8,8 @@
  *     someone says so.
  *   - Drag a region: pick up `<Filters />` by its body and put it down in
  *     another landmark, before or after a neighbour. That rewrites the JSX on
- *     the spot — there is no store for structure; the diff is the record.
+ *     the spot — there is no store for structure. The JSX is the state and the
+ *     record witnesses the move; neither is a copy of the other.
  *
  * Nothing is priced and nothing is marked while a region is in the air. The
  * only things drawn are the container under the pointer and one line where

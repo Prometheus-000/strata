@@ -13,8 +13,9 @@ constraints:
   - one decision per token per reason; if the reason changes, decide again and the record keeps both
   - "say who chose: who could have chosen otherwise? if the target and the value were both named to you, --decided-by human --actor <their handle>; if you chose either, --decided-by agent. Your shell already says who wrote it"
   - "using a token is not deciding one: nothing writes a line for a var(--x) already in a recipe. Consumers are evidence, computed on request"
+  - "a colour role also carries its contrast; a duration, radius or font role does not, because token.contrast only speaks for a value that parses as a colour. Read what explain gives you, and do not report a fact it could not have"
   - pass --why on every write; a decision without a sentence is a keystroke
-evidenceRequired: [consumers, usage concentration, duplicate visual role, contrast on dark (vs --surface-page)]
+evidenceRequired: [consumers, usage concentration, duplicate visual role]
 typicalDecisions: [token/cut, token/keep, token/propose]
 examples: [d0mtlvzac0-5lk7, d0mtlvzac0-fnuq, d0mtlvzac0-ed0m]
 reasons: |

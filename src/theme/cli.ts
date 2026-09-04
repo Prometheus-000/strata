@@ -74,7 +74,7 @@ export function runTheme(argv: string[], home: { root: string }, env: Record<str
     case 'keep':
     case 'propose': {
       const [token] = positional
-      if (!token || !token.startsWith('--')) return fail(`usage: ${cmd} --<token> [--why "…"] [--by human|agent] [--dry]`)
+      if (!token || !token.startsWith('--')) return fail(`usage: ${cmd} --<token> [--why "…"] [--decided-by human|agent] [--actor h] [--dry]`)
       const ctx = context()
       if ('error' in ctx) return fail(ctx.error)
       const prior = readLedger(home.root).tokens[token]?.status ?? 'proposed'
@@ -109,7 +109,7 @@ export function runTheme(argv: string[], home: { root: string }, env: Record<str
     case 'deviate': {
       const [where] = positional
       const m = where?.match(/^(.+):(\d+)$/)
-      if (!m) return fail('usage: deviate <file>:<line> --why "…" [--by human|agent] [--dry]')
+      if (!m) return fail('usage: deviate <file>:<line> --why "…" [--decided-by human|agent] [--actor h] [--dry]')
       const ctx = context()
       if ('error' in ctx) return fail(ctx.error)
       const result = decide({ kind: 'deviation', file: m[1], line: Number(m[2]), reason: flag('why') }, ctx)

@@ -42,3 +42,32 @@ test('a usage error is a message, not a stack trace', () => {
   assert.equal(bad.code, 1)
   assert.match(bad.err, /usage: move/)
 })
+
+test('retheme moves the seeds from a terminal, and clamps what the engine would clamp', () => {
+  // The `seed` kind had a handler, a projection and a slider, and no CLI verb:
+  // the only way to move a theme was to drag it in a browser. That made the
+  // agent's reach *smaller* than a person's, which is the one asymmetry this
+  // system says it does not have — and the retheme skill named a command
+  // (`strata decide seed …`) that never existed to do it with.
+  const one = run(['retheme', '--hue', '20', '--why', 'a warmer accent'])
+  assert.equal(one.code, 0, one.err)
+  assert.match(one.out, /hue 250 → 20/)
+  assert.doesNotMatch(one.out, /chroma|warmth|energy|density/, 'an unnamed seed stays where it is')
+
+  const flip = run(['retheme', '--appearance', 'light', '--why', 'paper'])
+  assert.equal(flip.code, 0, flip.err)
+  assert.match(flip.out, /appearance dark → light/)
+
+  const same = run(['retheme', '--why', 'nothing'])
+  assert.match(same.out, /nothing moved/, 'saying nothing moves nothing')
+
+  // The engine clamps chroma to 0.25; a value it cannot hold is refused with
+  // the range rather than silently pinned.
+  const far = run(['retheme', '--chroma', '5', '--why', 'electric'])
+  assert.equal(far.code, 1)
+  assert.match(far.err, /clamps it to 0–0\.25/)
+
+  const bad = run(['retheme', '--appearance', 'sepia', '--why', 'x'])
+  assert.equal(bad.code, 1)
+  assert.match(bad.err, /dark or light/)
+})

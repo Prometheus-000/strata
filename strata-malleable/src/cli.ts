@@ -18,6 +18,7 @@ import { describe as describeDecision, formatHandoff } from '@strata/substrate/f
 import { collapseReversals, current, pending, readAll, since } from '@strata/substrate/log'
 import { assignIdentity, buildManifest, buildStructure } from './identity/manifest'
 import { readManifest, readStore, writeManifest, writeStructure } from './store/persist'
+import { SEED_RANGE, type ThemeSeeds } from './engine/generateTheme'
 import { formatStructure } from './structure/read'
 import { init } from './init'
 import { parseTsx } from './controls/apply'
@@ -41,7 +42,7 @@ export interface CliIo {
   err: (s: string) => void
 }
 
-export const MALLEABLE_COMMANDS = ['id', 'regions', 'move', 'prop', 'ready', 'handoff', 'init', 'manifest', 'resolve', 'drift', 'ship', 'reconcile', 'set', 'remove'] as const
+export const MALLEABLE_COMMANDS = ['id', 'regions', 'move', 'prop', 'ready', 'handoff', 'init', 'manifest', 'resolve', 'drift', 'ship', 'reconcile', 'retheme', 'set', 'remove'] as const
 
 /** Runs one command; returns the exit code. */
 export function runMalleable(argv: string[], home: CliHome, env: Record<string, string | undefined> = process.env, io: CliIo = { out: console.log, err: console.error }): number {
@@ -123,7 +124,7 @@ export function runMalleable(argv: string[], home: CliHome, env: Record<string, 
         const [component] = positional
         const to = flag('to')
         if (!component || !to)
-          return fail('usage: move <Component> --to <tag|landmark|sid|file:line> [--from <file>] [--index n] [--line n] [--at n] [--why "…"] [--by human|agent] [--dry]')
+          return fail('usage: move <Component> --to <tag|landmark|sid|file:line> [--from <file>] [--index n] [--line n] [--at n] [--decided-by human|agent] [--actor h] [--why "…"] [--dry]')
         const ctx = context()
         if ('error' in ctx) return fail(ctx.error)
         const structure = buildStructure(home.source)
@@ -183,7 +184,7 @@ export function runMalleable(argv: string[], home: CliHome, env: Record<string, 
         const [component, prop, rawValue] = positional
         const file = flag('in')
         if (!component || !prop || (!rawValue && !has('default')) || !file)
-          return fail('usage: prop <Component> <prop> <value | --default> --in <file> [--parent <Component>] [--index n] [--why "…"] [--by human|agent] [--dry]')
+          return fail('usage: prop <Component> <prop> <value | --default> --in <file> [--parent <Component>] [--index n] [--decided-by human|agent] [--actor h] [--why "…"] [--dry]')
         const ctx = context()
         if ('error' in ctx) return fail(ctx.error)
         const abs = path.resolve(home.root, file)
@@ -291,13 +292,61 @@ export function runMalleable(argv: string[], home: CliHome, env: Record<string, 
 
       /* ---------------- writes — the terminal's half of the drag ---------------- */
 
+      /**
+       * RETHEME — move the seeds, from a terminal.
+       *
+       * The `seed` kind had a handler, a projection and an overlay control, and
+       * no CLI verb at all: the only way to move a theme was to drag a slider
+       * in a browser. That made the one claim this system rests on false in the
+       * other direction — not an agent with a private door, but an agent with
+       * *less* than a person, unable to do from a shell the thing the skill
+       * whose whole subject is retheming told it to do. The `retheme` skill
+       * even named a command (`strata decide seed …`) that has never existed.
+       *
+       * Every seed is optional and defaults to where the theme is now, so
+       * `retheme --hue 20` is a one-dial move and reads like one.
+       */
+      case 'retheme': {
+        const store = readStore()
+        const num = (name: keyof ThemeSeeds) => {
+          const v = flag(name)
+          return v === undefined ? undefined : Number(v)
+        }
+        const appearance = flag('appearance')
+        if (appearance !== undefined && appearance !== 'dark' && appearance !== 'light')
+          return fail(`appearance is dark or light, not "${appearance}"`)
+        const seeds: ThemeSeeds = {
+          ...store.seeds,
+          ...Object.fromEntries(
+            (['hue', 'chroma', 'warmth', 'energy', 'density'] as const)
+              .map((k) => [k, num(k)])
+              .filter(([, v]) => v !== undefined && Number.isFinite(v)),
+          ),
+          ...(appearance ? { appearance } : {}),
+        }
+        for (const [k, [lo, hi]] of Object.entries(SEED_RANGE))
+          if (seeds[k as keyof ThemeSeeds] as number < lo || (seeds[k as keyof ThemeSeeds] as number) > hi)
+            return fail(`${k} is ${String(seeds[k as keyof ThemeSeeds])}; the engine clamps it to ${lo}–${hi}, so say a value it can hold`)
+
+        const ctx = context()
+        if ('error' in ctx) return fail(ctx.error)
+        const result = write({ kind: 'seed', seeds, reason: flag('why') }, ctx)
+        if (!result) return 1
+        const moved = (['hue', 'chroma', 'warmth', 'energy', 'density', 'appearance'] as const)
+          .filter((k) => store.seeds[k] !== seeds[k])
+          .map((k) => `${k} ${String(store.seeds[k])} → ${String(seeds[k])}`)
+        io.out(`\n  ${moved.length ? moved.join(' · ') : 'nothing moved — these are the seeds already'}`)
+        io.out(footer(ctx, result.written))
+        return 0
+      }
+
       case 'set': {
         const [nodeId, property] = positional
         // A token is given as `--token --radius-surface` or as `var(--radius-surface)`;
         // a bare `--radius-surface` would be read as a flag.
         const raw = flag('token') ? `var(${flag('token')})` : positional[2]
         if (!nodeId || !property || !raw)
-          return fail('usage: set <nodeId> <property> <value | --token --name> [--scope instance|view|component|system] [--view v] [--instance i] [--why "…"] [--by human|agent] [--dry]')
+          return fail('usage: set <nodeId> <property> <value | --token --name> [--scope instance|view|component|system] [--view v] [--instance i] [--decided-by human|agent] [--actor h] [--why "…"] [--dry]')
         const scope = (flag('scope') ?? 'instance') as Scope
         if (!SCOPES.includes(scope)) return fail(`--scope must be one of ${SCOPES.join(', ')}`)
         const ctx = context()
@@ -317,7 +366,7 @@ export function runMalleable(argv: string[], home: CliHome, env: Record<string, 
 
       case 'remove': {
         const [id] = positional
-        if (!id) return fail('usage: remove <override id> [--why "…"] [--by human|agent] [--dry]')
+        if (!id) return fail('usage: remove <override id> [--decided-by human|agent] [--actor h] [--why "…"] [--dry]')
         const ctx = context()
         if ('error' in ctx) return fail(ctx.error)
         const result = write({ kind: 'override', action: 'remove', id, reason: flag('why') }, ctx)
@@ -333,11 +382,15 @@ export function runMalleable(argv: string[], home: CliHome, env: Record<string, 
   manifest    list every styled node and its malleable base values
   regions     every container with its file:line, and the regions it holds, in order
   resolve     <nodeId> <property> [--view v] [--instance i] — value, and why
+  retheme     [--hue n] [--chroma n] [--warmth n] [--energy n] [--density n] [--appearance dark|light] — move the seeds
   reconcile   overrides the system has caught up with
   drift       unresolved drift, with counts
   handoff     what changed since the last ready, from the record
 
-  writes — every one is a decision on the record and names its author (--by human|agent, STRATA_AUTHOR, or CLAUDECODE):
+  writes — every one is a decision on the record naming two hands: who chose
+  (--decided-by human|agent, --actor <handle>) and whose hand ran the command.
+  CLAUDECODE says who wrote and never who chose; an agent's shell that states
+  neither is refused rather than guessed at.
   set         <nodeId> <property> <value | --token --name> [--scope s] [--view v] [--instance i] [--why "…"] [--dry]
   remove      <override id>
   move        <Component> --to <tag|landmark|sid|file:line> [--from <file>] [--index n] [--line n] [--at n] [--why "…"] [--dry]

@@ -59,7 +59,12 @@ const help = () => {
   the malleable layer (--malleable <dir> picks the library root; --root <dir> the app tree)
     ${MALLEABLE_COMMANDS.join(' · ')}
 
-  every write takes --by human|agent (otherwise STRATA_AUTHOR, then CLAUDECODE, then human) and --dry`)
+  every write names two hands and --dry:
+    --decided-by human|agent   who could have chosen otherwise (--by is the same flag)
+    --actor <handle>           which hand that was; a missing name is noted on the record
+    --written-by human|agent   whose hand ran the command
+  CLAUDECODE in the environment says who *wrote* and never who decided, so an
+  agent's shell that states neither is refused rather than guessed at.`)
 }
 
 if (!cmd || cmd === 'help' || cmd === '--help') {

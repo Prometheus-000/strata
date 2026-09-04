@@ -4,7 +4,7 @@
  * Structure is read from here. The landmarks — `<main>`, `<aside>`,
  * `<footer>`, and the `<header>` inside `<TopBar />` — are the containers, and
  * each component call site under one is a region that can be dragged to
- * another. Nothing is declared: this file is the record, and a move is a diff
+ * another. Nothing is declared: this file is the state, and a move is a diff
  * of it.
  */
 import { Filters } from './Filters'
