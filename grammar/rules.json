@@ -1,5 +1,38 @@
 {
   "$description": "The grammar as data. Every rule in GRAMMAR.md, with the authority it carries. Only an invariant can fail a build, and an invariant is a mechanical truth about the artifact, never a design judgement. Policy is evaluated and reported. A preference carries its number. Knowledge is what was learned, with its source. Precedent is never declared here: it is computed from the record.",
+  "$layers": "The layers, as data, because the site used to hand-write this table and it drifted exactly as knowledge.drift-by-transcription predicts: it went on saying a validator enforced Layer 0 and that undeclared drift failed CI, long after both stopped being true. A layer's character is a claim about governance, so it belongs where the rules are and is projected into anything that displays it.",
+  "layers": [
+    {
+      "id": "layer0",
+      "name": "Meaning",
+      "what": "Semantic roles, derived by the engine from six seeds. The one vocabulary everything else speaks — consistency is predictability of meaning, not visual sameness.",
+      "governance": "one author · never forked · every role decided"
+    },
+    {
+      "id": "layer1",
+      "name": "Behavior",
+      "what": "Headless focus, keyboard and ARIA primitives. A solved primitive is imported, never reimplemented — a second focus trap is a second set of bugs, and it is the copy that rots.",
+      "governance": "shared · never forked"
+    },
+    {
+      "id": "layer2",
+      "name": "Recipes",
+      "what": "Styled compositions of meaning and behaviour. Copy the source, keep the two imports, restyle freely.",
+      "governance": "forkable by default · eject is a feature"
+    },
+    {
+      "id": "layer3",
+      "name": "Local",
+      "what": "Feature-owned one-offs. No permission required; a raw value here is reported like anywhere else, and declaring it makes it evidence.",
+      "governance": "free · candidacy computed by reuse, promotion decided by a hand"
+    },
+    {
+      "id": "machine",
+      "name": "Machine",
+      "what": "The part that makes the freedom safe: every projection regenerates from the record, and a build fails only when the artifact cannot be produced from it. Drift never fails CI — undeclared drift is reported, declared drift is evidence.",
+      "governance": "strata rebuild · strata check --enforce"
+    }
+  ],
   "rules": [
     {
       "id": "record.parses",

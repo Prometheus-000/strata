@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import { byAuthority, byScope, isCitedOnly, loadRules, preference, problemsWithRule, rulesFor, RULES_PATH } from '../src/grammar.ts'
+import { byAuthority, byScope, isCitedOnly, loadLayers, loadRules, preference, problemsWithLayer, problemsWithRule, rulesFor, rulesInLayer, RULES_PATH } from '../src/grammar.ts'
 
 const REPO = path.join(path.dirname(new URL(import.meta.url).pathname), '../..')
 
@@ -34,4 +34,29 @@ test('a malformed grammar is refused by name', () => {
   fs.mkdirSync(path.join(dir, 'grammar'))
   fs.writeFileSync(path.join(dir, RULES_PATH), JSON.stringify({ rules: [{ id: 'bad' }] }))
   assert.throws(() => loadRules(dir), /bad: authority/)
+})
+
+test('every layer is data, and every layered rule has a layer to belong to', () => {
+  // The hub used to hand-write this table in JSX, and it drifted exactly as
+  // knowledge.drift-by-transcription predicts — claiming a validator enforced
+  // Layer 0 long after nothing did. The table is projected now, so the failure
+  // that remains is a rule in a layer nothing displays. This is that failure.
+  const layers = loadLayers(REPO)
+  const rules = loadRules(REPO)
+  assert.ok(layers.length >= 4, 'the layers are in the grammar, not in the markup')
+
+  const ids = new Set(layers.map((l) => l.id))
+  const orphans = rules
+    .map((r) => r.id.split('.')[0])
+    .filter((prefix) => /^layer\d+$/.test(prefix) && !ids.has(prefix))
+  assert.deepEqual([...new Set(orphans)], [], 'a rule names a layer the table cannot show')
+
+  // And every layer that claims to govern something actually governs something.
+  for (const layer of layers.filter((l) => l.id.startsWith('layer')))
+    assert.ok(rulesInLayer(rules, layer).length > 0, `${layer.id} is displayed but carries no rules`)
+})
+
+test('a malformed layer is refused by name', () => {
+  assert.deepEqual(problemsWithLayer({ id: 'layer9', name: 'X', what: 'y' }), ['layer9: governance is missing'])
+  assert.deepEqual(problemsWithLayer({}), ['a layer has no id', 'undefined: name is missing', 'undefined: what is missing', 'undefined: governance is missing'])
 })

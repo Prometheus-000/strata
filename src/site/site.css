@@ -292,6 +292,15 @@ body {
   color: var(--ink-faint);
   line-height: 1.6;
 }
+/* How many rules a layer carries, and how many something can speak for. Counted
+   from the grammar at build, so the number cannot disagree with the file. */
+.ledger__count {
+  display: block;
+  margin-top: var(--strata-space-2);
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  color: var(--ink-faint);
+}
 
 /* ---------- Console — the composed proof, an object of its own class ---------- */
 .console {

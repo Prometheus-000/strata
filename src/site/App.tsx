@@ -17,6 +17,8 @@ import {
   useToasts,
 } from '../components'
 import { useTheme } from '../theme/ThemeContext'
+import grammar from '../../grammar/rules.json'
+import type { Layer, Rule } from '@strata/substrate/grammar'
 import { themeTokens, type Ledger } from '../theme/ledger'
 import { generateTheme } from '../theme/generateTheme'
 import LEDGER from '../theme/ledger.json'
@@ -166,7 +168,7 @@ const CREDO = [
   {
     line: 'The most important design choices are what you don’t see.',
     proof:
-      'The engine deepens accents on light grounds to hold AA contrast, honors reduced-motion at both the stylesheet and the runtime, and a validator reviews every diff. None of it has a UI. All of it is the design.',
+      'The engine deepens accents on light grounds to hold AA contrast, honors reduced-motion at both the stylesheet and the runtime, and every check reports rather than refuses. None of it has a UI. All of it is the design.',
   },
   {
     line: 'Less but better.',
@@ -192,52 +194,54 @@ function Credo() {
   )
 }
 
-/* ---------- The grammar — governance as a ledger, because it IS a table ---------- */
-const LAYERS = [
-  {
-    tag: 'LAYER 0 · MEANING',
-    what: 'Semantic tokens, derived by the engine from six seeds. The only hard contract — consistency is predictability of meaning, not visual sameness.',
-    rule: 'strict · machine-verified · one author · never forked',
-  },
-  {
-    tag: 'LAYER 1 · BEHAVIOR',
-    what: 'Headless focus, keyboard and ARIA primitives. A solved primitive is imported, never reimplemented — a second focus trap is a second set of bugs, and it is the copy that rots.',
-    rule: 'shared · never forked',
-  },
-  {
-    tag: 'LAYER 2 · RECIPES',
-    what: 'Styled compositions of meaning and behavior — the twelve instruments below. Copy the source, keep the two imports, restyle freely.',
-    rule: 'forkable by default · eject is a feature',
-  },
-  {
-    tag: 'LAYER 3 · LOCAL',
-    what: 'Feature-owned one-offs, like the console above. No permission required; a raw value here is reported like anywhere else, and declaring it makes it evidence.',
-    rule: 'free · candidacy computed by reuse, promotion decided by a hand',
-  },
-  {
-    tag: 'MACHINE',
-    what: 'The part that makes the freedom safe: every projection regenerates from the record, and a build fails only when the artifact cannot be produced from it. Drift never fails CI — undeclared drift is reported, declared drift is evidence.',
-    rule: 'strata rebuild · strata check --enforce',
-  },
-]
+/* ---------- The grammar — projected from grammar/rules.json, never transcribed ---------- */
+
+/**
+ * This table used to be a `const LAYERS` written out in JSX beside the markup
+ * that rendered it, and it drifted exactly as `knowledge.drift-by-transcription`
+ * says a hand-written projection does: it went on telling readers that a
+ * validator enforced Layer 0 and that undeclared drift failed CI, months after
+ * both had stopped being true. The rule that predicts that drift and the drift
+ * it predicted were in the same repository.
+ *
+ * So the layers are data now, in the grammar, and this reads them. The counts
+ * are computed, which means a rule added to a layer shows up here without
+ * anyone remembering to come and say so.
+ */
+const GRAMMAR = grammar as { layers: Layer[]; rules: Rule[] }
+
+const rulesInLayer = (layer: Layer) => GRAMMAR.rules.filter((r) => r.id.startsWith(`${layer.id}.`))
+
+const tagFor = (l: Layer) => (l.id === 'machine' ? 'MACHINE' : `LAYER ${l.id.replace('layer', '')} · ${l.name.toUpperCase()}`)
 
 function Grammar() {
   return (
     <Section
       kicker="The grammar"
       title="Strict where strictness is cheap. Free where freedom is the point."
-      sub="Meaning, behavior and expression have wildly different half-lives — so each layer gets its own governance instead of moving at the speed of the slowest."
+      sub="Meaning, behavior and expression have wildly different half-lives — so each layer gets its own governance instead of moving at the speed of the slowest. Every row below is read from grammar/rules.json, which is the same file the checks run from."
       id="grammar"
     >
       <Reveal>
         <div className="ledger">
-          {LAYERS.map((l) => (
-            <div className="ledger__row" key={l.tag}>
-              <span className="ledger__tag">{l.tag}</span>
-              <p className="ledger__what">{l.what}</p>
-              <span className="ledger__rule">{l.rule}</span>
-            </div>
-          ))}
+          {GRAMMAR.layers.map((l) => {
+            const mine = rulesInLayer(l)
+            const evaluated = mine.filter((r) => r.check && r.check !== 'none').length
+            return (
+              <div className="ledger__row" key={l.id}>
+                <span className="ledger__tag">{tagFor(l)}</span>
+                <p className="ledger__what">
+                  {l.what}
+                  {mine.length > 0 && (
+                    <span className="ledger__count">
+                      {mine.length} rule{mine.length === 1 ? '' : 's'} · {evaluated} evaluated
+                    </span>
+                  )}
+                </p>
+                <span className="ledger__rule">{l.governance}</span>
+              </div>
+            )
+          })}
         </div>
       </Reveal>
     </Section>

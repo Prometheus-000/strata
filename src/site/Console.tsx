@@ -1,7 +1,8 @@
 /**
  * LAYER 3 — LOCAL. A generation console composed from Strata recipes,
  * plus two feature-owned locals (the stepper, the output tile).
- * Nothing here asked permission; the validator enforced Layer 0 anyway.
+ * Nothing here asked permission, and nothing enforced anything: a raw value in
+ * this file would be reported like a raw value anywhere else.
  * If the stepper shows up in two more features, it's a promotion candidate.
  */
 import { useState } from 'react'

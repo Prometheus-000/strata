@@ -53,6 +53,26 @@ export const isCitedOnly = (r: Rule) => r.check === undefined || r.check === 'no
 
 export const scopeOf = (r: Rule): RuleScope => r.scope ?? 'system'
 
+/**
+ * A LAYER — what governance a tier carries, as data.
+ *
+ * This is here because the hub used to hand-write the layer table in JSX and it
+ * drifted precisely as `knowledge.drift-by-transcription` predicts: the copy
+ * went on claiming a validator enforced Layer 0, and that undeclared drift
+ * failed CI, long after both had stopped being true. A layer's character is a
+ * claim about governance, so it lives with the rules and is projected into
+ * anything that displays it.
+ */
+export interface Layer {
+  /** The prefix its rules carry: `layer0` matches `layer0.semantic-names-only`. */
+  id: string
+  name: string
+  /** What the layer is, in a sentence. */
+  what: string
+  /** How it is governed, as the line the table prints. */
+  governance: string
+}
+
 export const RULES_PATH = 'grammar/rules.json'
 
 export function loadRules(root: string): Rule[] {
@@ -64,6 +84,28 @@ export function loadRules(root: string): Rule[] {
   if (problems.length) throw new Error(`${RULES_PATH}: ${problems.join('; ')}`)
   return rules
 }
+
+export function loadLayers(root: string): Layer[] {
+  const p = path.join(root, RULES_PATH)
+  if (!fs.existsSync(p)) return []
+  const parsed = JSON.parse(fs.readFileSync(p, 'utf8')) as { layers?: unknown }
+  const layers = Array.isArray(parsed.layers) ? (parsed.layers as Layer[]) : []
+  const problems = layers.flatMap(problemsWithLayer)
+  if (problems.length) throw new Error(`${RULES_PATH}: ${problems.join('; ')}`)
+  return layers
+}
+
+export function problemsWithLayer(l: unknown): string[] {
+  if (typeof l !== 'object' || l === null) return ['a layer is not an object']
+  const x = l as Record<string, unknown>
+  const p: string[] = []
+  if (typeof x.id !== 'string' || !x.id) p.push('a layer has no id')
+  for (const k of ['name', 'what', 'governance']) if (typeof x[k] !== 'string' || !x[k]) p.push(`${String(x.id)}: ${k} is missing`)
+  return p
+}
+
+/** The rules that belong to a layer, by the prefix its id carries. */
+export const rulesInLayer = (rules: readonly Rule[], layer: Layer): Rule[] => rules.filter((r) => r.id.startsWith(`${layer.id}.`))
 
 export function problemsWithRule(r: unknown): string[] {
   if (typeof r !== 'object' || r === null) return ['a rule is not an object']
