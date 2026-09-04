@@ -1,0 +1,77 @@
+{
+  "at": "2026-09-04T00:31:07.072Z",
+  "rows": [
+    {
+      "task": "cut-token",
+      "arm": "packet",
+      "decisions": 1,
+      "withReason": 1,
+      "decidedByAgent": 1,
+      "invariantsHold": true,
+      "failingInvariants": [],
+      "projectionsHandEdited": 0,
+      "undeclaredLiterals": 0,
+      "reachedForCut": [],
+      "filesChanged": [
+        "src/theme/ledger.json",
+        "src/tokens/semantic.css",
+        "src/tokens/tokens.json"
+      ]
+    },
+    {
+      "task": "cut-token",
+      "arm": "list",
+      "decisions": 1,
+      "withReason": 1,
+      "decidedByAgent": 1,
+      "invariantsHold": true,
+      "failingInvariants": [],
+      "projectionsHandEdited": 0,
+      "undeclaredLiterals": 0,
+      "reachedForCut": [],
+      "filesChanged": [
+        "src/theme/ledger.json",
+        "src/tokens/semantic.css",
+        "src/tokens/tokens.json"
+      ]
+    },
+    {
+      "task": "move-region",
+      "arm": "packet",
+      "decisions": 1,
+      "withReason": 1,
+      "decidedByAgent": 0,
+      "invariantsHold": true,
+      "failingInvariants": [],
+      "projectionsHandEdited": 0,
+      "undeclaredLiterals": 0,
+      "reachedForCut": [],
+      "filesChanged": [
+        "strata-malleable/.malleable/structure.json",
+        "strata-malleable/fixtures/app/views/Page.tsx",
+        "strata-malleable/fixtures/app/views/TopBar.tsx",
+        "strata-malleable/test/structure.test.ts"
+      ]
+    },
+    {
+      "task": "move-region",
+      "arm": "list",
+      "decisions": 1,
+      "withReason": 1,
+      "decidedByAgent": 0,
+      "invariantsHold": true,
+      "failingInvariants": [],
+      "projectionsHandEdited": 0,
+      "undeclaredLiterals": 0,
+      "reachedForCut": [],
+      "filesChanged": [
+        "strata-malleable/.malleable/structure.json",
+        "strata-malleable/fixtures/app/views/Page.tsx",
+        "strata-malleable/fixtures/app/views/TopBar.tsx",
+        "strata-malleable/fixtures/app/views/views.css",
+        "strata-malleable/src/cli.ts",
+        "strata-malleable/test/structure.test.ts"
+      ]
+    }
+  ]
+}

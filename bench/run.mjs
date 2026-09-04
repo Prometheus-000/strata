@@ -54,19 +54,89 @@ const strata = (cwd, args) => {
 /** Every tracked file, so an arm is the product and not the product plus a build. */
 const tracked = () => execFileSync('git', ['ls-files'], { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean)
 
-function copyProduct(dest) {
+/**
+ * The frame: everything that says what this product decided and why.
+ *
+ * The first version of this bench copied the whole repository into both arms
+ * and differed only in what the *prompt* mentioned. That is not a control. An
+ * agent handed a component list and dropped into a directory goes looking —
+ * of course it does — and the first run proved it: the `list` arm found the
+ * skill, the ledger, the fallback table and the precedent unaided, then made
+ * the same decision by the same route as the arm that was handed them. The
+ * measured difference was zero, and it meant nothing, because the two arms
+ * were the same experiment.
+ *
+ * So the control now genuinely lacks the frame. What is left is what a team
+ * gets when they install a design system and never adopt a record: the
+ * components, the compiled stylesheet, the app, and names without reasons.
+ */
+const FRAME = [
+  'README.md',
+  'GRAMMAR.md',
+  'CLAUDE.md',
+  'grammar',
+  'skills',
+  'bench',
+  'mcp',
+  '.claude',
+  'src/theme/ledger.json',
+  'strata-malleable/integrations',
+]
+
+const isFrame = (file) => FRAME.some((f) => file === f || file.startsWith(`${f}/`)) || file.endsWith('SKILL.md')
+
+function copyProduct(dest, arm) {
+  const control = arm === 'list'
   fs.rmSync(dest, { recursive: true, force: true })
   for (const file of tracked()) {
     if (file.startsWith('bench/runs/')) continue
+    if (control && isFrame(file)) continue
     const to = path.join(dest, file)
     fs.mkdirSync(path.dirname(to), { recursive: true })
     fs.copyFileSync(path.join(ROOT, file), to)
   }
-  // The record travels with the copy: the packet arm's precedent has to be
-  // real precedent, or the experiment tests a fixture instead of a product.
-  fs.mkdirSync(path.join(dest, '.strata'), { recursive: true })
-  fs.copyFileSync(path.join(ROOT, '.strata/decisions.jsonl'), path.join(dest, '.strata/decisions.jsonl'))
+  if (control) stripReasons(dest)
+  else {
+    // The record travels with the packet arm: its precedent has to be real
+    // precedent, or the experiment tests a fixture instead of a product.
+    fs.mkdirSync(path.join(dest, '.strata'), { recursive: true })
+    fs.copyFileSync(path.join(ROOT, '.strata/decisions.jsonl'), path.join(dest, '.strata/decisions.jsonl'))
+  }
   for (const dir of ['node_modules', 'strata-malleable/node_modules']) linkModules(path.join(ROOT, dir), path.join(dest, dir), dest)
+}
+
+/**
+ * The two projections that carry the record inside them, reduced to what a
+ * conventional design system ships: values and names.
+ *
+ * `semantic.css` announces every cut in a comment with the argument for it,
+ * and `tokens.json` carries the whole ledger under `$extensions`. Leaving
+ * either in would hand the control arm the reasons through the back door —
+ * which is exactly the failure this function exists to fix.
+ */
+function stripReasons(dest) {
+  const css = path.join(dest, 'src/tokens/semantic.css')
+  if (fs.existsSync(css)) {
+    const text = fs
+      .readFileSync(css, 'utf8')
+      .replace(/ \/\* cut by [^*]*\*\//g, '')
+      .replace(/^ {3}through the decisions.*\n(?: {3}.*\n)?/m, '')
+    fs.writeFileSync(css, text)
+  }
+  const jsonPath = path.join(dest, 'src/tokens/tokens.json')
+  if (!fs.existsSync(jsonPath)) return
+  const json = JSON.parse(fs.readFileSync(jsonPath, 'utf8'))
+  const strip = (node) => {
+    if (!node || typeof node !== 'object') return
+    if (Array.isArray(node)) return node.forEach(strip)
+    delete node.$extensions
+    delete node.$reasons
+    for (const v of Object.values(node)) strip(v)
+  }
+  delete json.strata?.ledger
+  strip(json)
+  json.$description = 'Design tokens. Every value is a compiled projection of a seed set; do not edit values here.'
+  fs.writeFileSync(jsonPath, JSON.stringify(json, null, 2) + '\n')
 }
 
 /**
@@ -170,10 +240,12 @@ function prepare() {
   for (const task of tasks) {
     for (const arm of ARMS) {
       const dir = armDir(task.id, arm)
-      copyProduct(dir)
+      copyProduct(dir, arm)
       writeBrief(dir)
       fs.writeFileSync(path.join(dir, 'PROMPT.md'), promptFor(task, arm, dir))
-      fs.writeFileSync(path.join(dir, 'BEFORE.jsonl'), fs.readFileSync(path.join(dir, '.strata/decisions.jsonl')))
+      // The control arm has no record to snapshot, which is the point of it.
+      const record = path.join(dir, '.strata/decisions.jsonl')
+      fs.writeFileSync(path.join(dir, 'BEFORE.jsonl'), fs.existsSync(record) ? fs.readFileSync(record) : '')
       fs.writeFileSync(path.join(dir, 'BEFORE.files.json'), JSON.stringify(hashTree(dir), null, 2))
       console.log(`  ${rel(dir)}`)
     }
@@ -259,8 +331,11 @@ function scoreArm(task, arm) {
     /* a record that will not parse is itself the finding, below */
   }
 
+  // What is cut is a fact about the product, read from the source repo. The
+  // control arm has no ledger — that is what makes it a control — and asking
+  // it what it thinks is cut would score it against its own ignorance.
   const cut = new Set(
-    Object.entries(JSON.parse(fs.readFileSync(path.join(dir, 'src/theme/ledger.json'), 'utf8')).tokens)
+    Object.entries(JSON.parse(fs.readFileSync(path.join(ROOT, 'src/theme/ledger.json'), 'utf8')).tokens)
       .filter(([, d]) => d.status === 'cut')
       .map(([t]) => t),
   )

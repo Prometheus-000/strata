@@ -82,8 +82,20 @@ export function runMalleable(argv: string[], home: CliHome, env: Record<string, 
     return result
   }
 
-  const footer = (ctx: DecideContext, written: string[]) =>
-    ctx.dryRun ? `  ${ctx.because}\n  (dry run — nothing written)\n` : `  ${ctx.because}\n  ~ ${[...written, '.strata/decisions.jsonl'].join(', ')}\n`
+  /**
+   * A function declaration, not a `const` arrow, and the difference is not
+   * style. `run()` is called above, before this line is reached — a hoisted
+   * declaration is callable there, a `const` is in its temporal dead zone. As
+   * an arrow this threw `Cannot access 'footer' before initialization` on
+   * every command that printed one: move, prop, set, remove, on dry runs too.
+   * The write had already landed, so the record was right and the process
+   * exited 1 with a stack trace over the top of it.
+   */
+  function footer(ctx: DecideContext, written: string[]): string {
+    return ctx.dryRun
+      ? `  ${ctx.because}\n  (dry run — nothing written)\n`
+      : `  ${ctx.because}\n  ~ ${[...written, '.strata/decisions.jsonl'].join(', ')}\n`
+  }
 
   function run(): number {
     switch (cmd) {
