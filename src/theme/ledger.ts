@@ -1,12 +1,16 @@
 /**
  * THE TOKEN LEDGER — every generated token is a proposal; people keep or cut.
  *
- * The engine emits thirty-odd semantic tokens from six seeds. Until now the only
- * switches at that level were the deviation comment (let a raw value in) and
- * the acceptance (let a cost stand). This is the third: a decision per token.
- * `src/theme/ledger.json` is the record — the engine adds a `proposed` line for
- * every token it emits, and a person or an agent turns each into `kept` or
- * `cut`, with a reason and a name. `npm run tokens` never edits a decision.
+ * The engine emits forty-odd semantic roles from six seeds, and each one is a
+ * proposal until a hand decides it: `kept`, `cut`, or minted into existence by
+ * a hand in the first place.
+ *
+ * `src/theme/ledger.json` is NOT the record. It was, before the substrate
+ * existed, and this comment said so for months after it stopped being true —
+ * which is how a projection ends up describing itself as a source. The record
+ * is `.strata/decisions.jsonl`; the ledger is what the record says about
+ * tokens, written out, and `strata rebuild` writes it again. Nothing decides
+ * anything by editing it.
  *
  * A cut token does not disappear. Fourteen sites in `strata.css` say
  * `var(--accent-strong)`; if the property simply stopped existing, every one
@@ -14,10 +18,12 @@
  * silently, invisible in the diff. That is the behaviour this repo calls the
  * worst available. So a cut token *collapses*: it is emitted as its fallback
  * (`--accent-strong: var(--accent)`), the decision is written where the token
- * is defined, `tokens.json` says `cut` so an agent reads a decision rather than
- * a missing name, and the validator counts the consumers as telemetry.
+ * is defined, and `tokens.json` says `cut` so an agent reads a decision rather
+ * than a missing name. The consumers are not logged anywhere: `explain` and
+ * `check` count them from the source when someone asks, because using a token
+ * is not deciding one.
  *
- * Decisions live in the ledger. What a token collapses *to* lives here, next to
+ * Decisions live on the record. What a token collapses *to* lives here, next to
  * the engine, because that is derivation knowledge and the engine is the only
  * author of the semantic tier. The table is total over the engine's output and
  * acyclic; a test says so.
@@ -44,7 +50,7 @@ export interface Ledger {
 }
 
 export const LEDGER_DESCRIPTION =
-  'Every token the engine proposes, and what people decided. The engine adds `proposed` lines (npm run tokens) and never edits a decision; a person or an agent makes each one `kept` or `cut` (npm run ledger -- cut <token> --why "…"). A cut token collapses to its fallback in every projection — semantic.css, tokens.json, the runtime — and every usage is logged by npm run validate. Nothing here is deleted: a stale decision about a token the engine no longer emits is reported, not removed.'
+  'A PROJECTION of .strata/decisions.jsonl, not a source: this is what the record says about tokens, written out, and `strata rebuild` writes it again. Do not edit it — decide through `strata keep|cut|mint --<token> --why "…"`, and the projections regenerate in the same call. Every role the engine emits is a proposal until a hand decides it; a cut role collapses to its fallback in every projection — semantic.css, tokens.json, the runtime — with the decision written beside the declaration. Consumers are not logged anywhere: `strata explain` counts them from the source when asked, because using a token is not deciding one. Nothing here is deleted; a stale decision about a role the engine no longer emits is reported, not removed.'
 
 /** What a cut token collapses to, and why that is the honest floor. */
 export interface Fallback {
@@ -207,7 +213,13 @@ export function reconcileLedger(
     }
   const stale = Object.keys(tokens).filter((name) => !engineTokens.includes(name))
   return {
-    ledger: { $description: ledger.$description ?? LEDGER_DESCRIPTION, tokens },
+    // Always the constant, never what is already on disk. `?? LEDGER_DESCRIPTION`
+    // meant the first description this file ever had could not be replaced by a
+    // rebuild — so the text went on claiming the ledger was the record, and
+    // naming a validator that no longer exists, through every regeneration for
+    // months. A projected field that is not actually projected is a place
+    // ghosts live.
+    ledger: { $description: LEDGER_DESCRIPTION, tokens },
     added,
     stale,
   }

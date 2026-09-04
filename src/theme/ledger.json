@@ -1,5 +1,5 @@
 {
-  "$description": "Every token the engine proposes, and what people decided. The engine adds `proposed` lines (npm run tokens) and never edits a decision; a person or an agent makes each one `kept` or `cut` (npm run ledger -- cut <token> --why \"…\"). A cut token collapses to its fallback in every projection — semantic.css, tokens.json, the runtime — and every usage is logged by npm run validate. Nothing here is deleted: a stale decision about a token the engine no longer emits is reported, not removed.",
+  "$description": "A PROJECTION of .strata/decisions.jsonl, not a source: this is what the record says about tokens, written out, and `strata rebuild` writes it again. Do not edit it — decide through `strata keep|cut|mint --<token> --why \"…\"`, and the projections regenerate in the same call. Every role the engine emits is a proposal until a hand decides it; a cut role collapses to its fallback in every projection — semantic.css, tokens.json, the runtime — with the decision written beside the declaration. Consumers are not logged anywhere: `strata explain` counts them from the source when asked, because using a token is not deciding one. Nothing here is deleted; a stale decision about a role the engine no longer emits is reported, not removed.",
   "tokens": {
     "--surface-page": {
       "status": "kept",

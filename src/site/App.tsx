@@ -201,7 +201,7 @@ const LAYERS = [
   },
   {
     tag: 'LAYER 1 · BEHAVIOR',
-    what: 'Headless focus, keyboard and ARIA primitives. Correctness is not a taste question — nobody needs creative freedom over roving tabindex.',
+    what: 'Headless focus, keyboard and ARIA primitives. A solved primitive is imported, never reimplemented — a second focus trap is a second set of bugs, and it is the copy that rots.',
     rule: 'shared · never forked',
   },
   {
@@ -211,13 +211,13 @@ const LAYERS = [
   },
   {
     tag: 'LAYER 3 · LOCAL',
-    what: 'Feature-owned one-offs, like the console above. No permission required; the validator still enforces Layer 0 at the diff.',
-    rule: 'free · promotion earned by reuse, never granted',
+    what: 'Feature-owned one-offs, like the console above. No permission required; a raw value here is reported like anywhere else, and declaring it makes it evidence.',
+    rule: 'free · candidacy computed by reuse, promotion decided by a hand',
   },
   {
     tag: 'MACHINE',
-    what: 'The part that makes the freedom safe: token projections regenerate from one source, undeclared drift fails CI, declared drift is logged as promotion telemetry.',
-    rule: 'npm run tokens · npm run validate',
+    what: 'The part that makes the freedom safe: every projection regenerates from the record, and a build fails only when the artifact cannot be produced from it. Drift never fails CI — undeclared drift is reported, declared drift is evidence.',
+    rule: 'strata rebuild · strata check --enforce',
   },
 ]
 
