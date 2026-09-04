@@ -354,8 +354,18 @@ Nothing here has authority of its own; it is what happened.
 
 `strata history <target>` prints every decision on one target as glass
 boxes, oldest first; `strata log` prints the record one line each; `strata
-show <id>` prints one. A reversal is two lines, not a deletion. A refusal —
-a request the projection could not apply — is a line too, with the reason.
+show <id>` prints one. A reversal is two lines, not a deletion.
+
+The record holds the change and who made it, and stops there. A refusal
+changed nothing, so it is not a ruling — what was *tried* lives in the session
+that tried it, which is the harness's business and not the substrate's. The
+one exception is narrow: a projection that refuses something it can still name
+appends the attempt with `consequence.refused` and no state change, because a
+declined request against a known target is worth a line. Most refusals name
+nothing and are not recorded, which is the same argument
+`record.use-is-not-decision` makes about ordinary token use — thirty lines of
+judgement can be read end to end, and thirty thousand lines of what happened
+cannot be read at all.
 
 ## Agent Model
 

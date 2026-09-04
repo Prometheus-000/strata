@@ -13,10 +13,25 @@
  * (or refuses it, by name), returns the canonical body of what happened and
  * the facts it already had, and this module writes the line.
  *
- * Order: read the log → apply → append. A refusal that names a body is
- * appended with `consequence.refused` and no state change, so "what was
- * tried" is on the record too. Nothing here evaluates anything: that is
- * `explain`, `check` and `handoff`, and they run when asked.
+ * Order: read the log → apply → append.
+ *
+ * The record holds the change and who made it. That is the whole of its job,
+ * and the boundary is worth stating because it is easy to talk past: a
+ * refusal changed nothing, so it is not a ruling, and putting attempts on the
+ * record would turn a thing a person can read end to end into a log nobody
+ * reads — the same argument `record.use-is-not-decision` makes about ordinary
+ * token use. What was *tried* is the harness's business: the refusal is
+ * returned, printed, and sits in the session that provoked it.
+ *
+ * The exception is narrow and deliberate. When a projection refuses something
+ * it can still *name* — a request against a known target, declined on grounds
+ * a hand might revisit — it returns a body, and the attempt is appended with
+ * `consequence.refused` and no state change. Most refusals return a bare
+ * string and are not recorded at all, which is correct: a malformed request
+ * has no target to record it against.
+ *
+ * Nothing here evaluates anything: that is `explain`, `check` and `handoff`,
+ * and they run when asked.
  */
 import { newId, targetKey, type Consequence, type Decision, type DecisionBody, type Hand, type Kind } from './decision.ts'
 import { append, current, pending, readAll } from './log.ts'
