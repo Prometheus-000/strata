@@ -738,15 +738,31 @@ Stated so the next reader inherits the test and not the verdict:
   decisions from being undone by people who never saw them.* The broader
   "collage versus coherent work" framing is not what was measured. One run per
   cell, one model, and `bench/README.md` lists the rest of the limits.
-- **A harness is what makes the honours column real, and this repo ships
-  none.** A second experiment crossed context with harness — the same packet,
-  but one arm held to the honours column as terms of work. It did not change
-  the artifact: the arm without a record undid the same three decisions either
-  way, because no harness can restore a decision nobody wrote down. What it did
-  change was containment — the unheld arms read the real repository's README
-  and GRAMMAR from outside their own tree, and the held arms read nothing
-  outside it. Strata guarantees the record; it obliges nobody to honour
-  anything, and nothing here supplies the harness that would.
+- **The honours column is honoured by refusals, not by supervision — which is
+  the one place worth spending.** A second experiment crossed context with
+  harness: the same packet, but one arm held to the honours column as explicit
+  terms of work. It changed the artifact not at all. Every arm, including the
+  ones that had never seen a skill file, already wrote through `decide()`
+  rather than editing a projection, already named two hands correctly, and
+  already refused to invent decisions for values it could not attribute — one
+  of them citing `author.ts` on not guessing a deciding hand. Nobody obliged
+  any of it. The door did: `authorFrom` refuses to guess and prints why,
+  `problemsWith` refuses a malformed line by name, `rebuild --check` reports
+  drift unasked, and `--help` teaches `--decided-by` to anyone who types it. A
+  refusal is written once and travels with the artifact; a harness has to be
+  wrapped around every performer, forever.
+
+  The one thing the terms measurably changed was containment — the unheld arms
+  read this repository's own README and GRAMMAR from outside their sandbox, the
+  held arms read nothing outside it — and that was the experiment's need, not
+  the work's. In real use an agent reading the README is the point.
+
+  Two things this does not license. The sample is four capable agents on one
+  model, so "no harness needed" is a claim about performers of that quality and
+  no others. And the failure that mattered was immune to both: no harness and
+  no amount of care could restore three decisions nobody had written down. That
+  is a record problem, and the answer to it is more refusals, not more
+  supervision.
 - **The record is thirty-six lines, and thirty-four of them were imported.**
   Two were decided in a live session. That is a record of a vocabulary, not
   yet a record of a product being designed.

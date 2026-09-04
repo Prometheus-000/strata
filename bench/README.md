@@ -271,7 +271,18 @@ inventing a hand and a reason for it), but every control cell before the `held`
 ones was contaminated, and only the two `held` cells were ever clean.
 
 That is the harness's contribution here, and it is not the one that was
-predicted: **it is the term that made a control a control.** Which is the same
+predicted: **it is the term that made a control a control** — an experimental
+need, not the work's. In real use, an agent reading the README is the point.
+
+Which leaves the harness axis with nothing else to its name, and that is the
+result. Every arm honoured the honours column without being held to it, because
+the door refuses rather than instructs: `authorFrom` will not guess a hand,
+`problemsWith` will not take a malformed line, `rebuild --check` reports drift
+unasked. A refusal is written once and travels with the artifact; a harness has
+to be wrapped around every performer, forever. On this evidence the refusals
+are where the leverage is — with the caveat that four capable agents on one
+model is a narrow base to generalise from, and that neither refusals nor
+supervision could restore a decision nobody wrote down. Which is the same
 lesson the substrate keeps teaching in a different register — the guarantee is
 worth what the honouring is worth, and nothing obliges the honouring except a
 harness.
