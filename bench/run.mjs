@@ -25,8 +25,38 @@ const BENCH = path.join(ROOT, 'bench')
 const RUNS = path.join(BENCH, 'runs')
 const ARMS = ['packet', 'list']
 
+/**
+ * The second axis: not what the performer is given, but what is required of
+ * it. `loose` states the task and nothing else — which is what the first two
+ * runs did, and it means those runs measured the substrate rather than the
+ * contract, because nothing obliged the performer to honour anything.
+ *
+ * `held` states the honours column of the README's contract as terms of work.
+ * Its load-bearing rule is the fourth: check before and after and compare. The
+ * failure this bench found — three decisions undone as a side effect of one
+ * unrelated correct decision — was invisible to every measure and to the agent
+ * until after it had happened. A before-and-after comparison is exactly the
+ * shape of harness that would have caught it, so that is what this varies.
+ */
+const HARNESSES = ['loose', 'held']
+
+const TERMS = [
+  '## Terms of work',
+  '',
+  'These are conditions on how the task is done, not hints about the task.',
+  '',
+  '1. **Read the context above before doing anything else.** Not after.',
+  '2. **Stay inside your working directory.** Do not read or write any file outside it, whatever else is on this disk.',
+  '3. **Every change to design state goes through `strata …`.** Never hand-edit a projection (`src/tokens/*`, `src/theme/ledger.json`, `.malleable/*`) or a `data-*` stamp.',
+  '4. **Run `strata check` and `strata rebuild --check` before you start and again when you finish, and compare the two.** Report any difference you did not intend, including differences in files you did not touch.',
+  '5. **Say who decided honestly.** Ask who could have chosen otherwise; if the target and the value were both named to you, the deciding hand is theirs.',
+  '',
+].join('\n')
+
 const tasks = JSON.parse(fs.readFileSync(path.join(BENCH, 'tasks.json'), 'utf8')).tasks
-const armDir = (task, arm) => path.join(RUNS, `${task}-${arm}`)
+const armDir = (task, arm, harness = 'loose') => path.join(RUNS, `${task}-${arm}${harness === 'loose' ? '' : `-${harness}`}`)
+const cells = (task) => ARMS.flatMap((arm) => HARNESSES.map((harness) => ({ arm, harness, dir: armDir(task, arm, harness) })))
+const label = (cell) => `${cell.arm}/${cell.harness}`
 const rel = (p) => path.relative(ROOT, p)
 
 /**
@@ -220,9 +250,9 @@ function writeBrief(dest) {
   fs.writeFileSync(path.join(dest, 'BRIEF.md'), out)
 }
 
-function promptFor(task, arm, dir) {
+function promptFor(task, arm, dir, harness = 'loose') {
   const head = [
-    `# ${task.id} · ${arm}`,
+    `# ${task.id} · ${arm} · ${harness}`,
     '',
     `Working directory: \`${rel(dir)}\``,
     '',
@@ -245,27 +275,34 @@ function promptFor(task, arm, dir) {
       '',
       strata(dir, ['skill', task.skill, ...inputs]),
       '',
+      harness === 'held' ? TERMS : '',
     ].join('\n')
   }
-  return [...head, '## Context', '', fs.readFileSync(path.join(dir, 'BRIEF.md'), 'utf8')].join('\n')
+  return [...head, '## Context', '', fs.readFileSync(path.join(dir, 'BRIEF.md'), 'utf8'), '', harness === 'held' ? TERMS : ''].join('\n')
 }
 
-function prepare() {
+function prepare(only) {
   fs.mkdirSync(RUNS, { recursive: true })
-  for (const task of tasks) {
-    for (const arm of ARMS) {
-      const dir = armDir(task.id, arm)
+  const chosen = only ? tasks.filter((t) => t.id === only) : tasks
+  if (!chosen.length) {
+    console.error(`\n  no task "${only}" — ${tasks.map((t) => t.id).join(', ')}\n`)
+    process.exit(1)
+  }
+  let n = 0
+  for (const task of chosen) {
+    for (const { arm, harness, dir } of cells(task.id)) {
       copyProduct(dir, arm)
       writeBrief(dir)
-      fs.writeFileSync(path.join(dir, 'PROMPT.md'), promptFor(task, arm, dir))
+      fs.writeFileSync(path.join(dir, 'PROMPT.md'), promptFor(task, arm, dir, harness))
       // The control arm has no record to snapshot, which is the point of it.
       const record = path.join(dir, '.strata/decisions.jsonl')
       fs.writeFileSync(path.join(dir, 'BEFORE.jsonl'), fs.existsSync(record) ? fs.readFileSync(record) : '')
       fs.writeFileSync(path.join(dir, 'BEFORE.files.json'), JSON.stringify(hashTree(dir), null, 2))
       console.log(`  ${rel(dir)}`)
+      n++
     }
   }
-  console.log(`\n  ${tasks.length * ARMS.length} arm(s) prepared. Perform each PROMPT.md with its directory as the working directory, then: node bench/run.mjs score\n`)
+  console.log(`\n  ${n} arm(s) prepared. Perform each PROMPT.md with its directory as the working directory, then: node bench/run.mjs score\n`)
 }
 
 /**
@@ -333,8 +370,8 @@ const readLog = (file) =>
         .map((l) => JSON.parse(l))
     : []
 
-function scoreArm(task, arm) {
-  const dir = armDir(task.id, arm)
+function scoreArm(task, arm, harness = 'loose') {
+  const dir = armDir(task.id, arm, harness)
   if (!fs.existsSync(dir)) return null
   const before = new Set(readLog(path.join(dir, 'BEFORE.jsonl')).map((d) => d.id))
   const written = readLog(path.join(dir, '.strata/decisions.jsonl')).filter((d) => !before.has(d.id))
@@ -395,6 +432,7 @@ function scoreArm(task, arm) {
   return {
     task: task.id,
     arm,
+    harness,
     decisions: written.length,
     withReason: written.filter((d) => d.reason && d.reason.trim()).length,
     decidedByAgent: written.filter((d) => d.decided?.kind === 'agent').length,
@@ -410,10 +448,11 @@ function scoreArm(task, arm) {
 
 function score() {
   const rows = []
-  for (const task of tasks) for (const arm of ARMS) {
-    const r = scoreArm(task, arm)
-    if (r) rows.push(r)
-  }
+  for (const task of tasks)
+    for (const { arm, harness } of cells(task.id)) {
+      const r = scoreArm(task, arm, harness)
+      if (r) rows.push(r)
+    }
   if (!rows.length) {
     console.log('\n  nothing to score — run: node bench/run.mjs prepare\n')
     return
@@ -436,15 +475,18 @@ function report(rows = JSON.parse(fs.readFileSync(path.join(BENCH, 'RESULT.json'
     ['decisions silently undone', (r) => (r.reverted ?? []).length],
     ['files changed', (r) => r.filesChanged.length],
   ]
+  const W = 14
   for (const task of tasks) {
-    const mine = ARMS.map((a) => rows.find((r) => r.task === task.id && r.arm === a)).filter(Boolean)
+    const mine = cells(task.id)
+      .map((c) => rows.find((r) => r.task === task.id && r.arm === c.arm && (r.harness ?? 'loose') === c.harness))
+      .filter(Boolean)
     if (!mine.length) continue
     console.log(`\n  ${task.id}`)
-    console.log(`  ${'measure'.padEnd(26)}${mine.map((r) => r.arm.padStart(10)).join('')}`)
-    console.log(`  ${'─'.repeat(26 + 10 * mine.length)}`)
-    for (const [name, of] of MEASURES) console.log(`  ${name.padEnd(26)}${mine.map((r) => String(of(r)).padStart(10)).join('')}`)
-    for (const r of mine) for (const hit of r.reachedForCut) console.log(`    ${r.arm}: reached for a cut token — ${hit}`)
-    for (const r of mine) for (const hit of r.reverted ?? []) console.log(`    ${r.arm}: a decision was undone — ${hit}`)
+    console.log(`  ${'measure'.padEnd(26)}${mine.map((r) => label(r).padStart(W)).join('')}`)
+    console.log(`  ${'─'.repeat(26 + W * mine.length)}`)
+    for (const [name, of] of MEASURES) console.log(`  ${name.padEnd(26)}${mine.map((r) => String(of(r)).padStart(W)).join('')}`)
+    for (const r of mine) for (const hit of r.reachedForCut) console.log(`    ${label(r)}: reached for a cut token — ${hit}`)
+    for (const r of mine) for (const hit of r.reverted ?? []) console.log(`    ${label(r)}: a decision was undone — ${hit}`)
   }
   console.log('\n  A difference in the last four rows is evidence for the claim.')
   console.log('  A difference in the first two says the door works, which is a smaller claim.\n')
@@ -455,7 +497,7 @@ function report(rows = JSON.parse(fs.readFileSync(path.join(BENCH, 'RESULT.json'
 const [cmd, a, b] = process.argv.slice(2)
 switch (cmd) {
   case 'prepare':
-    prepare()
+    prepare(a)
     break
   case 'prompt': {
     const task = tasks.find((t) => t.id === a)
@@ -463,7 +505,7 @@ switch (cmd) {
       console.error(`\n  usage: run.mjs prompt <${tasks.map((t) => t.id).join('|')}> <${ARMS.join('|')}>\n`)
       process.exit(1)
     }
-    const dir = armDir(task.id, b)
+    const dir = armDir(task.id, b, process.argv[5] ?? 'loose')
     if (!fs.existsSync(dir)) {
       console.error('\n  prepare first: node bench/run.mjs prepare\n')
       process.exit(1)
@@ -480,10 +522,11 @@ switch (cmd) {
   default:
     console.log(`bench — the founding claim, as an experiment (see bench/README.md)
 
-  prepare              one isolated copy of the product per task × arm
+  prepare [task]       one isolated copy of the product per arm × harness
   prompt <task> <arm>  print one arm's prompt
   score                read each arm's record and tree
   report               the arms side by side
 
-  tasks: ${tasks.map((t) => t.id).join(', ')}   arms: ${ARMS.join(', ')}`)
+  tasks: ${tasks.map((t) => t.id).join(', ')}
+  arms:  ${ARMS.join(', ')} (what the performer is given) × ${HARNESSES.join(', ')} (what is required of it)`)
 }

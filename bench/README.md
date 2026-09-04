@@ -46,6 +46,36 @@ an observant agent could recognise as an alias standing in for a cut. That is
 the artifact speaking, and it is exactly what a real consumer of a design
 system sees, so it stays.
 
+## The second axis: what is required of the performer
+
+The first two runs varied what the performer was *given* and left it otherwise
+unconstrained. That measured the substrate, not the contract — nothing obliged
+the performer to honour anything, so a good result was the agent's doing and a
+bad one was nobody's.
+
+So arms now cross two axes: `packet` or `list` for what is given, `loose` or
+`held` for what is required.
+
+| harness | terms |
+| --- | --- |
+| `loose` | the task, and nothing else |
+| `held` | the README's honours column, stated as conditions of work |
+
+The `held` terms are: read the context first, stay inside the working
+directory, every change through `strata …` and never a hand-edited projection,
+**run `check` and `rebuild --check` before and after and compare them**, and
+answer honestly who decided.
+
+The fourth is load-bearing and the reason this axis exists. The failure the
+first result found — three decisions undone as a side effect of one unrelated
+correct decision — was invisible to every measure in this bench and to the
+agent itself until after the fact. A before-and-after comparison is the shape
+of harness that catches it. Whether it actually does is the question.
+
+The second term also closes a hole the first runs had: the arms were told not
+to *modify* anything outside their directory and never told not to *read*, and
+the real repository was on the same disk the whole time.
+
 ## The tasks
 
 Two, chosen because each has a right answer the record knows and a list cannot.
@@ -85,7 +115,7 @@ invoke one either. It prepares an isolated copy of the product per arm, writes
 the prompt the harness is to perform, and scores the result afterwards.
 
 ```bash
-node bench/run.mjs prepare              # every task × arm, into bench/runs/
+node bench/run.mjs prepare [task]       # every arm × harness, into bench/runs/
 node bench/run.mjs prompt cut-token packet   # print one prompt
 #   … perform it, with the working directory set to that arm's copy …
 node bench/run.mjs score                # read the record in each arm
