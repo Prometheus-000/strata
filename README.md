@@ -501,12 +501,24 @@ Four kinds of statement, and they do not carry the same authority:
 | **Precedent** | "37 instances, 3 hands, converged on 12px." | Computed from the record. Never declared. Candidacy is the computed part; promoting a candidate is a decision. |
 
 Most policy is *cited*, not evaluated, and the count belongs here rather than
-in a footnote. Of 32 rules, four are invariants and 28 are not; eleven of those 28
+in a footnote. Of 34 rules, four are invariants and 30 are not; thirteen of those 30
 have an evaluator that speaks for them, and the other seventeen say
 `"check": "none"` in `grammar/rules.json` and are carried into skill packets
 to be read by a hand. `strata check` prints that count under CITED, NOT
 EVALUATED, because a rule nothing evaluates is silent, and silence is easily
 mistaken for a pass.
+
+One class of drift has no projection to compare against: prose. A stylesheet
+can be regenerated and diffed against the record; a sentence cannot, so it
+goes on asserting whatever it asserted the day it was written. Two rules close
+the mechanical half of that — an npm script, a CLI verb, a repo path, a rule
+id, a state provider, a decision kind either resolve or they are reported,
+and a skill whose packet cites a renamed rule is not left quietly empty. The
+other half does not close: a sentence that is false but names nothing ("every
+change is reviewed before it ships") has no identifier to resolve, and needs a
+person who knows what is true. Both report under **policy** rather than
+failing a build, because prose is not the artifact. This repository chooses to
+fail its own build on them anyway, which is what `scripts/prose.test.ts` is.
 
 Six of the seventeen are marked `"scope": "product"` (eight rules carry that
 mark; two of them gained evaluators and left the cited list): they are this
@@ -762,7 +774,7 @@ Stated so the next reader inherits the test and not the verdict:
   arms were indistinguishable. So: *a record that carries reasons keeps
   decisions from being undone by people who never saw them.* The broader
   "collage versus coherent work" framing is not what was measured. One run per
-  cell, one model, and `bench/README.md` lists the rest of the limits.
+  cell per run, one model, and `bench/README.md` lists the rest of the limits.
 - **The honours column is honoured by refusals, not by supervision — which is
   the one place worth spending.** A second experiment crossed context with
   harness: the same packet, but one arm held to the honours column as explicit
@@ -788,8 +800,8 @@ Stated so the next reader inherits the test and not the verdict:
   no amount of care could restore three decisions nobody had written down. That
   is a record problem, and the answer to it is more refusals, not more
   supervision.
-- **The record is thirty-six lines, and thirty-four of them were imported.**
-  Two were decided in a live session. That is a record of a vocabulary, not
+- **The record is thirty-seven lines, and thirty-four of them were imported.**
+  Three were decided in a live session. That is a record of a vocabulary, not
   yet a record of a product being designed.
 - Code → Figma regeneration on CI. The Figma library was pushed by hand once
   and is a stale projection; `figma-library-state.json` is the evidence.

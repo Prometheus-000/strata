@@ -16,6 +16,8 @@ import { runTheme, THEME_COMMANDS } from '../src/theme/cli.ts'
 import { registerTheme } from '../src/theme/handlers.ts'
 import { runMalleable, MALLEABLE_COMMANDS } from '../strata-malleable/src/cli.ts'
 import { registerMalleable } from '../strata-malleable/src/decide/index.ts'
+import { registerProse } from '../substrate/src/prose.ts'
+import { PROSE } from '../scripts/prose.ts'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const argv = process.argv.slice(2)
@@ -35,6 +37,8 @@ const MALLEABLE_HOME = {
 // `import`, `rebuild` and the checks see all of them.
 registerTheme({ root: ROOT })
 registerMalleable({ root: MALLEABLE_HOME.root, source: MALLEABLE_HOME.source })
+// Prose last: the verbs it checks against are the ones the two above just registered.
+registerProse(ROOT, PROSE)
 
 const help = () => {
   console.log(`strata — the record of what this product decided, and the one way to change it

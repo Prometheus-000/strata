@@ -265,6 +265,23 @@
       "check": "none"
     },
     {
+      "id": "prose.names-what-exists",
+      "authority": "policy",
+      "statement": "A sentence that names an npm script, a CLI verb or a repo path names one that is there.",
+      "reason": "A projection can be regenerated and compared to the record, so it cannot drift far. A sentence cannot be regenerated from anything, so it drifts the moment the thing it describes changes and goes on asserting the old world until a person happens to read it.",
+      "incident": "A day of reading turned up three: `decision.ts` opened by explaining a field removed that morning; the hub told readers a validator enforced Layer 0 years after nothing did; the `retheme` skill instructed agents to run `strata decide seed …`, a command that has never existed, which made the one skill whose whole subject is retheming unperformable from a terminal. Each was made by fixing something else.",
+      "source": "substrate/src/prose.ts",
+      "check": "prose.names-what-exists"
+    },
+    {
+      "id": "skills.cite-what-exists",
+      "authority": "policy",
+      "statement": "A skill's packet cites rules, state providers, examples and decision kinds that resolve.",
+      "reason": "A packet is assembled by id. Renaming a rule does not break the citation loudly — it empties the packet quietly, and the agent that receives it is given less context with no sign that anything is missing.",
+      "source": "substrate/src/prose.ts",
+      "check": "skills.cite-what-exists"
+    },
+    {
       "id": "knowledge.drift-by-transcription",
       "authority": "knowledge",
       "statement": "Hand-written projections drift from the engine within a week.",

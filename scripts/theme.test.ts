@@ -8,7 +8,9 @@ import { importAll, rebuild, resetProjections } from '@strata/substrate/projecti
 import { resetEvaluators } from '@strata/substrate/evidence'
 import { explain, formatExplanation, runCheck } from '@strata/substrate/check'
 import { readAll } from '@strata/substrate/log'
+import { registerProse } from '@strata/substrate/prose'
 import { registerTheme } from '../src/theme/handlers'
+import { PROSE } from './prose'
 import { readLedger, LEDGER_PATH, SEMANTIC_PATH, TOKENS_PATH } from '../src/theme/emit'
 import { runTheme } from '../src/theme/cli'
 
@@ -151,6 +153,9 @@ test('the theme evaluators: invariants hold on this repo, a raw colour is a poli
   resetEvaluators()
   resetProjections()
   registerTheme({ root: REPO })
+  // The same registration `bin/strata.mjs` performs: the cited count below is
+  // a claim about the product, not about whichever evaluators a test loaded.
+  registerProse(REPO, PROSE)
   const real = runCheck(REPO)
   assert.deepEqual(real.invariants.filter((i) => !i.ok && i.rule !== 'projections.match-record').map((i) => i.rule), [], 'the real repo holds every invariant this projection can speak for')
 
