@@ -235,10 +235,12 @@ export function formatPacket(p: Packet): string {
     out.push('')
   }
   if (p.skill.reasons) out.push('## Reasons', '', p.skill.reasons, '')
+  // The rule for who decided is cited above, from the grammar, like every other
+  // rule — it used to be retyped in this footer and in all six skills, which is
+  // one fact with eight owners and no source. A pointer cannot go stale; a copy
+  // is a place a change has to remember to visit.
   out.push(
-    'Every decision goes through `strata …` with `--why "…"` and a hand.',
-    '',
-    'Ask who could have chosen otherwise. If the target and the value were both named to you, `--decided-by human --actor <their handle>`; if you chose either of them, `--decided-by agent`. Your shell already says who *wrote* it, and an agent writing a person\'s decision is the ordinary case — it is the deciding hand a reviewer reads.',
+    'Every decision goes through `strata …` with `--why "…"` and two hands. The rules above say which hands and why.',
     '',
     'Nothing here is checked while you work; `strata check` says what happened when you are ready.',
   )

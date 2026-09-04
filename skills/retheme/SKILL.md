@@ -6,14 +6,12 @@ inputs: [intent]
 context:
   state: [tokens]
   precedent: { kind: seed }
-  rules: [layer0.light-not-inverted-dark, layer0.warmth-tints-neutrals, layer0.energy-buys-shape, voice.monochrome-default, voice.dark-first, layer0.engine-only-author]
+  rules: [layer0.light-not-inverted-dark, layer0.warmth-tints-neutrals, layer0.energy-buys-shape, voice.monochrome-default, voice.dark-first, layer0.engine-only-author, record.decided-not-written, record.use-is-not-decision]
 constraints:
   - the engine is the only author of the semantic tier; a retheme is seeds, never values
   - stay inside the ranges tokens.json declares under strata.themeEngine.seeds.$ranges
   - chroma 0 is the house default; colour is a choice you state a reason for
-  - "say who chose: who could have chosen otherwise? if the target and the value were both named to you, --decided-by human --actor <their handle>; if you chose either, --decided-by agent. Your shell already says who wrote it"
-  - "using a token is not deciding one: nothing writes a line for a var(--x) already in a recipe. Consumers are evidence, computed on request"
-  - pass --why on every write; a decision without a sentence is a keystroke
+  - every write carries --why; the sentence is the decision, and the record keeps it
 evidenceRequired: [contrast on dark (vs --surface-page), contrast on light (vs --surface-page)]
 typicalDecisions: [seed]
 examples: []

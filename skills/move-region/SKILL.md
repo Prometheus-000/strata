@@ -6,14 +6,12 @@ inputs: [region, to]
 context:
   state: [structure]
   precedent: { kind: move, component: $region }
-  rules: [knowledge.designer-defines-ux, evaluation.report-not-police, layer1.imported-not-copied]
+  rules: [knowledge.designer-defines-ux, evaluation.report-not-police, layer1.imported-not-copied, record.decided-not-written, record.use-is-not-decision]
 constraints:
   - move through strata move, never by editing JSX by hand, so the record names you
   - never move anything back that a designer moved
   - a list stays inside a region; its data is its order
-  - "say who chose: who could have chosen otherwise? if the target and the value were both named to you, --decided-by human --actor <their handle>; if you chose either, --decided-by agent. Your shell already says who wrote it"
-  - "using a token is not deciding one: nothing writes a line for a var(--x) already in a recipe. Consumers are evidence, computed on request"
-  - pass --why on every write; a decision without a sentence is a keystroke
+  - every write carries --why; the sentence is the decision, and the record keeps it
 evidenceRequired: [needs wiring, landed in]
 typicalDecisions: [move]
 examples: []
