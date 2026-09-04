@@ -13,6 +13,7 @@ import {
   SEED_RANGE,
   clamp,
   type ThemeSeeds,
+  resolvedTheme,
 } from './generateTheme'
 import { toPx } from './scales'
 
@@ -20,7 +21,7 @@ export type NumericSeed = 'hue' | 'chroma' | 'warmth' | 'energy' | 'density'
 const NUMERIC_SEEDS: NumericSeed[] = ['hue', 'chroma', 'warmth', 'energy', 'density']
 
 const tokenPx = (seeds: ThemeSeeds, token: string): number | null => {
-  const v = generateTheme(seeds)[token]
+  const v = resolvedTheme(seeds)[token]
   return v === undefined ? null : toPx(v)
 }
 
@@ -132,8 +133,8 @@ export function solveSeed(
   const next = { ...seeds, [seed]: to }
   const achievedPx = tokenPx(next, token) ?? targetPx
 
-  const before = generateTheme(seeds)
-  const after = generateTheme(next)
+  const before = resolvedTheme(seeds)
+  const after = resolvedTheme(next)
   const sideEffects = Object.keys(after)
     .filter((k) => k !== token && before[k] !== after[k])
     .map((k) => ({ token: k, from: before[k], to: after[k] }))

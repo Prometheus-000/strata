@@ -2,12 +2,12 @@
  * DECIDE — the one way anything changes.
  *
  *   human ─┐
- *          ├──► decide(request, { by, via }) ──► handler applies ──► log appends
+ *          ├──► decide(request, { decided, written, via }) ──► handler applies ──► log appends
  *   agent ─┘
  *
  * A pointer in the overlay, a command in a terminal, an agent's shell: each
- * builds a request and says who it is writing for, and nothing else about
- * them differs. The substrate knows how to record; it does not know how to
+ * builds a request and says both who chose and whose hand wrote, and nothing
+ * else about them differs. The substrate knows how to record; it does not know how to
  * cut a token or rewrite JSX. Those are projections, and each projection
  * registers a handler for the kinds it owns. The handler applies the change
  * (or refuses it, by name), returns the canonical body of what happened and
@@ -18,16 +18,19 @@
  * tried" is on the record too. Nothing here evaluates anything: that is
  * `explain`, `check` and `handoff`, and they run when asked.
  */
-import { newId, targetKey, type Author, type Consequence, type Decision, type DecisionBody, type Kind } from './decision.ts'
+import { newId, targetKey, type Consequence, type Decision, type DecisionBody, type Hand, type Kind } from './decision.ts'
 import { append, current, pending, readAll } from './log.ts'
 
 export interface DecideContext {
   /** Where the log lives. */
   root: string
-  by: Author
+  /** Who could have chosen otherwise. */
+  decided: Hand
+  /** Whose hand ran the command. */
+  written: Hand
   /** The surface writing: 'cli' | 'overlay' | 'server' | a harness name. */
   via: string
-  /** How `by` was determined. Kept on the record. */
+  /** How `decided` and `written` were determined. Kept on the record. */
   because?: string
   at?: string
   /** For projections that also need a tree to edit — the app root, relative to `root`. */
@@ -103,7 +106,8 @@ export function decide(req: Request, ctx: DecideContext): DecideResult {
     ...body,
     id: resolved.id,
     at,
-    by: ctx.by,
+    decided: ctx.decided,
+    written: ctx.written,
     via: ctx.via,
     ...(ctx.because ? { because: ctx.because } : {}),
     ...(req.reason ? { reason: req.reason } : {}),

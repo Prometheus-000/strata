@@ -2,7 +2,7 @@
   "name": "strata-malleable",
   "private": true,
   "version": "0.1.0",
-  "description": "The malleable layer — change one thing, decide later where it belongs.",
+  "description": "The malleable layer \u2014 change one thing, decide later where it belongs.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,7 +17,8 @@
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "@strata/substrate": "file:../substrate"
+    "@strata/substrate": "file:../substrate",
+    "@strata/engine": "file:../engine"
   },
   "devDependencies": {
     "@types/node": "^26.4.0",

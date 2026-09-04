@@ -62,8 +62,9 @@ function remember(store: Store) {
 }
 
 /**
- * Every write the overlay makes is one request to the one endpoint, as
- * `human`, because a pointer is a hand. The dev server applies it to
+ * Every write the overlay makes is one request to the one endpoint, decided
+ * and written by `human`, because a pointer is a hand and the hand on the
+ * mouse is the hand that chose. The dev server applies it to
  * `.malleable/overrides.json` or to source and appends the decision, so
  * `ship` and the reviewer act on the same record the designer made —
  * "come back later" has to survive a restarted machine, not a reloaded tab.
@@ -73,7 +74,7 @@ export async function decideFromOverlay(request: Request): Promise<DecideResult>
   const res = await fetch('/__strata/decide', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ request, by: 'human', via: 'overlay' }),
+    body: JSON.stringify({ request, decided: { kind: 'human' }, written: { kind: 'human' }, via: 'overlay' }),
   })
   return (await res.json()) as DecideResult
 }

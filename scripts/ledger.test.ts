@@ -52,11 +52,11 @@ test('nothing cut, nothing changed — the ledger is invisible until someone dec
 
 test('a cut token collapses to var(--fallback) in the stylesheet and to a value for receipts', () => {
   const tokens = generateTheme(OBSIDIAN)
-  const cut = ledger({ '--accent-strong': { status: 'cut', by: 'human', reason: 'one accent' } })
+  const cut = ledger({ '--accent-strong': { status: 'cut', decided: { kind: 'human' }, reason: 'one accent' } })
   const css = applyLedger(tokens, cut, { mode: 'var' })
   assert.equal(css.tokens['--accent-strong'], 'var(--accent)')
   assert.equal(css.tokens['--accent'], tokens['--accent'], 'the fallback itself is untouched')
-  assert.deepEqual(css.receipts, [{ token: '--accent-strong', to: '--accent', by: 'human', reason: 'one accent' }])
+  assert.deepEqual(css.receipts, [{ token: '--accent-strong', to: '--accent', decided: { kind: 'human' }, reason: 'one accent' }])
   const value = applyLedger(tokens, cut, { mode: 'value' })
   assert.equal(value.tokens['--accent-strong'], tokens['--accent'])
 })
@@ -94,16 +94,16 @@ test('the accent gate: cutting the accent collapses everything accent-derived to
 
 test('kept and proposed tokens pass through untouched', () => {
   const tokens = generateTheme(OBSIDIAN)
-  const l = ledger({ '--accent': { status: 'kept', by: 'agent' }, '--ink': { status: 'proposed' } })
+  const l = ledger({ '--accent': { status: 'kept', decided: { kind: 'agent' } }, '--ink': { status: 'proposed' } })
   assert.deepEqual(applyLedger(tokens, l).tokens, tokens)
 })
 
 /* ---------------- reconciling ---------------- */
 
 test('reconcile proposes what is new and never edits a decision', () => {
-  const decided = ledger({ '--accent-strong': { status: 'cut', by: 'human', reason: 'one accent' } })
+  const decided = ledger({ '--accent-strong': { status: 'cut', decided: { kind: 'human' }, reason: 'one accent' } })
   const { ledger: next, added, stale } = reconcileLedger(ENGINE, decided)
-  assert.deepEqual(next.tokens['--accent-strong'], { status: 'cut', by: 'human', reason: 'one accent' })
+  assert.deepEqual(next.tokens['--accent-strong'], { status: 'cut', decided: { kind: 'human' }, reason: 'one accent' })
   assert.equal(added.length, ENGINE.length - 1)
   assert.ok(added.every((n) => next.tokens[n].status === 'proposed'))
   assert.deepEqual(stale, [])
@@ -111,10 +111,10 @@ test('reconcile proposes what is new and never edits a decision', () => {
 })
 
 test('a decision about a token the engine no longer emits is reported, not removed', () => {
-  const old = ledger({ '--gone': { status: 'cut', by: 'human', reason: 'was never good' } })
+  const old = ledger({ '--gone': { status: 'cut', decided: { kind: 'human' }, reason: 'was never good' } })
   const { ledger: next, stale } = reconcileLedger(ENGINE, old)
   assert.deepEqual(stale, ['--gone'])
-  assert.deepEqual(next.tokens['--gone'], { status: 'cut', by: 'human', reason: 'was never good' })
+  assert.deepEqual(next.tokens['--gone'], { status: 'cut', decided: { kind: 'human' }, reason: 'was never good' })
 })
 
 test('reconcile is idempotent', () => {

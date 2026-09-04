@@ -16,7 +16,7 @@ const RULES = {
     { id: 'projections.match-record', authority: 'invariant', statement: 's', reason: 'a projection that differs is a decision nobody made', source: 'x', check: 'projections.match-record' },
     { id: 'floors.exist', authority: 'invariant', statement: 's', reason: 'every chain must end somewhere honest', source: 'x', check: 'floors.exist' },
     { id: 'names.semantic', authority: 'policy', statement: 's', reason: 'predictability of meaning, not sameness', source: 'x', check: 'names.semantic' },
-    { id: 'promotion.candidate-at', authority: 'preference', statement: 's', reason: 'one is taste; nine is a missing token', source: 'x', value: 2 },
+    { id: 'promotion.candidate-at', authority: 'preference', statement: 's', reason: 'one is taste; nine is a missing token', source: 'x', value: 2, check: 'none' },
   ],
 }
 
@@ -33,7 +33,7 @@ function world() {
   }))
   registerProjection({ name: 'tokens.txt', project: (_r, log) => ({ 'tokens.txt': log.map((d) => d.kind === 'token' && `${d.token}=${d.action}`).join('\n') + '\n' }) })
   let t = Date.parse('2026-09-03T12:00:00.000Z')
-  const ctx = () => ({ root: dir, by: 'human' as const, via: 'test', at: new Date((t += 1000)).toISOString() })
+  const ctx = () => ({ root: dir, decided: { kind: 'human' as const }, written: { kind: 'human' as const }, via: 'test', at: new Date((t += 1000)).toISOString() })
   return { dir, ctx }
 }
 
@@ -89,7 +89,7 @@ test('explain assembles the four blocks: the record supplies context, evaluators
   const mid = explain(dir, e.history[1].id)!
   assert.equal(mid.decision.reason, 'one filled action per surface')
   const text = formatExplanation(mid)
-  assert.match(text, /DECISION\n──────────────\nToken: --a\nAction: cut\nAuthor: human\nReason: one filled action per surface/)
+  assert.match(text, /DECISION\n──────────────\nToken: --a\nAction: cut\nDecided by: human\nWritten by: human\nReason: one filled action per surface/)
   assert.match(text, /CONTEXT\n──────────────\ntarget: token:--a  \(record\)\ndecisions on this target before it: 1  \(record\)\nsuperseded: keep --a · human  \(record\)\nsince superseded by: keep --a · human  \(record\)\nprecedent: 2 other decision\(s\) about the same thing  \(precedent\)/)
   assert.match(text, /EVIDENCE\n──────────────\nconsumers: 34  \(token\.usage\)\nusage concentration: high  \(token\.usage\)/)
   assert.doesNotMatch(text, /nope/)

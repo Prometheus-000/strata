@@ -5,7 +5,8 @@ import { describe, formatDecision, formatHandoff } from '../src/format.ts'
 
 const cut: Decision = {
   id: newId(Date.parse('2026-09-03T12:00:00.000Z')),
-  by: 'human',
+  decided: { kind: 'human' },
+  written: { kind: 'human' },
   at: '2026-09-03T12:00:00.000Z',
   via: 'cli',
   kind: 'token',
@@ -17,7 +18,7 @@ const cut: Decision = {
 
 test('a decision prints as four blocks, and only the blocks it has', () => {
   const bare = formatDecision(cut)
-  assert.match(bare, /^DECISION\n──────────────\nToken: --accent-strong\nAction: cut\nAuthor: human\nReason: one filled action per surface\n/)
+  assert.match(bare, /^DECISION\n──────────────\nToken: --accent-strong\nAction: cut\nDecided by: human\nWritten by: human\nReason: one filled action per surface\n/)
   assert.match(bare, /CONSEQUENCE\n──────────────\nfallback → --accent\naffected → 34\nwritten → src\/tokens\/semantic\.css/)
   assert.doesNotMatch(bare, /CONTEXT|EVIDENCE/)
   const full = formatDecision(cut, {
@@ -39,7 +40,7 @@ test('one-line descriptions and the handoff read like the receipt did', () => {
     reason: undefined,
     consequence: { adapt: ['open'] },
   }
-  const text = formatHandoff([move], { ...cut, kind: 'ready', by: 'human', consequence: {} })
+  const text = formatHandoff([move], { ...cut, kind: 'ready', decided: { kind: 'human' }, consequence: {} })
   assert.match(text, /<Filters \/>\s+main → header\s+TopBar\.tsx:10 · human/)
   assert.match(text, /needs wiring: open/)
   assert.match(text, /ready for review — human/)

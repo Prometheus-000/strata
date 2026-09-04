@@ -24,12 +24,15 @@
  */
 
 export type TokenStatus = 'proposed' | 'kept' | 'cut'
-export type { Author } from '@strata/substrate/decision'
-import type { Author } from '@strata/substrate/decision'
+export type { Author, Hand } from '@strata/substrate/decision'
+import type { Author, Hand } from '@strata/substrate/decision'
 
 export interface TokenDecision {
   status: TokenStatus
-  by?: Author
+  /** Who could have chosen otherwise. */
+  decided?: Hand
+  /** Whose hand ran the command. */
+  written?: Hand
   reason?: string
   /** The decision in `.strata/decisions.jsonl` that set this line. The ledger is a projection of the record. */
   id?: string
@@ -97,7 +100,26 @@ export const FALLBACKS: Record<string, Fallback> = {
   '--motion-ease-emphasis': t('--motion-ease', 'An emphasis curve without its own personality is the ordinary curve.'),
   '--motion-ease': t('ease', 'The user agent’s default curve.'),
 
+  /* rhythm: a role that scales a primitive with density collapses to the primitive, unscaled */
+  '--control-h-sm': t('2rem', 'A small control without its own role is the height it was scaling; density stops reaching it.'),
+  '--control-h-md': t('2.5rem', 'As the small one. This is the ordinary control, so its floor is the ordinary height.'),
+  '--control-h-lg': t('3rem', 'As the small one.'),
+  '--control-pad-x': t('var(--strata-space-4)', 'The primitive it was multiplying. A control still has padding; it stops answering the density dial.'),
+  '--surface-pad': t('var(--strata-space-5)', 'As control-pad-x.'),
+  '--stack-gap': t('var(--strata-space-4)', 'As control-pad-x. A stack still has a gap.'),
+
+  /* type: a face that is not distinguished is the body face, and mono stays mono */
+  '--font-display': t('--font-body', 'One family is the house rule anyway; a display face that is not distinguished is the body face.'),
+  '--font-body': t('var(--strata-font-body)', 'The primitive stack. Below it there is only the user agent.'),
+  '--font-mono': t('monospace', 'A mono role must stay mono — a tabular number set in the body face is a bug, not a preference. The generic family is the honest floor.'),
+
+  /* elevation: each level falls to the one below, ending at nothing */
+  '--shadow-overlay': t('--shadow-floating', 'An overlay without its own elevation sits at the floating one.'),
+  '--shadow-floating': t('--shadow-raised', 'Floating falls to raised.'),
+  '--shadow-raised': t('none', 'No shadow. Which is already what this repo decided by cutting --shadow-color; this is the floor if the recipe is cut too.'),
+
   /* rhythm and shape */
+  '--radius-pill': t('var(--strata-radius-round)', 'The primitive. A pill is a shape decision the primitive already holds.'),
   '--density': t('1', 'Unit density: every control and gap at its declared size.'),
   '--radius-overlay': t('--radius-surface', 'An overlay without its own radius rounds like a surface.'),
   '--radius-surface': t('--radius-interactive', 'A surface without its own radius rounds like a control.'),
@@ -105,6 +127,28 @@ export const FALLBACKS: Record<string, Fallback> = {
 }
 
 const isToken = (v: string) => v.startsWith('--')
+
+/**
+ * A minted role is a name a hand coined for a value usage kept reaching. No
+ * seed produces it, so the engine cannot derive its fallback either — but the
+ * floor is not a puzzle: cutting a minted name removes the *name*, and the
+ * value it named is still what those places wanted. So it collapses to that
+ * value, and the consumers keep rendering what they rendered.
+ */
+export const mintedFallback = (value: string): Fallback =>
+  t(value, 'A minted name collapses to the value it named. The vocabulary loses the word; nothing on the screen moves.')
+
+/**
+ * The fallback table, with the minted roles the record holds folded in. The
+ * static table is derivation knowledge and lives beside the engine; a minted
+ * entry is a decision and comes from the record, which is why this is a
+ * function and not a constant.
+ */
+export function fallbacksFor(minted: Record<string, string> = {}): Record<string, Fallback> {
+  const out: Record<string, Fallback> = { ...FALLBACKS }
+  for (const [name, value] of Object.entries(minted)) out[name] = mintedFallback(value)
+  return out
+}
 
 /**
  * Cut tokens collapse; everything else passes through. `var` mode emits
@@ -115,15 +159,16 @@ const isToken = (v: string) => v.startsWith('--')
 export function applyLedger(
   tokens: Record<string, string>,
   ledger: Ledger,
-  opts: { mode: 'var' | 'value' } = { mode: 'var' },
-): { tokens: Record<string, string>; receipts: Array<{ token: string; to: string; by?: Author; reason?: string }> } {
+  opts: { mode: 'var' | 'value'; fallbacks?: Record<string, Fallback> } = { mode: 'var' },
+): { tokens: Record<string, string>; receipts: Array<{ token: string; to: string; decided?: Hand; reason?: string }> } {
   const out: Record<string, string> = {}
   const receipts: ReturnType<typeof applyLedger>['receipts'] = []
   const isCut = (name: string) => ledger.tokens[name]?.status === 'cut'
+  const table = opts.fallbacks ?? FALLBACKS
 
   /** Follow the fallback chain past every cut token to the first live one. */
   const landing = (name: string, seen = new Set<string>()): string => {
-    const fb = FALLBACKS[name]
+    const fb = table[name]
     if (!fb || seen.has(name)) return name
     seen.add(name)
     if (!isToken(fb.to)) return fb.to
@@ -131,13 +176,13 @@ export function applyLedger(
   }
 
   for (const [name, value] of Object.entries(tokens)) {
-    if (!isCut(name) || !FALLBACKS[name]) {
+    if (!isCut(name) || !table[name]) {
       out[name] = value
       continue
     }
     const to = landing(name)
     const decision = ledger.tokens[name]
-    receipts.push({ token: name, to, by: decision.by, reason: decision.reason })
+    receipts.push({ token: name, to, decided: decision.decided, reason: decision.reason })
     out[name] = !isToken(to) ? to : opts.mode === 'var' ? `var(${to})` : (tokens[to] ?? to)
   }
   return { tokens: out, receipts }
@@ -182,4 +227,5 @@ export const themeTokens = (
   tokens: Record<string, string>,
   ledger: Ledger,
   mode: 'var' | 'value' = 'var',
-): Record<string, string> => applyLedger(tokens, ledger, { mode }).tokens
+  fallbacks?: Record<string, Fallback>,
+): Record<string, string> => applyLedger(tokens, ledger, { mode, fallbacks }).tokens

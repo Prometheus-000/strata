@@ -3,11 +3,18 @@
  * to decide has environmental context rather than isolated rules.
  *
  * A rule says "recipes speak tokens". Precedent says "thirty-seven instances
- * independently converged on 12px, eleven of them by hand, across four
- * views", and lists the decisions. The second is what promotion is earned
- * by, and it is computed over history, never declared: nothing here has
- * authority of its own. The threshold at which a convergence is called a
- * candidate is a preference, held in the grammar; the default is three.
+ * independently converged on 12px, across four views and three hands", and
+ * lists the decisions. The second is what promotion is earned by, and it is
+ * computed over history, never declared: nothing here has authority of its
+ * own. The threshold at which a convergence is called a candidate is a
+ * preference, held in the grammar; the default is three.
+ *
+ * Two things are counted, and they answer different questions. Distinct
+ * *targets* say the value was reached in more than one place. Distinct
+ * *hands* — distinct `decided.actor` — say it was reached by more than one
+ * person. One hand touching nine instances is a habit; three hands reaching
+ * the same value is evidence. Where no actor was named the record cannot tell
+ * them apart, and this says so rather than assuming either.
  */
 import { targetKey, type Author, type Decision, type Kind } from './decision.ts'
 import { describe } from './format.ts'
@@ -25,7 +32,10 @@ export interface PrecedentQuery {
   component?: string
   /** A token: decided by name, or snapped to by an override. */
   token?: string
+  /** The kind of hand that decided it. */
   author?: Author
+  /** The hand that decided it, by name. Opaque: an exact match on `decided.actor`. */
+  actor?: string
   /** Every word must appear in the reason, the target or the description. */
   text?: string
   /** ISO date; decisions at or after it. */
@@ -44,9 +54,20 @@ export interface Convergence {
   nodes: string[]
   views: string[]
   byAuthor: Record<Author, number>
-  /** Reached from more than one target — not one hand revisiting one thing. */
+  /** The distinct named hands that decided it, in the order the record met them. */
+  actors: string[]
+  /** Decisions here whose deciding hand went unnamed — countable, not attributable. */
+  unnamed: number
+  /**
+   * Reached by more than one hand where hands are named, and from more than
+   * one target where they are not. One hand revisiting one thing is neither.
+   */
   independent: boolean
-  /** Meets the candidate threshold. */
+  /**
+   * Meets the count the grammar prefers before a convergence is worth a
+   * hand's attention. A candidate is computed and means "look at this"; it is
+   * not a promotion, which only a hand can decide.
+   */
   candidate: boolean
   decisions: string[]
 }
@@ -94,7 +115,8 @@ export function search(index: PrecedentIndex, q: PrecedentQuery, opts: { candida
   const words = (q.text ?? '').toLowerCase().split(/\s+/).filter(Boolean)
   const decisions = index.all.filter((d) => {
     if (q.kind && d.kind !== q.kind) return false
-    if (q.author && d.by !== q.author) return false
+    if (q.author && d.decided.kind !== q.author) return false
+    if (q.actor && d.decided.actor !== q.actor) return false
     if (q.since && d.at < q.since) return false
     if (q.property && !((d.kind === 'override' && d.property === q.property) || (d.kind === 'prop' && d.prop === q.property))) return false
     if (q.value && valueText(d) !== q.value) return false
@@ -127,11 +149,13 @@ export function converge(decisions: readonly Decision[], candidateAt = PROMOTION
     const key = `${d.kind}|${property}|${value}`
     let g = groups.get(key)
     if (!g) {
-      g = { c: { kind: d.kind, property, value, count: 0, nodes: [], views: [], byAuthor: { human: 0, agent: 0 }, independent: false, candidate: false, decisions: [] }, targets: new Set() }
+      g = { c: { kind: d.kind, property, value, count: 0, nodes: [], views: [], byAuthor: { human: 0, agent: 0 }, actors: [], unnamed: 0, independent: false, candidate: false, decisions: [] }, targets: new Set() }
       groups.set(key, g)
     }
     g.targets.add(targetKey(d))
-    g.c.byAuthor[d.by]++
+    g.c.byAuthor[d.decided.kind]++
+    if (d.decided.actor === undefined) g.c.unnamed++
+    else if (!g.c.actors.includes(d.decided.actor)) g.c.actors.push(d.decided.actor)
     g.c.decisions.push(d.id)
     const node = d.kind === 'override' ? d.node : d.file
     const view = d.kind === 'override' ? d.view : undefined
@@ -139,14 +163,32 @@ export function converge(decisions: readonly Decision[], candidateAt = PROMOTION
     if (view && !g.c.views.includes(view)) g.c.views.push(view)
   }
   return [...groups.values()]
-    .map(({ c, targets }) => ({ ...c, count: targets.size, independent: targets.size >= 2, candidate: targets.size >= candidateAt }))
+    .map(({ c, targets }) => ({
+      ...c,
+      count: targets.size,
+      // Where the record names hands, independence is a count of hands; where
+      // it does not, the most it can honestly say is that the value was
+      // reached in more than one place.
+      independent: c.actors.length ? c.actors.length >= 2 : targets.size >= 2,
+      candidate: targets.size >= candidateAt,
+    }))
     .sort((a, b) => b.count - a.count || a.property.localeCompare(b.property))
 }
 
+/**
+ * The hands, counted. Where none was named the record cannot tell one hand
+ * from five, and says that rather than counting decisions as hands.
+ */
+export const handsIn = (c: Convergence): string => {
+  if (!c.actors.length) return 'hands unnamed'
+  const named = `${c.actors.length} hand${c.actors.length === 1 ? '' : 's'}: ${c.actors.join(', ')}`
+  return c.unnamed ? `${named}, and ${c.unnamed} decision${c.unnamed === 1 ? '' : 's'} by an unnamed hand` : named
+}
+
 export function sentence(c: Convergence): string {
-  const what = c.kind === 'prop' ? `${c.property} = ${c.value}` : `${c.property} = ${c.value}`
+  const what = `${c.property} = ${c.value}`
   const who = [c.byAuthor.human ? `${c.byAuthor.human} by hand` : '', c.byAuthor.agent ? `${c.byAuthor.agent} by agent` : ''].filter(Boolean).join(', ')
   const where = c.views.length > 1 ? ` across ${c.views.length} views` : c.nodes.length > 1 ? ` across ${c.nodes.length} nodes` : ''
   const unit = c.kind === 'prop' ? 'call site' : 'instance'
-  return `${c.count} ${unit}${c.count === 1 ? '' : 's'} ${c.independent ? 'independently ' : ''}converged on ${what}${where} (${who})${c.candidate ? ' — promotion candidate' : ''}`
+  return `${c.count} ${unit}${c.count === 1 ? '' : 's'} ${c.independent ? 'independently ' : ''}converged on ${what}${where} · ${handsIn(c)} · ${who}${c.candidate ? ' — a candidate for promotion, which is a hand\'s to decide' : ''}`
 }

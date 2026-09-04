@@ -11,7 +11,9 @@ constraints:
   - move through strata move, never by editing JSX by hand, so the record names you
   - never move anything back that a designer moved
   - a list stays inside a region; its data is its order
-  - pass --by agent and --why on every write
+  - "say who chose: who could have chosen otherwise? if the target and the value were both named to you, --decided-by human --actor <their handle>; if you chose either, --decided-by agent. Your shell already says who wrote it"
+  - "using a token is not deciding one: nothing writes a line for a var(--x) already in a recipe. Consumers are evidence, computed on request"
+  - pass --why on every write; a decision without a sentence is a keystroke
 evidenceRequired: [needs wiring, landed in]
 typicalDecisions: [move]
 examples: []
@@ -35,8 +37,8 @@ reasons: |
 3. Decide, on the record:
 
    ```bash
-   strata move Filters --to nav --by agent --why "…"
-   strata move Filters --to main --at 0 --by agent
+   strata move Filters --to nav --decided-by agent --why "…"
+   strata move Filters --to main --at 0 --decided-by agent
    strata move Filters --to nav --dry        # plan it, write nothing
    ```
 

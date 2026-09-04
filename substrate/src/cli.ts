@@ -70,7 +70,7 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
     case 'ready': {
       const who = authorFrom(rest, env)
       if ('error' in who) return fail(who.error)
-      const ctx: DecideContext = { root: home.root, by: who.author, via: 'cli', because: who.because, dryRun: has('dry') }
+      const ctx: DecideContext = { root: home.root, decided: who.decided, written: who.written, via: 'cli', because: who.because, dryRun: has('dry') }
       const result = decide({ kind: 'ready', reason: flag('why') }, ctx)
       if (!result.ok) return fail(result.error)
       io.out(`\n  ${describe(result.decision)} · ${result.decision.consequence.affected ?? 0} change(s) handed off\n  ${who.because}\n`)
@@ -78,10 +78,20 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
     }
 
     case 'import': {
-      const { imported, skipped } = importAll(home.root, { dryRun: has('dry') })
+      // An import is a claim about who decided the things in an old file, and
+      // it is made once, over every line. It is stated, never inferred.
+      const who = authorFrom(rest, env)
+      if ('error' in who) return fail(who.error)
+      const { imported, skipped } = importAll(home.root, {
+        dryRun: has('dry'),
+        decided: who.decided,
+        written: who.written,
+        because: `${who.because}; brought onto the record by import — the old file recorded a channel, not a judgement, so the deciding hand is the one this import stated`,
+      })
       for (const d of imported) io.out(`  + ${d.id}  ${d.at.slice(0, 10)}  ${describe(d)}`)
       for (const s of skipped) io.out(`  · ${s} is already on the record`)
       io.out(`\n  ${imported.length} decision(s) imported from ${registeredProjections().join(', ') || 'no projection'}${has('dry') ? ' (dry run — nothing written)' : ''}`)
+      if (imported.length) io.out(`  ${who.because}`)
       if (imported.length && !has('dry')) io.out('  next: strata rebuild — so every projected line points at its decision\n')
       return 0
     }
@@ -107,6 +117,7 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
         component: flag('component'),
         token: flag('token'),
         author: flag('author') as Author | undefined,
+        actor: flag('actor'),
         since: flag('since'),
         unpromoted: has('unpromoted'),
         text: positional.join(' ') || undefined,

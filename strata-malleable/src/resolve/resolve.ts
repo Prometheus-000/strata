@@ -11,7 +11,7 @@
  * System sits upstream of all four: it moves a seed, the seed moves the token,
  * the token moves every value derived from it — including the base.
  */
-import { generateTheme, type ThemeSeeds } from '../engine/generateTheme'
+import { resolvedTheme, type ThemeSeeds } from '../engine/generateTheme'
 import { PRIMITIVES, toPx } from '../engine/scales'
 import type {
   NodeAddress,
@@ -37,7 +37,19 @@ export interface ResolveInput {
 
 /** Every token name the resolver can evaluate, primitives included. */
 export function tokenTable(seeds: ThemeSeeds): Record<string, string> {
-  return { ...PRIMITIVES, ...generateTheme(seeds) }
+  // Computed form: the resolver compares a dragged pixel value against a
+  // role, and `calc(2.5rem * var(--density))` is not a number.
+  const table = { ...PRIMITIVES, ...resolvedTheme(seeds) }
+  // A role the engine holds against a Tier 1 primitive arrives as the
+  // reference — `--radius-pill: var(--strata-radius-round)` — because that is
+  // what belongs in the stylesheet. Here it is worth what the primitive is
+  // worth, so one hop is followed. Anything the table cannot resolve keeps
+  // its reference, and the resolver declines to compare it, which is correct.
+  for (const [name, value] of Object.entries(table)) {
+    const ref = /^var\((--[\w-]+)\)$/.exec(value)
+    if (ref && table[ref[1]] !== undefined) table[name] = table[ref[1]]
+  }
+  return table
 }
 
 /**

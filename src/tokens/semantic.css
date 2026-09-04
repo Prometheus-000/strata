@@ -33,7 +33,7 @@
   --positive-soft: oklch(0.780 0.160 150.0 / 0.15);
   --warning-soft: oklch(0.820 0.150 80.0 / 0.15);
   --danger-soft: oklch(0.680 0.190 22.0 / 0.15);
-  --shadow-color: transparent; /* cut by agent: Lines, not shadows. The reference grammar — the portfolio and Visionary alike — draws every level with a 1px rule and an alpha wash, and paints no drop shadow anywhere; a shadow is decoration the eye pays for on every card. The elevation tokens keep their offsets and paint nothing, so the rule does the work it was already doing. */
+  --shadow-color: transparent; /* cut by human prometheus-000: Lines, not shadows. The reference grammar — the portfolio and Visionary alike — draws every level with a 1px rule and an alpha wash, and paints no drop shadow anywhere; a shadow is decoration the eye pays for on every card. The elevation tokens keep their offsets and paint nothing, so the rule does the work it was already doing. */
 }
 
 [data-theme='light'] {
@@ -61,7 +61,7 @@
   --positive-soft: oklch(0.600 0.150 150.0 / 0.13);
   --warning-soft: oklch(0.660 0.140 75.0 / 0.15);
   --danger-soft: oklch(0.550 0.190 22.0 / 0.12);
-  --shadow-color: transparent; /* cut by agent: Lines, not shadows. The reference grammar — the portfolio and Visionary alike — draws every level with a 1px rule and an alpha wash, and paints no drop shadow anywhere; a shadow is decoration the eye pays for on every card. The elevation tokens keep their offsets and paint nothing, so the rule does the work it was already doing. */
+  --shadow-color: transparent; /* cut by human prometheus-000: Lines, not shadows. The reference grammar — the portfolio and Visionary alike — draws every level with a 1px rule and an alpha wash, and paints no drop shadow anywhere; a shadow is decoration the eye pays for on every card. The elevation tokens keep their offsets and paint nothing, so the rule does the work it was already doing. */
 }
 
 :root {
@@ -71,26 +71,23 @@
   --motion-base: 313ms;
   --motion-slow: 577ms;
   --motion-ease: var(--strata-ease-out);
-  --motion-ease-emphasis: var(--motion-ease); /* cut by agent: Nothing bounces. The engine gives a calm theme a spring on emphasis above energy 0.3, and a dialog that overshoots is a personality the chrome should not have. Collapses to the ordinary curve; the energy dial still sets speed. */
+  --motion-ease-emphasis: var(--motion-ease); /* cut by human prometheus-000: Nothing bounces. The engine gives a calm theme a spring on emphasis above energy 0.3, and a dialog that overshoots is a personality the chrome should not have. Collapses to the ordinary curve; the energy dial still sets speed. */
   --density: 1.000;
   --radius-interactive: 0.506rem;
   --radius-surface: 0.759rem;
-  --radius-overlay: var(--radius-surface); /* cut by agent: Two radii, not three: a control and a panel. The engine gave overlays 2.4× the control radius, which at calm energy is a 19px dialog — the one soft shape on an otherwise architectural page. An overlay is a panel; it rounds like one. */
+  --radius-overlay: var(--radius-surface); /* cut by human prometheus-000: Do not design multiple ways to do the same thing. */
 
-  /* ---- Static roles (not seed-derived) ---- */
-  --radius-pill: var(--strata-radius-round);
-
+  /* ---- Roles held against a Tier 1 primitive, and the names usage earned ---- */
   --control-h-sm: calc(2rem * var(--density));
   --control-h-md: calc(2.5rem * var(--density));
   --control-h-lg: calc(3rem * var(--density));
   --control-pad-x: calc(var(--strata-space-4) * var(--density));
   --surface-pad: calc(var(--strata-space-5) * var(--density));
   --stack-gap: calc(var(--strata-space-4) * var(--density));
-
+  --radius-pill: var(--strata-radius-round);
   --font-display: var(--strata-font-display);
   --font-body: var(--strata-font-body);
   --font-mono: var(--strata-font-mono);
-
   --shadow-raised: var(--strata-shadow-1) var(--shadow-color);
   --shadow-floating: var(--strata-shadow-2) var(--shadow-color);
   --shadow-overlay: var(--strata-shadow-3) var(--shadow-color);

@@ -2,9 +2,10 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { ID_PATTERN, isDecision, newId, problemsWith, targetKey, type Decision } from '../src/decision.ts'
 
-export const base = (at = '2026-09-03T12:00:00.000Z'): Pick<Decision, 'id' | 'by' | 'at' | 'via' | 'consequence'> => ({
+export const base = (at = '2026-09-03T12:00:00.000Z'): Pick<Decision, 'id' | 'decided' | 'written' | 'at' | 'via' | 'consequence'> => ({
   id: newId(Date.parse(at)),
-  by: 'human',
+  decided: { kind: 'human' },
+  written: { kind: 'human' },
   at,
   via: 'test',
   consequence: {},
@@ -21,7 +22,7 @@ test('an id sorts by time as a string and matches its pattern', () => {
 test('the target key is stable per kind and ignores provenance', () => {
   const token: Decision = { ...base(), kind: 'token', token: '--accent-strong', action: 'cut' }
   assert.equal(targetKey(token), 'token:--accent-strong')
-  assert.equal(targetKey({ ...token, by: 'agent', reason: 'x' } as Decision), 'token:--accent-strong')
+  assert.equal(targetKey({ ...token, decided: { kind: 'agent' }, reason: 'x' } as Decision), 'token:--accent-strong')
   assert.equal(
     targetKey({ ...base(), kind: 'override', action: 'set', scope: 'view', selector: 'gallery::Card.div.st-card', property: 'radius' }),
     'override:view:gallery::Card.div.st-card:radius',
@@ -37,7 +38,7 @@ test('the target key is stable per kind and ignores provenance', () => {
 test('every way a line can fail to be a decision is named', () => {
   assert.deepEqual(problemsWith({ ...base(), kind: 'token', token: '--x', action: 'cut' }), [])
   assert.ok(problemsWith({ ...base(), kind: 'token', token: 'x', action: 'cut' }).some((p) => /custom property/.test(p)))
-  assert.ok(problemsWith({ ...base(), by: 'robot', kind: 'ready' }).some((p) => /human or agent/.test(p)))
+  assert.ok(problemsWith({ ...base(), decided: 'robot', kind: 'ready' }).some((p) => /kind: human \| agent/.test(p)))
   assert.ok(problemsWith({ ...base(), kind: 'nope' }).some((p) => /unknown kind/.test(p)))
   assert.ok(problemsWith({ ...base(), id: '1', kind: 'ready' }).some((p) => /id/.test(p)))
   assert.ok(problemsWith({ ...base(), kind: 'override', action: 'set', scope: 'galaxy', selector: 's', property: 'p' }).some((p) => /scope/.test(p)))

@@ -103,7 +103,7 @@ export function formatDrift(r: DriftReport): string {
     line(`  component  ${o.target.selector} · ${o.property} · ${o.author}`)
 
   line('')
-  line('UNRESOLVED DRIFT — ships as-is, decided later')
+  line('UNRESOLVED DRIFT — ships as-is, decided later. Counts are computed; every promotion below is a hand\'s to make.')
   if (!r.groups.length) line('  none')
   for (const g of r.groups) {
     const where = [
@@ -114,8 +114,15 @@ export function formatDrift(r: DriftReport): string {
       .join(' + ')
     line(`  ${String(g.count).padStart(3)} × ${g.property} = ${g.value}  (${g.kind})`)
     line(`        ${where} · ${g.nodes.join(', ')}`)
-    if (g.count >= PROMOTION_CANDIDATE_AT)
-      line(`        ${g.count} appearances — promotion candidate`)
+    if (g.count >= PROMOTION_CANDIDATE_AT) {
+      // Candidacy is computed: it is a count crossing a number the grammar
+      // prefers, and it says "look at this". Promotion is a decision — a hand
+      // widens the scope, or coins a name for the value, and the record keeps
+      // who and why. The report never does the second thing.
+      line(`        ${g.count} appearances — a candidate. Promoting it is a decision:`)
+      line(`          malleable set … --scope component|system   widen it to where it belongs`)
+      if (g.kind === 'drifted') line(`          strata mint --<name> --value ${g.value} --why "…"   give the value a name`)
+    }
   }
 
   if (r.redundant.length) {

@@ -4,12 +4,12 @@
  * bottom. The CLI, the check report and the hub all render through here, so
  * there is one shape to learn.
  *
- *   DECISION      the body and its provenance
+ *   DECISION      the body, who decided it, and whose hand wrote it
  *   CONTEXT       what was true around it (supplied by whoever asked)
  *   EVIDENCE      what an evaluator found (supplied, never computed here)
  *   CONSEQUENCE   what the operation recorded when it ran
  */
-import { targetKey, type Decision, type Value } from './decision.ts'
+import { handText, targetKey, type Decision, type Value } from './decision.ts'
 
 export interface Fact {
   name: string
@@ -29,6 +29,8 @@ export function rows(d: Decision): Array<[string, string]> {
   switch (d.kind) {
     case 'token':
       r.push(['Token', d.token], ['Action', d.action])
+      if (d.value) r.push(['Value', valueText(d.value)])
+      if (d.from?.length) r.push(['Earned by', `${d.from.length} decision(s): ${d.from.join(', ')}`])
       break
     case 'override':
       r.push(['Override', `${d.property} on ${d.selector}`], ['Action', d.action], ['Scope', d.fromScope ? `${d.fromScope} → ${d.scope}` : d.scope])
@@ -53,7 +55,7 @@ export function rows(d: Decision): Array<[string, string]> {
       r.push(['Action', 'ready'])
       break
   }
-  r.push(['Author', d.by])
+  r.push(['Decided by', handText(d.decided)], ['Written by', handText(d.written)])
   if (d.reason) r.push(['Reason', d.reason])
   return r
 }
@@ -86,10 +88,10 @@ export function formatDecision(d: Decision, extras: { context?: Fact[]; evidence
 
 /** One line, for lists. */
 export function describe(d: Decision): string {
-  const who = ` · ${d.by}`
+  const who = ` · ${handText(d.decided)}${d.written.kind === d.decided.kind && d.written.actor === d.decided.actor ? '' : ` (written ${handText(d.written)})`}`
   switch (d.kind) {
     case 'token':
-      return `${d.action} ${d.token}${d.consequence.collapsesTo ? ` → ${d.consequence.collapsesTo}` : ''}${who}${d.reason ? ` · ${d.reason}` : ''}`
+      return `${d.action} ${d.token}${d.value ? ` = ${valueText(d.value)}` : ''}${d.consequence.collapsesTo ? ` → ${d.consequence.collapsesTo}` : ''}${who}${d.reason ? ` · ${d.reason}` : ''}`
     case 'override':
       return `${d.action} ${d.property}${d.value ? ` = ${valueText(d.value)}` : ''} on ${d.selector} @ ${d.scope}${who}`
     case 'move': {
@@ -109,13 +111,27 @@ export function describe(d: Decision): string {
   }
 }
 
-/** The handoff: what changed since the last ready, and whether it has been handed off. */
+/**
+ * The handoff: what changed since the last ready, and whether it has been
+ * handed off.
+ *
+ * The lines are split by the hand that *chose* them. An agent typing a
+ * person's decision is the ordinary case and needs nothing; an agent that
+ * chose is the case a person has not seen yet, and those are named so a
+ * reviewer does not have to go looking for them.
+ */
 export function formatHandoff(changes: readonly Decision[], ready: Decision | null): string {
   const out: string[] = ['']
   if (!changes.length) out.push('  nothing changed since the last review')
   for (const d of changes) out.push(`  ${describe(d)}`)
   out.push('')
-  out.push(ready ? `ready for review — ${ready.by}, ${ready.at}` : 'not yet handed off')
+  const chosen = changes.filter((d) => d.decided.kind === 'agent')
+  if (chosen.length) {
+    out.push(`${chosen.length} ${chosen.length === 1 ? 'line was' : 'lines were'} decided by an agent, not merely written by one — a person reviews ${chosen.length === 1 ? 'it' : 'these'} before ${chosen.length === 1 ? 'it is' : 'they are'} committed:`)
+    for (const d of chosen) out.push(`  ${d.id}  ${describe(d)}`)
+    out.push('')
+  }
+  out.push(ready ? `ready for review — ${handText(ready.decided)}, ${ready.at}` : 'not yet handed off')
   out.push('')
   return out.join('\n')
 }

@@ -14,7 +14,7 @@ test('import brings an old file onto the record once, in time order, chained; re
     name: 'old.json',
     import: (root) => {
       const old = JSON.parse(fs.readFileSync(path.join(root, 'old.json'), 'utf8')) as Record<string, 'cut' | 'kept'>
-      return Object.entries(old).map(([token, s], i) => ({ kind: 'token' as const, token, action: s === 'cut' ? ('cut' as const) : ('keep' as const), by: 'human' as const, at: `2026-01-0${2 - i}T00:00:00.000Z` }))
+      return Object.entries(old).map(([token, s], i) => ({ kind: 'token' as const, token, action: s === 'cut' ? ('cut' as const) : ('keep' as const), at: `2026-01-0${2 - i}T00:00:00.000Z` }))
     },
     project: (_root, log) => ({
       'old.json': JSON.stringify(Object.fromEntries(log.filter((d) => d.kind === 'token').map((d) => [d.kind === 'token' && d.token, d.kind === 'token' && d.action]))),

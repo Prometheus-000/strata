@@ -70,7 +70,7 @@ export function runMalleable(argv: string[], home: CliHome, env: Record<string, 
   function context(): DecideContext | { error: string } {
     const who = authorFrom(rest, env)
     if ('error' in who) return who
-    return { root: home.logRoot, by: who.author, via: 'cli', because: who.because, dryRun: has('dry') }
+    return { root: home.logRoot, decided: who.decided, written: who.written, via: 'cli', because: who.because, dryRun: has('dry') }
   }
 
   function write(request: Request, ctx: DecideContext) {

@@ -11,7 +11,9 @@ constraints:
   - pick only what the component declared with defineControls; a control is a promise that any option is a valid state
   - a call site rendered from a list is one line of source; a pick on one instance is a pick on all of them, and that is correct
   - an attribute whose value is an expression is left to the code
-  - pass --by agent and --why on every write
+  - "say who chose: who could have chosen otherwise? if the target and the value were both named to you, --decided-by human --actor <their handle>; if you chose either, --decided-by agent. Your shell already says who wrote it"
+  - "using a token is not deciding one: nothing writes a line for a var(--x) already in a recipe. Consumers are evidence, computed on request"
+  - pass --why on every write; a decision without a sentence is a keystroke
 evidenceRequired: [reuse count]
 typicalDecisions: [prop]
 examples: []
@@ -35,8 +37,8 @@ reasons: |
 3. Decide, on the record:
 
    ```bash
-   strata prop Badge tone positive --in fixtures/app/views/Gallery.tsx --by agent --why "…"
-   strata prop Badge tone --default --in fixtures/app/views/Gallery.tsx --by agent
+   strata prop Badge tone positive --in fixtures/app/views/Gallery.tsx --decided-by agent --why "…"
+   strata prop Badge tone --default --in fixtures/app/views/Gallery.tsx --decided-by agent
    ```
 
 4. Declare only what the component genuinely allows when adding controls;

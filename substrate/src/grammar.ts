@@ -19,19 +19,39 @@ import path from 'node:path'
 export type Authority = 'invariant' | 'policy' | 'preference' | 'knowledge' | 'precedent'
 export const AUTHORITIES: readonly Authority[] = ['invariant', 'policy', 'preference', 'knowledge', 'precedent']
 
+/**
+ * Whose rule it is. `system` rules are Strata's own — the layers, the record,
+ * the way evaluation works — and an adopter inherits them. `product` rules are
+ * one product's taste, shipped here as a worked example and expected to be
+ * replaced. The distinction is not decoration: a reader who cannot tell them
+ * apart reads this product's preference for two radii as the system's law.
+ */
+export type RuleScope = 'system' | 'product'
+
 export interface Rule {
   id: string
   authority: Exclude<Authority, 'precedent'>
+  /** Defaults to `system` — a rule says so when it is only this product's. */
+  scope?: RuleScope
   statement: string
   reason: string
   incident?: string
   /** Where the prose lives. */
   source: string
-  /** The evaluator that speaks for it, when one can. */
+  /**
+   * The evaluator that speaks for it. `none` says, out loud, that no
+   * evaluator can: the rule is cited into skills and read by a hand, and
+   * `check` reports it as cited rather than passing over it in silence.
+   */
   check?: string
   /** A preference's number. */
   value?: unknown
 }
+
+/** A rule nothing can evaluate — stated, so silence is never mistaken for a pass. */
+export const isCitedOnly = (r: Rule) => r.check === undefined || r.check === 'none'
+
+export const scopeOf = (r: Rule): RuleScope => r.scope ?? 'system'
 
 export const RULES_PATH = 'grammar/rules.json'
 
@@ -54,6 +74,9 @@ export function problemsWithRule(r: unknown): string[] {
   if (!['invariant', 'policy', 'preference', 'knowledge'].includes(String(x.authority))) p.push(`${id}: authority must be invariant, policy, preference or knowledge`)
   for (const k of ['statement', 'reason', 'source']) if (typeof x[k] !== 'string' || !x[k]) p.push(`${id}: ${k} is missing`)
   if (x.authority === 'preference' && x.value === undefined) p.push(`${id}: a preference carries its value`)
+  if (x.scope !== undefined && x.scope !== 'system' && x.scope !== 'product') p.push(`${id}: scope is system or product`)
+  if (x.authority !== 'invariant' && x.check === undefined)
+    p.push(`${id}: say which evaluator speaks for this rule, or "check": "none" — a rule nothing evaluates is cited, and check says so`)
   return p
 }
 
@@ -61,6 +84,8 @@ export const rulesFor = (rules: readonly Rule[], ids: readonly string[]): Rule[]
   ids.map((id) => rules.find((r) => r.id === id)).filter((r): r is Rule => !!r)
 
 export const byAuthority = (rules: readonly Rule[], authority: Authority): Rule[] => rules.filter((r) => r.authority === authority)
+
+export const byScope = (rules: readonly Rule[], scope: RuleScope): Rule[] => rules.filter((r) => scopeOf(r) === scope)
 
 /** A preference's number, or the default when the grammar does not say. */
 export function preference<T>(rules: readonly Rule[], id: string, fallback: T): T {

@@ -15,8 +15,12 @@
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { generateTheme, OBSIDIAN, PRESETS, type ThemeSeeds } from './generateTheme'
-import { applyLedger, emptyLedger, FALLBACKS, reconcileLedger, summarise, type Ledger, type TokenStatus } from './ledger'
+import { generateTheme, OBSIDIAN, PRESETS, ROLES_AGAINST_PRIMITIVES, SEED_RANGE, type ThemeSeeds } from './generateTheme'
+import { applyLedger, emptyLedger, fallbacksFor, reconcileLedger, summarise, type Ledger, type TokenStatus } from './ledger'
+import { readAll } from '@strata/substrate/log'
+import { current } from '@strata/substrate/fold'
+import type { Decision } from '@strata/substrate/decision'
+import { handText, type Hand } from '@strata/substrate/decision'
 
 export const LEDGER_PATH = 'src/theme/ledger.json'
 export const SEMANTIC_PATH = 'src/tokens/semantic.css'
@@ -31,7 +35,7 @@ export interface EmitResult {
   counts: Record<TokenStatus, number>
   added: string[]
   stale: string[]
-  receipts: Array<{ token: string; to: string; by?: string; reason?: string }>
+  receipts: Array<{ token: string; to: string; decided?: Hand; reason?: string }>
   /** The projections, as text, so a check can compare them with what is on disk. */
   files: Record<string, string>
   written: string[]
@@ -42,26 +46,51 @@ export interface EmitResult {
  * writes nothing; `ledger` projects a ledger that is not on disk yet — the
  * one the record says — instead of reading the file.
  */
-export function emitTokens(root: string, opts: { dryRun?: boolean; ledger?: Ledger } = {}): EmitResult {
+/**
+ * The roles a hand coined, from the record. The engine derives everything it
+ * can from six numbers; these are the names usage earned that no seed
+ * produces, and the record is their source — which is why they arrive here
+ * rather than from `generateTheme`.
+ */
+export function mintedRoles(log: readonly Decision[]): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const d of current(log).values()) {
+    if (d.kind !== 'token' || d.action !== 'mint' || !d.value) continue
+    out[d.token] = 'token' in d.value ? `var(${d.value.token})` : d.value.literal
+  }
+  return out
+}
+
+export function emitTokens(root: string, opts: { dryRun?: boolean; ledger?: Ledger; log?: readonly Decision[] } = {}): EmitResult {
 
   const DARK = OBSIDIAN
   const LIGHT = PRESETS.Gallery
+  const minted = mintedRoles(opts.log ?? readAll(root))
+  const fallbacks = fallbacksFor(minted)
+  const theme = (seeds: ThemeSeeds) => ({ ...generateTheme(seeds), ...minted })
 
+  // These used to be written out here by hand, which made the emitter a second
+  // author of ten semantic roles: they had no origin in the engine, no line in
+  // the ledger, and no way to be cut, kept or explained. They are the engine's
+  // now, and this only decides where they sit in the file.
+  const againstPrimitive = (prop: string) => ROLES_AGAINST_PRIMITIVES.includes(prop) || prop in minted
+
+  // `--surface-pad` is not a colour, whatever its prefix says.
   const isColor = (prop: string) =>
-    /^--(surface|ink|accent|line|focus|positive|warning|danger|shadow-color)/.test(prop)
+    !againstPrimitive(prop) && /^--(surface|ink|accent|line|focus|positive|warning|danger|shadow-color)/.test(prop)
 
   /* ---- the ledger: reconcile, never edit a decision ---- */
-  const engineTokens = Object.keys(generateTheme(DARK))
+  const engineTokens = Object.keys(theme(DARK))
   const { ledger, added, stale } = reconcileLedger(engineTokens, opts.ledger ?? readLedger(root))
 
-  const dark = applyLedger(generateTheme(DARK), ledger)
-  const light = applyLedger(generateTheme(LIGHT), ledger)
+  const dark = applyLedger(theme(DARK), ledger, { mode: 'var', fallbacks })
+  const light = applyLedger(theme(LIGHT), ledger, { mode: 'var', fallbacks })
   const cutNote = new Map(dark.receipts.map((r) => [r.token, r]))
 
   /** A declaration, with the decision beside it when the token was cut. */
   const decl = (p: string, v: string, indent = '  ') => {
     const cut = cutNote.get(p)
-    const note = cut ? ` /* cut by ${cut.by ?? 'human'}${cut.reason ? `: ${cut.reason}` : ''} */` : ''
+    const note = cut ? ` /* cut by ${cut.decided ? handText(cut.decided) : 'an unnamed hand'}${cut.reason ? `: ${cut.reason}` : ''} */` : ''
     return `${indent}${p}: ${v};${note}`
   }
 
@@ -93,25 +122,10 @@ ${block(light.tokens, isColor)}
 
 :root {
   /* ---- Engine-derived rhythm, motion, shape (Obsidian defaults) ---- */
-${block(dark.tokens, (p) => !isColor(p))}
+${block(dark.tokens, (p) => !isColor(p) && !againstPrimitive(p))}
 
-  /* ---- Static roles (not seed-derived) ---- */
-  --radius-pill: var(--strata-radius-round);
-
-  --control-h-sm: calc(2rem * var(--density));
-  --control-h-md: calc(2.5rem * var(--density));
-  --control-h-lg: calc(3rem * var(--density));
-  --control-pad-x: calc(var(--strata-space-4) * var(--density));
-  --surface-pad: calc(var(--strata-space-5) * var(--density));
-  --stack-gap: calc(var(--strata-space-4) * var(--density));
-
-  --font-display: var(--strata-font-display);
-  --font-body: var(--strata-font-body);
-  --font-mono: var(--strata-font-mono);
-
-  --shadow-raised: var(--strata-shadow-1) var(--shadow-color);
-  --shadow-floating: var(--strata-shadow-2) var(--shadow-color);
-  --shadow-overlay: var(--strata-shadow-3) var(--shadow-color);
+  /* ---- Roles held against a Tier 1 primitive, and the names usage earned ---- */
+${block(dark.tokens, againstPrimitive)}
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -140,10 +154,11 @@ ${block(dark.tokens, (p) => !isColor(p))}
     return {
       'strata.ledger': {
         status: d.status,
-        ...(d.by ? { by: d.by } : {}),
+        ...(d.decided ? { decided: d.decided } : {}),
+        ...(d.written ? { written: d.written } : {}),
         ...(d.reason ? { reason: d.reason } : {}),
         ...(cut ? { fallback: cut.to } : {}),
-        collapsesTo: FALLBACKS[p]?.to,
+        collapsesTo: fallbacks[p]?.to,
       },
     }
   }
@@ -166,7 +181,7 @@ ${block(dark.tokens, (p) => !isColor(p))}
         $description:
           'The single source of the semantic tier. generateTheme(seeds) derives every color, radius, rhythm and easing in OKLCH. Ranges are clamped by the engine.',
         seeds: {
-          $ranges: { hue: [0, 360], chroma: [0, 0.25], warmth: [-1, 1], energy: [0, 1], density: [0.85, 1.15] },
+          $ranges: SEED_RANGE,
           $reasons: {
             hue: 'Accent hue on the OKLCH wheel — perceptually uniform, so any hue yields the same apparent vividness.',
             chroma: 'Muted ↔ electric. 0 is monochrome — the house default — and a monochrome accent compiles to ink, not grey. Light appearances compile at 0.87× and lower lightness to hold AA contrast.',
@@ -183,7 +198,7 @@ ${block(dark.tokens, (p) => !isColor(p))}
           'Every generated token is a proposal; src/theme/ledger.json records what people decided. proposed = unreviewed, ships as generated. kept = reviewed and wanted. cut = collapses to its fallback everywhere; the fallback is named on the token. Agents: never reach for a cut token; to cut or keep one, run npm run ledger -- cut|keep <token> --why "…".',
         source: LEDGER_PATH,
         counts,
-        cut: dark.receipts.map((r) => ({ token: r.token, fallback: r.to, by: r.by, reason: r.reason })),
+        cut: dark.receipts.map((r) => ({ token: r.token, fallback: r.to, decided: r.decided, reason: r.reason })),
       },
       font: {
         display: { $value: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif", $type: 'fontFamily' },

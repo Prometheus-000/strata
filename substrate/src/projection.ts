@@ -11,11 +11,34 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import { newId, targetKey, type Author, type Consequence, type Decision, type DecisionBody } from './decision.ts'
+import { newId, targetKey, type Consequence, type Decision, type DecisionBody, type Hand } from './decision.ts'
 import { append, current, readAll } from './log.ts'
 
-/** A decision as an importer reconstructs it from an old file: body, hand, time, reason. */
-export type Imported = DecisionBody & { by: Author; at: string; reason?: string; consequence?: Consequence }
+/**
+ * A decision as an importer reconstructs it from an old file: body, time,
+ * reason, and — only where the old file genuinely recorded them — the hands.
+ * Most old files recorded a channel rather than a judgement, so an importer
+ * that cannot tell who chose leaves `decided` unset and takes the hands the
+ * import was run with. Saying "the file did not know" in `because` is the
+ * honest reconstruction; inventing a decider is not.
+ */
+export type Imported = DecisionBody & {
+  decided?: Hand
+  written?: Hand
+  at: string
+  reason?: string
+  because?: string
+  consequence?: Consequence
+}
+
+export interface ImportOptions {
+  dryRun?: boolean
+  /** The hands every imported row takes unless its own source knew better. */
+  decided?: Hand
+  written?: Hand
+  /** Why those hands, kept on every row that used them. */
+  because?: string
+}
 
 export interface Projection {
   name: string
@@ -34,7 +57,7 @@ export const registeredProjections = () => [...projections.keys()]
 export const importVia = (name: string) => `import:${name}`
 
 /** Bring every projection's old file onto the record, once, in time order, with the chain intact. */
-export function importAll(root: string, opts: { dryRun?: boolean } = {}): { imported: Decision[]; skipped: string[] } {
+export function importAll(root: string, opts: ImportOptions = {}): { imported: Decision[]; skipped: string[] } {
   const log = readAll(root)
   const skipped: string[] = []
   const pending: Array<Imported & { via: string }> = []
@@ -50,15 +73,20 @@ export function importAll(root: string, opts: { dryRun?: boolean } = {}): { impo
   pending.sort((a, b) => a.at.localeCompare(b.at))
   const imported: Decision[] = []
   const seen = current(log)
+  const fallbackDecided: Hand = opts.decided ?? { kind: 'human' }
+  const fallbackWritten: Hand = opts.written ?? fallbackDecided
   for (const d of pending) {
-    const { by, at, reason, consequence, via, ...body } = d
+    const { decided, written, at, reason, because, consequence, via, ...body } = d
     const prev = seen.get(targetKey(body as DecisionBody))
+    const why = because ?? opts.because
     const decision: Decision = {
       ...(body as DecisionBody),
       id: newId(Date.parse(at)),
       at,
-      by,
+      decided: decided ?? fallbackDecided,
+      written: written ?? fallbackWritten,
       via,
+      ...(why ? { because: why } : {}),
       ...(reason ? { reason } : {}),
       ...(prev ? { supersedes: prev.id } : {}),
       consequence: consequence ?? {},
