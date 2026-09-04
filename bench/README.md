@@ -216,6 +216,21 @@ decisions silently undone              0             0             3            
 files changed                          3             2             3             3
 ```
 
+### Run 4 — context × harness, repeated
+
+```
+cut-token                   packet/loose   packet/held    list/loose     list/held
+decisions written                      1             1             4             1
+with a reason                          1             1             4             1
+decided by agent                       1             1             1             1
+invariants hold                      yes           yes           yes           yes
+projections hand-edited                0             0             0             0
+undeclared literals                    0             0             0             0
+reached for a cut token                0             0             0             0
+decisions silently undone              0             0             0             3
+files changed                          3             3             3             3
+```
+
 <!-- /scorecards -->
 
 The control did everything right. It found the CLI unaided, wrote a proper
@@ -322,11 +337,57 @@ lesson the substrate keeps teaching in a different register — the guarantee is
 worth what the honouring is worth, and nothing obliges the honouring except a
 harness.
 
-One difference this bench cannot adjudicate: `packet/held` **kept**
-`--motion-instant` where all three loose arms cut it, arguing that the token
-has no consumers but one *dependent* — `--motion-fast` declares it as its
+One difference this bench could not adjudicate at the time: `packet/held`
+**kept** `--motion-instant` where all three loose arms cut it, arguing that the
+token has no consumers but one *dependent* — `--motion-fast` declares it as its
 fallback, so cutting it pulls the bottom rung out of the ladder. Three loose
-arms noted that same fact and cut anyway. That may be the harness pushing
-attention onto consequences, or it may be one sample of a coin flip. With one
-arm per cell it cannot be told apart, and it is recorded as a difference
-observed rather than a difference caused.
+arms noted that same fact and cut anyway. It was recorded as a difference
+observed rather than a difference caused, pending a repeat.
+
+## Run 4: the repeat, and the one thing a record could do that supervision could not
+
+The same 2×2, run again on the same task.
+
+**The `packet/held` keep was noise.** All four cells cut `--motion-instant`, on
+substantially the same argument each time — zero consumers, and the tap
+acknowledgement the token was kept for is transitioned at `--motion-fast` in
+the stylesheet, so the tier it existed to name is occupied by the tier below
+it. `packet/held` made the same dependent-token observation it made in Run 3
+and reached the opposite conclusion, which is what one sample of a coin flip
+looks like from the other side. Across two runs the harness axis has now moved
+nothing but containment.
+
+**`list/loose` did something none of the four earlier control cells did: it
+repaired the reversion.** Same trap — its one cut re-emitted the stylesheet
+from a record that had never been told about three earlier decisions, and
+`--shadow-color`, `--radius-overlay` and `--motion-ease-emphasis` came back. It
+then wrote the three onto the record as cuts, `decided` human with **no actor**,
+`written` agent, each reason saying in as many words that it is a transcription
+of what the stylesheet already shipped and not a judgement of its own:
+
+> I am not the hand that chose this; the stylesheet is the evidence that a
+> person did, and it is stated here as a person unnamed rather than claimed by
+> the agent that typed it.
+
+Run 2's control faced the identical situation and found two exits, both
+closed: it would not hand-restore the values, because the next rebuild would
+undo the restoration, and it would not invent decisions for them, citing
+`substrate/src/author.ts` on not guessing a deciding hand. Both refusals were
+correct. The third exit is the one the two-hand split opens — a decision whose
+deciding hand is a human it cannot name, written by an agent that says so. The
+artifact is restored, the record is honest about how, and nobody is credited
+with a choice they did not make. Every measure went to zero as a result.
+
+That is the strongest thing this bench has shown, and the narrowest: not that
+the record prevents the loss — it did not, in four of five control cells — but
+that when an agent goes looking for a way to undo the loss without lying about
+who decided, the record has one and the stylesheet does not.
+
+**What it does not show.** `list/loose` did not repair in Run 2 or Run 3, so
+one repair in three is variance, not a property of the loose harness, and the
+tempting read — that term 4's "report any difference you did not intend" set
+reporting as the ceiling, and the arm with no terms went past it — is not
+supported by its own control. `list/held` reported the three and stopped; so
+did two of the three loose arms before it. What separates Run 4's `list/loose`
+from every other control cell is not its harness. It is that one agent, on one
+run, thought of the move.
