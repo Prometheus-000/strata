@@ -1,7 +1,9 @@
 /**
  * LAYER 1 — BEHAVIOR. Headless, unstyled, never forked.
- * Correctness is not a taste question: roving tabindex, arrow-key
- * navigation, and ARIA wiring live here so no recipe rebuilds them.
+ * A solved primitive is imported, never reimplemented: roving tabindex,
+ * arrow-key navigation and ARIA wiring live here so no recipe rebuilds them,
+ * because a second implementation is a second set of bugs and it is the copy
+ * that rots.
  */
 import { useId, useRef, useState, type KeyboardEvent } from 'react'
 

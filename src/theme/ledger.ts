@@ -216,7 +216,7 @@ export function reconcileLedger(
     // Always the constant, never what is already on disk. `?? LEDGER_DESCRIPTION`
     // meant the first description this file ever had could not be replaced by a
     // rebuild — so the text went on claiming the ledger was the record, and
-    // naming a validator that no longer exists, through every regeneration for
+    // naming the old validator, gone for years, through every regeneration for
     // months. A projected field that is not actually projected is a place
     // ghosts live.
     ledger: { $description: LEDGER_DESCRIPTION, tokens },

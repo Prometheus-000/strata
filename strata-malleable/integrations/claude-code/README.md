@@ -11,7 +11,7 @@ The loop, and who does what:
    you ── drag ───────▶│             drag a corner to change a property · drag a
                        │             region to move it · no prompt, no text box ·
                        │             a move rewrites the JSX on the spot
-   you ── "ready" ────▶│             writes .malleable/ready.json — NOT a commit
+   you ── "ready" ────▶│             one `ready` line on the record — NOT a commit
                        ▼
                  /malleable-review   Claude reads it and makes the code fit the
                        │             design; it never undoes a move
@@ -31,9 +31,11 @@ npm install --save-dev strata-malleable
 npx malleable init
 ```
 
-`init` copies the skill and the two commands into `.claude/` and adds
-`.malleable/ready.json` to `.gitignore`. It installs no hook and touches no
-settings.
+`init` copies the skill and the two commands into `.claude/`. It installs no
+hook, touches no settings, and adds nothing to `.gitignore` — pressing ready
+writes one `ready` decision to `.strata/decisions.jsonl`, which is committed
+like every other decision. There is no handoff file to ignore, and there has
+not been one since the record replaced it.
 
 Then:
 

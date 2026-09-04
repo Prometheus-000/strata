@@ -200,7 +200,7 @@ function Credo() {
  * This table used to be a `const LAYERS` written out in JSX beside the markup
  * that rendered it, and it drifted exactly as `knowledge.drift-by-transcription`
  * says a hand-written projection does: it went on telling readers that a
- * validator enforced Layer 0 and that undeclared drift failed CI, months after
+ * the old validator enforced Layer 0 and that undeclared drift failed CI, long after
  * both had stopped being true. The rule that predicts that drift and the drift
  * it predicted were in the same repository.
  *

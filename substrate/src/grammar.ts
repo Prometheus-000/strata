@@ -58,7 +58,7 @@ export const scopeOf = (r: Rule): RuleScope => r.scope ?? 'system'
  *
  * This is here because the hub used to hand-write the layer table in JSX and it
  * drifted precisely as `knowledge.drift-by-transcription` predicts: the copy
- * went on claiming a validator enforced Layer 0, and that undeclared drift
+ * went on claiming the old validator enforced Layer 0, and that undeclared drift
  * failed CI, long after both had stopped being true. A layer's character is a
  * claim about governance, so it lives with the rules and is projected into
  * anything that displays it.
