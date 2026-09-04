@@ -8,12 +8,21 @@
  * consequences — so they are one type, discriminated on `kind`, and one
  * append-only log holds every one of them.
  *
- * Three fields do the work. `by` says which hand; `reason` says why, in the
- * author's words; `consequence` says what the operation already knew when it
- * ran — files written, the fallback a cut landed on, the overrides a promotion
- * absorbed. Nothing in `consequence` is computed: evidence (contrast, usage,
- * convergence) is derived later, on request, because a design in progress
- * fails any check by definition and the write path must stay silent.
+ * Four fields do the work. `decided` says who could have chosen otherwise and
+ * `written` says whose hand ran the command — two questions, because a record
+ * that asks one credits an agent with judgements it only typed. `reason` says
+ * why, in the deciding hand's words. `consequence` says what the operation
+ * already knew when it ran — files written, the fallback a cut landed on, the
+ * overrides a promotion absorbed. Nothing in `consequence` is computed:
+ * evidence (contrast, usage, convergence) is derived later, on request,
+ * because a design in progress fails any check by definition and the write
+ * path must stay silent.
+ *
+ * The kinds are eight and the list is closed. Each is an act *within* the
+ * work; the frame it happens inside — the grammar, the skills, which rules are
+ * invariants — is edited in files by people and never decided through here.
+ * There is no `rule` kind, and `scripts/frame.test.ts` is what keeps it that
+ * way.
  *
  * This module has no dependencies and touches no filesystem, clock or DOM.
  */

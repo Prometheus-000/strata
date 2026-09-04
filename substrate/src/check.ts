@@ -9,8 +9,13 @@
  * the projections match it, every fallback chain ends, every var() resolves.
  * A build fails on those and on nothing else — never because a design is
  * different. Everything else is reported under the authority it carries:
- * policy, preference, knowledge, precedent. Nothing here runs while someone
- * is designing; it runs when asked.
+ * policy, preference, knowledge, precedent.
+ *
+ * And the rules nothing here can speak for are named rather than passed over.
+ * A rule says which evaluator answers for it or says `check: "none"` out loud,
+ * and the report ends with the count of those — seventeen of twenty-eight in
+ * this product — because a rule that is silent is easily read as a rule that
+ * passed. Nothing here runs while someone is designing; it runs when asked.
  */
 import { targetKey, type Decision } from './decision.ts'
 import { authorityOf, evalContext, evaluate, findings as allFindings, registeredEvaluators, type EvalContext, type Finding } from './evidence.ts'

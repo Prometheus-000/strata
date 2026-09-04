@@ -494,7 +494,8 @@ to be read by a hand. `strata check` prints that count under CITED, NOT
 EVALUATED, because a rule nothing evaluates is silent, and silence is easily
 mistaken for a pass.
 
-Eight of the seventeen are marked `"scope": "product"`: they are this
+Six of the seventeen are marked `"scope": "product"` (eight rules carry that
+mark; two of them gained evaluators and left the cited list): they are this
 product's taste — one family, two radii, lines not shadows — not the system's
 rules, and an adopter is expected to replace them. Everything in GRAMMAR.md's
 voice section is in that eight.
@@ -511,7 +512,7 @@ $ strata check
 
 INVARIANTS
 ──────────────
-✓ record.parses — 36 decision(s)
+✓ record.parses — 37 decision(s)
 ✓ projections.match-record
 ✓ fallbacks.total-acyclic
 ✓ css.vars-defined
@@ -706,7 +707,7 @@ tokens (Layer 0)
 
 the malleable layer
   id · regions · manifest · resolve · reconcile · drift · handoff
-  set · remove · move · prop · ship
+  set · remove · move · prop · retheme · ship
 ```
 
 ```bash
