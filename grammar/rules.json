@@ -227,7 +227,7 @@
       "authority": "policy",
       "statement": "Nothing runs, warns or flags while someone is designing. Evaluation happens at ready, at check, and when asked.",
       "reason": "A design in progress fails any check by definition, so a tool that reports mid-drag is measuring the wrong moment and reads as policing by volume.",
-      "incident": "The slot layer priced every drag against a contract and wrote the cost into source. It was removed.",
+      "incident": "The slot layer priced every drag against a contract and wrote the cost into source. It was removed — but its premise, that an arrangement can be scored against a declaration, outlived the code and fused with the reporter: `layer1.correctness-not-taste` went on asserting it for months after the thing that justified it was gone. It is not residue, it is an attractor. An agent with no exposure to the slot layer re-derived it from scratch in this repository, arguing that a layer 1 finding should be a violation rather than an observation — reasoning locally from \"the code is wrong\" to \"the check should say so.\" Deleting the code does not inoculate against the idea. Expect it back, and read for it.",
       "source": "README.md › Governance",
       "check": "none"
     },
