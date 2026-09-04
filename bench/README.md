@@ -271,6 +271,13 @@ Honest limits, in the order they weaken the finding:
   prevent it: the stylesheet it was handed said `--radius-overlay:
   var(--radius-surface)` with no provenance, and three deliberate decisions
   were indistinguishable from three accidental aliases.
+
+  It is worth being precise about which way this limit points. The loss needs a
+  regenerable artifact to happen at all — so the exposure is not a property of
+  Strata but of regeneration, and it arrives with whatever else regenerates a
+  product's surfaces, installed or not. Read that way this bench is not a test
+  of a feature. It is the smallest available demonstration that when artifacts
+  become regenerable, the decisions behind them stop being documentation.
 - **The move-region task showed no difference at all** — 0 to 0 on every
   measure. The claim held on one task of two.
 - **One arm per cell.** The two packet runs agreed with each other, which is

@@ -2,6 +2,20 @@
 
 **A persistent design decision system for humans and agents.**
 
+> **When artifacts become regenerable, decisions become infrastructure.**
+
+That is the whole argument, and it is a claim about a change that has already
+happened rather than a preference. While a stylesheet was hand-made it was
+where the thinking lived: the reason a value was what it was survived in the
+artifact, because the artifact was expensive enough that nobody rewrote it
+casually. An artifact that can be produced again from something else no longer
+carries the thinking. It carries the output of the thinking, which is not the
+same thing and cannot be read backwards. So the decision is either held
+somewhere durable or it is gone the next time anything regenerates — and
+"somewhere durable" stops being documentation and becomes load-bearing.
+
+Strata is what that somewhere looks like.
+
 Strata is not a component library, a token collection, or an AI layer bolted
 onto a design system.
 
@@ -41,8 +55,8 @@ and it assumed the only author was a human with a text box.
 Three things broke that model at once. Agents started writing UI, and an
 agent with a component list generates collage while an agent with reasons
 generates coherent work — which is the founding claim, and `bench/` is where
-it is put to a test rather than repeated. It has been run once; the result is
-narrower than the sentence, and is written up there. Products started needing more than one projection
+it is put to a test rather than repeated. The runs so far give it a form
+narrower than the sentence, and are written up there. Products started needing more than one projection
 of the same intent — React, CSS, Figma, a runtime the team has not chosen
 yet. And the review gate turned out to measure the wrong moment: a design in
 progress fails any check by definition, so a tool that reports mid-drag
