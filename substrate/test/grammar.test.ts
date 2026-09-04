@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import { byAuthority, byScope, isCitedOnly, loadLayers, loadRules, preference, problemsWithLayer, problemsWithRule, rulesFor, rulesInLayer, RULES_PATH } from '../src/grammar.ts'
+import { byAuthority, byScope, isCitedOnly, layerOf, loadLayers, loadRules, preference, problemsWithLayer, problemsWithRule, rulesFor, rulesInLayer, rulesOutsideLayers, RULES_PATH } from '../src/grammar.ts'
 
 const REPO = path.join(path.dirname(new URL(import.meta.url).pathname), '../..')
 
@@ -52,8 +52,43 @@ test('every layer is data, and every layered rule has a layer to belong to', () 
   assert.deepEqual([...new Set(orphans)], [], 'a rule names a layer the table cannot show')
 
   // And every layer that claims to govern something actually governs something.
-  for (const layer of layers.filter((l) => l.id.startsWith('layer')))
-    assert.ok(rulesInLayer(rules, layer).length > 0, `${layer.id} is displayed but carries no rules`)
+  for (const layer of layers) assert.ok(rulesInLayer(rules, layer, layers).length > 0, `${layer.id} is displayed but carries no rules`)
+})
+
+test('a layer is declared or read from the id, and what belongs to neither is returned rather than dropped', () => {
+  const layers = loadLayers(REPO)
+  const rules = loadRules(REPO)
+
+  // The id says it, when the id was named for a layer.
+  const byPrefix = rules.find((r) => r.id.startsWith('layer0.'))!
+  assert.equal(layerOf(byPrefix, layers), 'layer0')
+  // And a rule whose id was named before the layers existed says so in a field.
+  const declared = rules.find((r) => r.layer !== undefined)!
+  assert.equal(layerOf(declared, layers), declared.layer)
+
+  // The count the hub shows is every rule, once. It used to be the thirteen
+  // whose ids happened to start with `layerN`, out of thirty-odd — the Machine
+  // row rendering `check --enforce` above no rules at all, while the four
+  // invariants it exists to describe sat outside the table.
+  const placed = layers.flatMap((l) => rulesInLayer(rules, l, layers))
+  const outside = rulesOutsideLayers(rules, layers)
+  assert.equal(placed.length + outside.length, rules.length, 'a rule is in two layers, or in none and uncounted')
+  assert.equal(new Set([...placed, ...outside].map((r) => r.id)).size, rules.length)
+  assert.ok(outside.length > 0, 'the record’s own rules govern no tier of the artifact, and that is not a gap')
+})
+
+test('a rule declaring a layer that is not there is refused, like any other broken citation', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'strata-layer-'))
+  fs.mkdirSync(path.join(dir, path.dirname(RULES_PATH)), { recursive: true })
+  const write = (layer: string) =>
+    fs.writeFileSync(
+      path.join(dir, RULES_PATH),
+      JSON.stringify({ layers: [{ id: 'machine', name: 'Machine', what: 'x', governance: 'y' }], rules: [{ id: 'a.rule', authority: 'policy', statement: 's', reason: 'r', source: 'x', check: 'none', layer }] }),
+    )
+  write('machine')
+  assert.equal(loadRules(dir).length, 1)
+  write('layer9')
+  assert.throws(() => loadRules(dir), /layer "layer9" is not one of the layers/)
 })
 
 test('a malformed layer is refused by name', () => {

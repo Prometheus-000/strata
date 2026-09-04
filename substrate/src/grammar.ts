@@ -33,6 +33,14 @@ export interface Rule {
   authority: Exclude<Authority, 'precedent'>
   /** Defaults to `system` — a rule says so when it is only this product's. */
   scope?: RuleScope
+  /**
+   * The layer it governs, when it governs one. Defaults to the prefix its id
+   * carries, which is how most rules say it: `layer0.semantic-names-only`
+   * needs no field. A rule whose id was named before the layers existed, or
+   * whose subject is the record rather than the artifact, says so here or
+   * says nothing and sits outside the stack.
+   */
+  layer?: string
   statement: string
   reason: string
   incident?: string
@@ -78,9 +86,13 @@ export const RULES_PATH = 'grammar/rules.json'
 export function loadRules(root: string): Rule[] {
   const p = path.join(root, RULES_PATH)
   if (!fs.existsSync(p)) return []
-  const parsed = JSON.parse(fs.readFileSync(p, 'utf8')) as { rules?: unknown }
+  const parsed = JSON.parse(fs.readFileSync(p, 'utf8')) as { rules?: unknown; layers?: unknown }
   const rules = Array.isArray(parsed.rules) ? (parsed.rules as Rule[]) : []
+  const layers = Array.isArray(parsed.layers) ? (parsed.layers as Layer[]) : []
+  const known = new Set(layers.map((l) => l.id))
   const problems = rules.flatMap(problemsWithRule)
+  // A declared layer is a citation like any other: it resolves or it is a ghost.
+  for (const r of rules) if (r.layer !== undefined && !known.has(r.layer)) problems.push(`${r.id}: layer "${r.layer}" is not one of the layers`)
   if (problems.length) throw new Error(`${RULES_PATH}: ${problems.join('; ')}`)
   return rules
 }
@@ -104,8 +116,21 @@ export function problemsWithLayer(l: unknown): string[] {
   return p
 }
 
-/** The rules that belong to a layer, by the prefix its id carries. */
-export const rulesInLayer = (rules: readonly Rule[], layer: Layer): Rule[] => rules.filter((r) => r.id.startsWith(`${layer.id}.`))
+/** The layer a rule governs: what it declares, else the prefix its id carries. */
+export const layerOf = (r: Rule, layers: readonly Layer[]): string | undefined => r.layer ?? layers.find((l) => r.id.startsWith(`${l.id}.`))?.id
+
+export const rulesInLayer = (rules: readonly Rule[], layer: Layer, layers: readonly Layer[] = [layer]): Rule[] => rules.filter((r) => layerOf(r, layers) === layer.id)
+
+/**
+ * The rules that govern no layer. Not a leftover: the record's own rules, the
+ * ones about how evaluation works, and what this product decided about its
+ * voice are all real rules with no tier of the artifact to sit in. They are
+ * returned rather than dropped, because a table that silently omits two rules
+ * in three is worse than no table — the hub showed a layer stack of thirteen
+ * rules while the grammar held thirty-four, and the four the Machine row
+ * exists to describe were among the missing.
+ */
+export const rulesOutsideLayers = (rules: readonly Rule[], layers: readonly Layer[]): Rule[] => rules.filter((r) => layerOf(r, layers) === undefined)
 
 export function problemsWithRule(r: unknown): string[] {
   if (typeof r !== 'object' || r === null) return ['a rule is not an object']

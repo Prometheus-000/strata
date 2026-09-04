@@ -20,6 +20,7 @@ import { loadRules } from '@strata/substrate/grammar'
 import { brokenCitations, ghosts } from '@strata/substrate/prose'
 import { registerTheme } from '../src/theme/handlers'
 import { registerMalleable } from '../strata-malleable/src/decide/index'
+import { MEASURES, TERM_LINES } from '../bench/run.mjs'
 import { PROSE } from './prose'
 
 const REPO = path.join(path.dirname(new URL(import.meta.url).pathname), '..')
@@ -86,10 +87,11 @@ test("the bench README's measures and terms are the ones the bench runs", () => 
   // wording is allowed to differ; the *set* of measures and the *count* of
   // terms are not, because a scorecard pasted into a README is a copy of a run
   // that will not be made again.
-  const src = read('bench/run.mjs')
-  const measures = [...src.matchAll(/^\s*\['([a-z][a-z -]+)', \(r\)/gm)].map((m) => m[1])
-  assert.ok(measures.length >= 8, 'the measures moved; teach this test where')
-
+  //
+  // Imported rather than read as text. An earlier version of this test parsed
+  // `run.mjs` with a regex — checking a transcription of the code instead of
+  // the code, which is the defect the whole file exists to catch.
+  const measures = MEASURES.map(([name]) => name)
   const doc = read('bench/README.md')
   const quoted = new Set(
     doc
@@ -101,8 +103,6 @@ test("the bench README's measures and terms are the ones the bench runs", () => 
   )
   assert.deepEqual([...quoted].filter((q) => !measures.includes(q)), [], 'the README shows a measure the bench does not compute')
 
-  const terms = (src.match(/const TERMS = \[([\s\S]*?)\]\.join/)?.[1] ?? '').match(/^\s*'\d\./gm)?.length ?? 0
-  assert.ok(terms > 0, 'the terms moved; teach this test where')
   const claimed = doc.match(/The `held` terms are: ([^]*?)\n\n/)?.[1] ?? ''
-  assert.equal(claimed.split(',').length, terms, `the README summarises ${claimed.split(',').length} terms; the bench states ${terms}`)
+  assert.equal(claimed.split(',').length, TERM_LINES.length, `the README summarises ${claimed.split(',').length} terms; the bench states ${TERM_LINES.length}`)
 })

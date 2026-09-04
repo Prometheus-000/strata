@@ -120,12 +120,18 @@ is different is reported, never refused.
 8. **Enforcement is reserved for invariants.** A build fails only when the
    artifact is invalid or cannot be faithfully produced from the record — the
    record parses, the projections match it, every fallback chain ends, every
-   `var()` resolves. Safety is *not* on that list, deliberately: AA contrast
-   and focus correctness are evaluated and reported like every other policy,
-   because an invariant here is a mechanical truth about the artifact and a
-   contrast threshold is a judgement. Policy is evaluated. Preference carries
-   its number. Knowledge carries its source. Precedent is computed. They do
-   not share authority.
+   `var()` resolves. Safety is *not* on that list, deliberately: an invariant
+   here is a mechanical truth about the artifact, and a contrast threshold is
+   a judgement about text at a size. So contrast is reported instead —
+   `safety.contrast` measures every token that is read against the grounds it
+   is actually set against, on both appearances, and reports what falls short
+   without refusing anything. **Focus correctness is not evaluated**, and this
+   sentence used to claim it was: what exists is `layer1.imported-not-copied`,
+   which reports a focus primitive that was reimplemented rather than
+   imported, and `knowledge.accent-gate`, which records that focus stays
+   visible when the colour tier collapses to ink. Neither is a check that
+   focus works. Policy is evaluated. Preference carries its number. Knowledge
+   carries its source. Precedent is computed. They do not share authority.
 
 ## Architecture
 
@@ -501,8 +507,8 @@ Four kinds of statement, and they do not carry the same authority:
 | **Precedent** | "37 instances, 3 hands, converged on 12px." | Computed from the record. Never declared. Candidacy is the computed part; promoting a candidate is a decision. |
 
 Most policy is *cited*, not evaluated, and the count belongs here rather than
-in a footnote. Of 34 rules, four are invariants and 30 are not; thirteen of those 30
-have an evaluator that speaks for them, and the other seventeen say
+in a footnote. Of 35 rules, four are invariants and 31 are not; thirteen of those 31
+have an evaluator that speaks for them, and the other eighteen say
 `"check": "none"` in `grammar/rules.json` and are carried into skill packets
 to be read by a hand. `strata check` prints that count under CITED, NOT
 EVALUATED, because a rule nothing evaluates is silent, and silence is easily
@@ -520,7 +526,7 @@ person who knows what is true. Both report under **policy** rather than
 failing a build, because prose is not the artifact. This repository chooses to
 fail its own build on them anyway, which is what `scripts/prose.test.ts` is.
 
-Six of the seventeen are marked `"scope": "product"` (eight rules carry that
+Six of the eighteen are marked `"scope": "product"` (eight rules carry that
 mark; two of them gained evaluators and left the cited list): they are this
 product's taste — one family, two radii, lines not shadows — not the system's
 rules, and an adopter is expected to replace them. Everything in GRAMMAR.md's

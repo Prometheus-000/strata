@@ -64,6 +64,26 @@ export interface ProseOptions {
   remembered?: readonly string[]
   /** How deep to walk each directory. */
   depth?: number
+  /**
+   * Data files whose string fields are prose. A grammar, a manifest, a
+   * config with reasons in it: the English is in the values, so the scanner
+   * has to be told which keys hold it rather than reading the whole file and
+   * flagging every identifier it contains.
+   */
+  data?: readonly ProseData[]
+}
+
+export interface ProseData {
+  /** The file, relative to the root. */
+  file: string
+  /** Keys whose string values are English, scanned like any other prose. */
+  text?: readonly string[]
+  /**
+   * Keys whose whole value names a file — optionally with a section after a
+   * `›`, as a rule's `source` carries. A rule citing prose that was deleted
+   * is a broken citation with none of the structure that would show it.
+   */
+  paths?: readonly string[]
 }
 
 const DEFAULTS = {
@@ -74,6 +94,7 @@ const DEFAULTS = {
   retired: [] as Retired[],
   remembered: [] as string[],
   depth: 3,
+  data: [] as ProseData[],
 }
 
 type Settled = typeof DEFAULTS
@@ -132,20 +153,88 @@ const scriptsOf = (root: string, pkg: string): string[] => {
 }
 
 /**
- * The four scans over English. Each looks for one shape of identifier and
- * asks whether the thing it names is there.
+ * One stretch of English and where it came from. A markdown file, a doc
+ * comment, or one field of one entry in a data file — the scans do not care
+ * which, so long as something can say where it was found.
+ */
+interface Passage {
+  /** The file it lives in: what an exemption names, and what paths resolve against. */
+  file: string
+  /** Where to report it, which for a data file names the entry too. */
+  where: string
+  text: string
+}
+
+/** The English of a data file: the fields a product said carry prose. */
+function passagesIn(root: string, d: ProseData): Passage[] {
+  const p = path.join(root, d.file)
+  if (!fs.existsSync(p)) return []
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(fs.readFileSync(p, 'utf8'))
+  } catch {
+    return []
+  }
+  const keys = new Set(d.text ?? [])
+  const out: Passage[] = []
+  const walk = (node: unknown) => {
+    if (Array.isArray(node)) return node.forEach(walk)
+    if (typeof node !== 'object' || node === null) return
+    const x = node as Record<string, unknown>
+    // An entry names itself when it can, so a finding points at the rule
+    // rather than at a file with thirty of them.
+    const at = typeof x.id === 'string' ? `${d.file}#${x.id}` : d.file
+    for (const [k, v] of Object.entries(x)) {
+      if (keys.has(k) && typeof v === 'string') out.push({ file: d.file, where: at, text: v })
+      else walk(v)
+    }
+  }
+  walk(parsed)
+  return out
+}
+
+/** The fields whose whole value names a file, with what they name. */
+function citedPaths(root: string, d: ProseData): Array<{ where: string; value: string }> {
+  const p = path.join(root, d.file)
+  if (!fs.existsSync(p) || !d.paths?.length) return []
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(fs.readFileSync(p, 'utf8'))
+  } catch {
+    return []
+  }
+  const keys = new Set(d.paths)
+  const out: Array<{ where: string; value: string }> = []
+  const walk = (node: unknown) => {
+    if (Array.isArray(node)) return node.forEach(walk)
+    if (typeof node !== 'object' || node === null) return
+    const x = node as Record<string, unknown>
+    const at = typeof x.id === 'string' ? `${d.file}#${x.id}` : d.file
+    for (const [k, v] of Object.entries(x)) {
+      if (keys.has(k) && typeof v === 'string') out.push({ where: at, value: v })
+      else walk(v)
+    }
+  }
+  walk(parsed)
+  return out
+}
+
+/**
+ * The scans over English. Each looks for one shape of identifier and asks
+ * whether the thing it names is there. They run over every passage — a
+ * markdown file, a doc comment, a field of a data file — because the drift
+ * does not care which of those a sentence was written into.
  */
 export function ghosts(root: string, opts: ProseOptions = {}): Ghost[] {
   const o = settle(opts)
-  const files = proseFiles(root, opts)
-  const text = new Map(files.map((f) => [f, proseOf(root, f)]))
+  const passages: Passage[] = [...proseFiles(root, opts).map((f) => ({ file: f, where: f, text: proseOf(root, f) })), ...o.data.flatMap((d) => passagesIn(root, d))]
   const found: Ghost[] = []
   const say = (file: string, message: string, rule = NAMES_WHAT_EXISTS) => found.push({ rule, file, message })
 
   // 1. An npm script. The one this repository retired outlived its
   //    definition, in three READMEs, by months.
   const scripts = new Set(o.packages.flatMap((p) => scriptsOf(root, p)))
-  for (const [f, body] of text) for (const m of body.matchAll(/npm run ([a-z][a-z0-9:-]*)/g)) if (!scripts.has(m[1])) say(f, `\`npm run ${m[1]}\` — nothing defines that script`)
+  for (const { where, text } of passages) for (const m of text.matchAll(/npm run ([a-z][a-z0-9:-]*)/g)) if (!scripts.has(m[1])) say(where, `\`npm run ${m[1]}\` — nothing defines that script`)
 
   // 2. A CLI verb, but only where the line is an invocation rather than
   //    English: after a backtick, after a shell prompt, or carrying flags.
@@ -153,11 +242,11 @@ export function ghosts(root: string, opts: ProseOptions = {}): Ghost[] {
   const commands = new Set(o.commands)
   const remembered = new Set(o.remembered)
   if (commands.size)
-    for (const [f, body] of text)
-      for (const line of body.split('\n'))
+    for (const { file, where, text } of passages)
+      for (const line of text.split('\n'))
         for (const m of line.matchAll(/(?:`|\$ |^\s*)(?:strata|malleable) ([a-z][a-z-]*)/g)) {
           const invocation = /[`$]/.test(m[0]) || line.includes('--')
-          if (invocation && !commands.has(m[1]) && !remembered.has(`${m[1]} (${f})`)) say(f, `\`strata ${m[1]}\` — no command by that name; the prose tells someone to run something that is not there`)
+          if (invocation && !commands.has(m[1]) && !remembered.has(`${m[1]} (${file})`)) say(where, `\`strata ${m[1]}\` — no command by that name; the prose tells someone to run something that is not there`)
         }
 
   // 3. A path into this repository: backticked, with a slash, first segment a
@@ -172,8 +261,8 @@ export function ghosts(root: string, opts: ProseOptions = {}): Ghost[] {
       .map((e) => e.name)
   }
   const roots = new Set(o.packages.flatMap(dirsUnder))
-  for (const [f, body] of text)
-    for (const m of body.matchAll(/`([^`\s]+\/[^`\s]*)`/g)) {
+  for (const { file, where, text } of passages)
+    for (const m of text.matchAll(/`([^`\s]+\/[^`\s]*)`/g)) {
       const p = m[1].replace(/[.,;:]$/, '')
       if (!roots.has(p.split('/')[0])) continue
       if (p.includes('*') || p.includes('<') || p.endsWith('/')) continue
@@ -181,15 +270,25 @@ export function ghosts(root: string, opts: ProseOptions = {}): Ghost[] {
       // the file that names it: a README beside a folder names its sibling
       // directory bare, and means the one next to it rather than a path from
       // the root.
-      const candidates = [p, ...o.packages.map((pkg) => path.join(pkg, p)), path.join(path.dirname(f), p)]
-      if (!candidates.some((c) => fs.existsSync(path.join(root, c)))) say(f, `\`${p}\` — no such file`)
+      const candidates = [p, ...o.packages.map((pkg) => path.join(pkg, p)), path.join(path.dirname(file), p)]
+      if (!candidates.some((c) => fs.existsSync(path.join(root, c)))) say(where, `\`${p}\` — no such file`)
     }
 
   // 4. A word this product retired. The convention is one word: a retired
   //    thing is named as "the old X" when the point is that it is gone, which
   //    is narrower and more honest than trusting whole files — an allowlisted
   //    file goes on being trusted long after the reason for it has expired.
-  for (const [f, body] of text) for (const r of o.retired) if (r.pattern.test(body)) say(f, `a retired phrase is back — ${r.why}`)
+  for (const { where, text } of passages) for (const r of o.retired) if (r.pattern.test(text)) say(where, `a retired phrase is back — ${r.why}`)
+
+  // 5. A field whose whole value names a file, as a rule's `source` does:
+  //    `GRAMMAR.md › Layer 0 › The engine is the only author`. The section
+  //    after the `›` is prose and is not resolved; the file is.
+  for (const d of o.data)
+    for (const { where, value } of citedPaths(root, d)) {
+      const file = value.split('›')[0].trim()
+      if (!file || file.includes('*')) continue
+      if (!fs.existsSync(path.join(root, file))) say(where, `cites \`${file}\`, which is not there`)
+    }
 
   return found
 }

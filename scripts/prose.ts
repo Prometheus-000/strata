@@ -40,5 +40,13 @@ export const PROSE: ProseOptions = {
    * the comment on the verb built to replace it — so the exemption names the
    * file that is allowed to remember it rather than trusting a whole file.
    */
-  remembered: ['decide (strata-malleable/src/cli.ts)'],
+  remembered: ['decide (strata-malleable/src/cli.ts)', 'decide (grammar/rules.json)'],
+  /**
+   * The grammar is prose too, and for a long time it was the only prose here
+   * nothing read: `statement`, `reason` and `incident` are English in a JSON
+   * file, and `source` points at the page the rule was argued on. The hub
+   * projects all four onto the index, so a ghost in the grammar is a ghost on
+   * the front page.
+   */
+  data: [{ file: 'grammar/rules.json', text: ['statement', 'reason', 'incident'], paths: ['source'] }],
 }

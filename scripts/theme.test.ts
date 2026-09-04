@@ -206,3 +206,24 @@ test('minting coins a name for a value usage kept reaching: the record is its so
   assert.equal(twice.ok, false)
   assert.match(twice.ok ? '' : twice.error, /already derived from the seeds/)
 })
+
+test('contrast is swept and reported, never enforced, and every read token is measured against something', () => {
+  resetEvaluators()
+  registerTheme({ root: REPO })
+  const r = runCheck(REPO)
+  const contrast = r.findings.filter((f) => f.rule === 'safety.contrast')
+
+  // Policy, always. A build that refused a design over a threshold would be
+  // policing, and the whole point of reporting it is that it does not.
+  assert.ok(contrast.every((f) => f.authority === 'policy'), 'contrast spoke with an authority that can fail a build')
+  assert.ok(!r.invariants.some((i) => i.rule === 'safety.contrast'), 'contrast is not an invariant')
+
+  // Nothing that is read is silently unmeasured. This finding exists so that
+  // an empty contrast report means "measured and fine" rather than "nobody
+  // looked" — which is what the report was for months.
+  assert.deepEqual(contrast.filter((f) => /measured against nothing/.test(f.message)), [], 'a token is read and no pairing covers it — add it to CONTRAST_PAIRS')
+
+  // And it is not vacuous: the pairings resolve to real numbers on this palette.
+  assert.ok(contrast.length > 0, 'the sweep found nothing at all, which on this palette means it did not run')
+  assert.ok(contrast.every((f) => /^\d+\.\d{2}:1 on (dark|light)/.test(f.message)))
+})

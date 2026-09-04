@@ -18,7 +18,7 @@ import {
 } from '../components'
 import { useTheme } from '../theme/ThemeContext'
 import grammar from '../../grammar/rules.json'
-import type { Layer, Rule } from '@strata/substrate/grammar'
+import { rulesInLayer, rulesOutsideLayers, type Layer, type Rule } from '@strata/substrate/grammar'
 import { themeTokens, type Ledger } from '../theme/ledger'
 import { generateTheme } from '../theme/generateTheme'
 import LEDGER from '../theme/ledger.json'
@@ -199,9 +199,9 @@ function Credo() {
 /**
  * This table used to be a `const LAYERS` written out in JSX beside the markup
  * that rendered it, and it drifted exactly as `knowledge.drift-by-transcription`
- * says a hand-written projection does: it went on telling readers that a
- * the old validator enforced Layer 0 and that undeclared drift failed CI, long after
- * both had stopped being true. The rule that predicts that drift and the drift
+ * says a hand-written projection does: it went on telling readers that the
+ * old validator enforced Layer 0 and that undeclared drift failed CI, long
+ * after both had stopped being true. The rule that predicts that drift and the drift
  * it predicted were in the same repository.
  *
  * So the layers are data now, in the grammar, and this reads them. The counts
@@ -210,7 +210,8 @@ function Credo() {
  */
 const GRAMMAR = grammar as { layers: Layer[]; rules: Rule[] }
 
-const rulesInLayer = (layer: Layer) => GRAMMAR.rules.filter((r) => r.id.startsWith(`${layer.id}.`))
+const inLayer = (l: Layer) => rulesInLayer(GRAMMAR.rules, l, GRAMMAR.layers)
+const OUTSIDE = rulesOutsideLayers(GRAMMAR.rules, GRAMMAR.layers)
 
 const tagFor = (l: Layer) => (l.id === 'machine' ? 'MACHINE' : `LAYER ${l.id.replace('layer', '')} · ${l.name.toUpperCase()}`)
 
@@ -225,7 +226,7 @@ function Grammar() {
       <Reveal>
         <div className="ledger">
           {GRAMMAR.layers.map((l) => {
-            const mine = rulesInLayer(l)
+            const mine = inLayer(l)
             const evaluated = mine.filter((r) => r.check && r.check !== 'none').length
             return (
               <div className="ledger__row" key={l.id}>
@@ -242,6 +243,19 @@ function Grammar() {
               </div>
             )
           })}
+          {OUTSIDE.length > 0 && (
+            <div className="ledger__row">
+              <span className="ledger__tag">OUTSIDE THE STACK</span>
+              <p className="ledger__what">
+                Rules with no tier of the artifact to sit in: how the record names its hands, when evaluation runs, what this
+                product decided about its own voice.
+                <span className="ledger__count">
+                  {OUTSIDE.length} rule{OUTSIDE.length === 1 ? '' : 's'} · {OUTSIDE.filter((r) => r.check && r.check !== 'none').length} evaluated
+                </span>
+              </p>
+              <span className="ledger__rule">read by a hand · cited into packets</span>
+            </div>
+          )}
         </div>
       </Reveal>
     </Section>

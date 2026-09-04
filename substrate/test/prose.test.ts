@@ -154,3 +154,43 @@ test('registered, it reports under policy — it never speaks as an invariant', 
   assert.equal(found[0].where, 'README.md')
   resetEvaluators()
 })
+
+test('a data file is prose too: the fields a product names are scanned like any other English', () => {
+  const grammar = {
+    rules: [
+      { id: 'a.live', statement: 'Run `strata cut` to remove one.', reason: 'it works', source: 'README.md' },
+      { id: 'a.stale', statement: 'Run `strata retheme` first.', reason: 'See `src/gone.ts`, and run `npm run validate`.', source: 'GONE.md' },
+    ],
+  }
+  const root = repo({ ...BASE, 'README.md': 'the grammar is here', 'grammar/rules.json': JSON.stringify(grammar) })
+  const data = [{ file: 'grammar/rules.json', text: ['statement', 'reason'], paths: ['source'] }]
+  const found = messages(root, { data })
+  assert.deepEqual(found, [
+    // Each names the entry, not just the file: a grammar has thirty of them.
+    'grammar/rules.json#a.stale: `npm run validate` — nothing defines that script',
+    'grammar/rules.json#a.stale: `strata retheme` — no command by that name; the prose tells someone to run something that is not there',
+    'grammar/rules.json#a.stale: `src/gone.ts` — no such file',
+    'grammar/rules.json#a.stale: cites `GONE.md`, which is not there',
+  ])
+})
+
+test('a data file with no `data` option is not read, and a malformed one is not a crash', () => {
+  const root = repo({ ...BASE, 'grammar/rules.json': '{ not json' })
+  assert.deepEqual(messages(root), [], 'a data file nobody named is none of the scanner\'s business')
+  assert.deepEqual(messages(root, { data: [{ file: 'grammar/rules.json', text: ['statement'] }] }), [], 'unparseable is quiet, not fatal')
+  assert.deepEqual(messages(root, { data: [{ file: 'nothing/here.json', text: ['statement'] }] }), [])
+})
+
+test('a path cited by a data field may name the section it was argued in', () => {
+  const rules = { rules: [{ id: 'a.sourced', source: 'README.md › Governance › The authority ladder' }] }
+  const root = repo({ ...BASE, 'README.md': 'x', 'grammar/rules.json': JSON.stringify(rules) })
+  assert.deepEqual(messages(root, { data: [{ file: 'grammar/rules.json', paths: ['source'] }] }), [], 'the file resolves; the section after the › is prose')
+})
+
+test('an exemption in a data file is keyed by the file, as everywhere else', () => {
+  const rules = { rules: [{ id: 'a.history', incident: 'The old `strata decide` became four verbs.' }] }
+  const root = repo({ ...BASE, 'grammar/rules.json': JSON.stringify(rules) })
+  const data = [{ file: 'grammar/rules.json', text: ['incident'] }]
+  assert.equal(messages(root, { data }).length, 1)
+  assert.deepEqual(messages(root, { data, remembered: ['decide (grammar/rules.json)'] }), [])
+})

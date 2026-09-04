@@ -37,6 +37,7 @@
     {
       "id": "record.parses",
       "authority": "invariant",
+      "layer": "machine",
       "statement": "Every line of .strata/decisions.jsonl is a decision: an id, a kind, a hand, a time, a surface.",
       "reason": "The record is the source; a projection of a record that cannot be read is a guess.",
       "source": "substrate/src/decision.ts",
@@ -45,6 +46,7 @@
     {
       "id": "projections.match-record",
       "authority": "invariant",
+      "layer": "machine",
       "statement": "ledger.json, semantic.css, tokens.json and overrides.json are byte for byte what the record projects.",
       "reason": "An artifact that cannot be faithfully produced from the record is not a projection of it, and a hand edit there is a decision nobody made.",
       "incident": "The stylesheet that said surface chroma 0.012 while the engine computed 0.006. Nobody chose that; transcription did.",
@@ -54,6 +56,7 @@
     {
       "id": "fallbacks.total-acyclic",
       "authority": "invariant",
+      "layer": "machine",
       "statement": "Every token the engine emits has a fallback, nothing else does, and every chain ends in a literal.",
       "reason": "A cut token collapses instead of disappearing; a token with no floor, or a floor that loops, would fail every consumer silently at computed-value time.",
       "source": "src/theme/ledger.ts",
@@ -62,6 +65,7 @@
     {
       "id": "css.vars-defined",
       "authority": "invariant",
+      "layer": "machine",
       "statement": "Every var(--name) a stylesheet reaches for names a custom property something defines.",
       "reason": "An undefined custom property is an invalid declaration paid at the consumer, invisible in the diff — the behaviour this repo calls the worst available.",
       "source": "src/theme/ledger.ts",
@@ -89,7 +93,7 @@
       "statement": "A theme is six seeds, and light is not inverted dark: light appearances compile accents at 0.87× chroma and lower lightness.",
       "reason": "A light accent that merely inverts fails AA on paper. The engine encodes the correction so no one has to remember it.",
       "source": "GRAMMAR.md › Layer 0 — Meaning › A theme is six seeds",
-      "check": "token.contrast"
+      "check": "none"
     },
     {
       "id": "layer0.warmth-tints-neutrals",
@@ -265,11 +269,20 @@
       "check": "none"
     },
     {
+      "id": "safety.contrast",
+      "authority": "policy",
+      "statement": "Every token that is read is measured against the grounds it is actually set against, on both appearances, and anything under 4.5:1 for text or 3:1 for a mark is reported. A read token named in no pairing is reported as measured against nothing. Nothing fails a build for any of it.",
+      "reason": "Enforcing a threshold would refuse designs, and a contrast number is a judgement about text at a size rather than a mechanical truth about the artifact, so it cannot be an invariant here. But the alternative was silence, and silence about safety reads as a pass. The pairings are declared because nothing else in the system knows them: a sweep of every ink against every surface reported inverse ink on a page, where a low number is the token doing its job, and noise about safety is how safety findings get ignored.",
+      "incident": "For months `token.contrast` was evidence only: it answered when a hand explained one token, and swept nothing. The README said contrast was “evaluated and reported like every other policy”, and no report existed. The claim was found by reading, not by any check — which is the half of prose drift no scanner closes.",
+      "source": "src/theme/evaluators.ts",
+      "check": "safety.contrast"
+    },
+    {
       "id": "prose.names-what-exists",
       "authority": "policy",
       "statement": "A sentence that names an npm script, a CLI verb or a repo path names one that is there.",
       "reason": "A projection can be regenerated and compared to the record, so it cannot drift far. A sentence cannot be regenerated from anything, so it drifts the moment the thing it describes changes and goes on asserting the old world until a person happens to read it.",
-      "incident": "A day of reading turned up three: `decision.ts` opened by explaining a field removed that morning; the hub told readers a validator enforced Layer 0 years after nothing did; the `retheme` skill instructed agents to run `strata decide seed …`, a command that has never existed, which made the one skill whose whole subject is retheming unperformable from a terminal. Each was made by fixing something else.",
+      "incident": "A day of reading turned up three: `decision.ts` opened by explaining a field removed that morning; the hub told readers the old validator enforced Layer 0 years after nothing did; the `retheme` skill instructed agents to run `strata decide seed …`, a command that has never existed, which made the one skill whose whole subject is retheming unperformable from a terminal. Each was made by fixing something else.",
       "source": "substrate/src/prose.ts",
       "check": "prose.names-what-exists"
     },
