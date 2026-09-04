@@ -26,6 +26,7 @@
  * the other half is still a person's job.
  */
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { test } from 'node:test'
@@ -201,6 +202,16 @@ test('the tools the MCP README lists are the tools the server has', () => {
   const readme = new Set([...read('mcp/README.md').matchAll(/`(strata_[a-z_]+)`/g)].map((m) => m[1]))
   assert.deepEqual([...readme].sort().filter((t) => !server.has(t)), [], 'the README lists a tool the server does not serve')
   assert.deepEqual([...server].sort().filter((t) => !readme.has(t)), [], 'the server serves a tool the README never mentions')
+})
+
+test("the bench README's scorecards are what the record says, byte for byte", () => {
+  // The tables used to be pasted from a terminal into prose, and the arms that
+  // produced them were then deleted — numbers with no source, in the one file
+  // whose whole argument is that nothing should be. They are generated from
+  // `bench/RESULTS.jsonl` now, and this is the `rebuild --check` of that: the
+  // same shape the record already holds every other projection to.
+  const out = execFileSync('node', [path.join(REPO, 'bench/run.mjs'), 'docs', '--check'], { cwd: REPO, encoding: 'utf8' })
+  assert.match(out, /matches the record/)
 })
 
 test("the bench README's measures and terms are the ones the bench runs", () => {
