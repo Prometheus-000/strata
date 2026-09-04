@@ -467,15 +467,15 @@
     "--font-display": {
       "status": "kept",
       "decided": {
-        "kind": "agent",
-        "actor": "claude-code"
+        "kind": "human",
+        "actor": "prometheus-000"
       },
       "written": {
         "kind": "agent",
         "actor": "claude-code"
       },
-      "reason": "The role names a job — display type — and the ledger should hold it even while its value coincides with the body face. One family constrains what this role may be set to, not whether it exists; cutting it would erase the intent at ten call sites and force a re-mint the day the house wants a second face for headings.",
-      "id": "d0mtm5z44t-ifap"
+      "reason": "The role names a job — display type — and the ledger should hold it even while its value coincides with the body face. One family constrains what this role may be set to, not whether it exists; cutting it would erase the intent at twelve call sites and force a re-mint the day the house wants a second face for headings. Proposed by an agent, confirmed by hand.",
+      "id": "d0mtm716m3-afwe"
     },
     "--font-body": {
       "status": "proposed"

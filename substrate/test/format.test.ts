@@ -46,3 +46,34 @@ test('one-line descriptions and the handoff read like the receipt did', () => {
   assert.match(text, /ready for review — human/)
   assert.match(formatHandoff([], null), /nothing changed since the last review[\s\S]*not yet handed off/)
 })
+
+test('the handoff asks for eyes on an agent-decided line, and stops once a person has ruled on it', () => {
+  const t = (n: number) => new Date(Date.parse('2026-09-03T12:00:00.000Z') + n * 1000).toISOString()
+  const keep = (decided: Decision['decided'], at: string): Decision =>
+    ({
+      id: newId(Date.parse(at)),
+      at,
+      decided,
+      written: { kind: 'agent', actor: 'claude-code' },
+      via: 'cli',
+      consequence: {},
+      kind: 'token',
+      token: '--font-display',
+      action: 'keep',
+    }) as Decision
+
+  const proposed = keep({ kind: 'agent', actor: 'claude-code' }, t(1))
+  const one = formatHandoff([proposed], null)
+  assert.match(one, /decided by an agent, not merely written by one/)
+
+  // The confirmation is the review. A reviewer sent to look at something
+  // already answered learns to stop reading the list.
+  const confirmed = keep({ kind: 'human', actor: 'prometheus-000' }, t(2))
+  const both = formatHandoff([proposed, confirmed], null)
+  assert.doesNotMatch(both, /decided by an agent, not merely written by one/)
+  assert.match(both, /human prometheus-000/, 'both lines still show: the record is the history, not the verdict')
+
+  // A different target is not settled by an unrelated ruling.
+  const other = { ...confirmed, token: '--font-mono' } as Decision
+  assert.match(formatHandoff([proposed, other], null), /decided by an agent/)
+})

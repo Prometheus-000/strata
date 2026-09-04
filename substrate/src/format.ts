@@ -125,7 +125,15 @@ export function formatHandoff(changes: readonly Decision[], ready: Decision | nu
   if (!changes.length) out.push('  nothing changed since the last review')
   for (const d of changes) out.push(`  ${describe(d)}`)
   out.push('')
-  const chosen = changes.filter((d) => d.decided.kind === 'agent')
+  // An agent-decided line that a person has since ruled on is settled: the
+  // later decision *is* the review. Listing it anyway would send a reviewer to
+  // look at something already answered, which is the fastest way to teach them
+  // to stop reading this list.
+  const chosen = changes.filter(
+    (d, i) =>
+      d.decided.kind === 'agent' &&
+      !changes.slice(i + 1).some((later) => later.decided.kind === 'human' && targetKey(later) === targetKey(d)),
+  )
   if (chosen.length) {
     out.push(`${chosen.length} ${chosen.length === 1 ? 'line was' : 'lines were'} decided by an agent, not merely written by one — a person reviews ${chosen.length === 1 ? 'it' : 'these'} before ${chosen.length === 1 ? 'it is' : 'they are'} committed:`)
     for (const d of chosen) out.push(`  ${d.id}  ${describe(d)}`)
