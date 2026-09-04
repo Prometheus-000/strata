@@ -4,7 +4,7 @@
  *
  *   prepare              an isolated copy of the product per task × arm
  *   prompt <task> <arm>  print one arm's prompt, to hand to a harness
- *   score                read each arm's record and tree, and score it
+ *   score [label]        read each arm's record and tree, and append the run
  *   report               the arms side by side
  *
  * Strata calls no model, and neither does this. The bench prepares, and scores
@@ -446,7 +446,7 @@ function scoreArm(task, arm, harness = 'loose') {
   }
 }
 
-function score() {
+function score(label) {
   const rows = []
   for (const task of tasks)
     for (const { arm, harness } of cells(task.id)) {
@@ -457,7 +457,7 @@ function score() {
     console.log('\n  nothing to score — run: node bench/run.mjs prepare\n')
     return
   }
-  append({ at: new Date().toISOString(), rows })
+  append({ at: new Date().toISOString(), ...(label ? { label } : {}), rows })
   report(rows)
 }
 
@@ -582,7 +582,7 @@ switch (cmd) {
     break
   }
   case 'score':
-    score()
+    score(a)
     break
   case 'report':
     report()
@@ -595,7 +595,7 @@ switch (cmd) {
 
   prepare [task]       one isolated copy of the product per arm × harness
   prompt <task> <arm>  print one arm's prompt
-  score                read each arm's record and tree
+  score [label]        read each arm's record and tree, and append the run
   report               the arms side by side
 
   tasks: ${tasks.map((t) => t.id).join(', ')}
