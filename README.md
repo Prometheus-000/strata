@@ -738,6 +738,15 @@ Stated so the next reader inherits the test and not the verdict:
   decisions from being undone by people who never saw them.* The broader
   "collage versus coherent work" framing is not what was measured. One run per
   cell, one model, and `bench/README.md` lists the rest of the limits.
+- **A harness is what makes the honours column real, and this repo ships
+  none.** A second experiment crossed context with harness — the same packet,
+  but one arm held to the honours column as terms of work. It did not change
+  the artifact: the arm without a record undid the same three decisions either
+  way, because no harness can restore a decision nobody wrote down. What it did
+  change was containment — the unheld arms read the real repository's README
+  and GRAMMAR from outside their own tree, and the held arms read nothing
+  outside it. Strata guarantees the record; it obliges nobody to honour
+  anything, and nothing here supplies the harness that would.
 - **The record is thirty-six lines, and thirty-four of them were imported.**
   Two were decided in a live session. That is a record of a vocabulary, not
   yet a record of a product being designed.

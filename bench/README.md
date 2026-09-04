@@ -227,3 +227,60 @@ The claim, then, holds in the narrow form the evidence supports: **a record
 that carries reasons keeps decisions from being undone by people who never saw
 them.** The broader "collage versus coherent work" framing is not what was
 measured, and is still a claim.
+
+## The harness result, and a correction to the one above
+
+The 2×2 — context (`packet`/`list`) crossed with harness (`loose`/`held`) — on
+the cut-token task.
+
+```
+                            packet/loose   packet/held    list/loose     list/held
+decisions written                      1             1             1             1
+with a reason                          1             1             1             1
+invariants hold                      yes           yes           yes           yes
+undeclared literals                    0             0             0             0
+decisions silently undone              0             0             3             3
+files changed                          3             2             3             3
+```
+
+**The stated hypothesis was wrong.** The prediction was that `list/held` would
+catch the reversion that `list/loose` missed, because term 4 requires comparing
+`check` and `rebuild --check` before and after. Both arms reverted the same
+three tokens, and both noticed. Every mechanical measure is identical. A
+before-and-after comparison did not change the artifact, because the harness
+cannot restore decisions that are not recorded anywhere — and "silently" was
+always the wrong word: the agent reported it in both loose runs too. It was
+silent to the measures, not to the performer.
+
+**What the harness demonstrably did do was contain the experiment.** Counting
+paths outside its own tree in each transcript:
+
+| cell | files touched outside its arm |
+| --- | --- |
+| `packet/held` | 0 |
+| `list/held` | 0 |
+| `list/loose` | 3 — including the real repository's `README.md` and `GRAMMAR.md` |
+
+Which retro-fits the earlier runs. The first two runs told their arms not to
+*modify* anything outside their directory and never told them not to *read*,
+and the real repository sat on the same disk throughout. So **the "frameless"
+control was reading the actual frame** — the prose, at least, if not the
+ledger. The result above survives that (the three cuts reverted anyway, because
+knowing a decision exists is not the same as being able to restore it without
+inventing a hand and a reason for it), but every control cell before the `held`
+ones was contaminated, and only the two `held` cells were ever clean.
+
+That is the harness's contribution here, and it is not the one that was
+predicted: **it is the term that made a control a control.** Which is the same
+lesson the substrate keeps teaching in a different register — the guarantee is
+worth what the honouring is worth, and nothing obliges the honouring except a
+harness.
+
+One difference this bench cannot adjudicate: `packet/held` **kept**
+`--motion-instant` where all three loose arms cut it, arguing that the token
+has no consumers but one *dependent* — `--motion-fast` declares it as its
+fallback, so cutting it pulls the bottom rung out of the ladder. Three loose
+arms noted that same fact and cut anyway. That may be the harness pushing
+attention onto consequences, or it may be one sample of a coin flip. With one
+arm per cell it cannot be told apart, and it is recorded as a difference
+observed rather than a difference caused.

@@ -1,9 +1,10 @@
 {
-  "at": "2026-09-04T00:40:20.728Z",
+  "at": "2026-09-04T00:53:41.511Z",
   "rows": [
     {
       "task": "cut-token",
       "arm": "packet",
+      "harness": "loose",
       "decisions": 1,
       "withReason": 1,
       "decidedByAgent": 1,
@@ -21,7 +22,26 @@
     },
     {
       "task": "cut-token",
+      "arm": "packet",
+      "harness": "held",
+      "decisions": 1,
+      "withReason": 1,
+      "decidedByAgent": 1,
+      "invariantsHold": true,
+      "failingInvariants": [],
+      "projectionsHandEdited": 0,
+      "undeclaredLiterals": 0,
+      "reachedForCut": [],
+      "reverted": [],
+      "filesChanged": [
+        "src/theme/ledger.json",
+        "src/tokens/tokens.json"
+      ]
+    },
+    {
+      "task": "cut-token",
       "arm": "list",
+      "harness": "loose",
       "decisions": 1,
       "withReason": 1,
       "decidedByAgent": 1,
@@ -42,41 +62,26 @@
       ]
     },
     {
-      "task": "move-region",
-      "arm": "packet",
-      "decisions": 1,
-      "withReason": 1,
-      "decidedByAgent": 0,
-      "invariantsHold": true,
-      "failingInvariants": [],
-      "projectionsHandEdited": 0,
-      "undeclaredLiterals": 0,
-      "reachedForCut": [],
-      "reverted": [],
-      "filesChanged": [
-        "strata-malleable/.malleable/structure.json",
-        "strata-malleable/fixtures/app/views/Page.tsx",
-        "strata-malleable/fixtures/app/views/TopBar.tsx"
-      ]
-    },
-    {
-      "task": "move-region",
+      "task": "cut-token",
       "arm": "list",
+      "harness": "held",
       "decisions": 1,
       "withReason": 1,
-      "decidedByAgent": 0,
+      "decidedByAgent": 1,
       "invariantsHold": true,
       "failingInvariants": [],
       "projectionsHandEdited": 0,
       "undeclaredLiterals": 0,
       "reachedForCut": [],
-      "reverted": [],
+      "reverted": [
+        "--shadow-color: transparent → oklch(0.050 0.010 236.0 / 0.50)",
+        "--motion-ease-emphasis: var(--motion-ease) → var(--strata-ease-spring)",
+        "--radius-overlay: var(--radius-surface) → 1.215rem"
+      ],
       "filesChanged": [
-        "strata-malleable/.malleable/structure.json",
-        "strata-malleable/fixtures/app/views/Page.tsx",
-        "strata-malleable/fixtures/app/views/TopBar.tsx",
-        "strata-malleable/fixtures/app/views/views.css",
-        "strata-malleable/test/structure.test.ts"
+        "src/theme/ledger.json",
+        "src/tokens/semantic.css",
+        "src/tokens/tokens.json"
       ]
     }
   ]
