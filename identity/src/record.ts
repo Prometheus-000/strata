@@ -20,7 +20,24 @@
  *   - everything else is a smaller bump.
  */
 import { handText, problemsWith, targetKey, type Decision } from '@strata/substrate/decision'
-import { DEVIATION_W, GENERIC_W, append, clamp01, deviationPosition, emptyState, positionFor, type IdentityEvent, type IdentityState, type Receipt, type Vec } from './field.ts'
+import {
+  DEVIATION_W,
+  GENERIC_W,
+  append,
+  clamp01,
+  deviationPosition,
+  emptyState,
+  frameAt,
+  levelCount,
+  positionFor,
+  type Frame,
+  type IdentityEvent,
+  type IdentityState,
+  type Receipt,
+  type Station,
+  type Vec,
+} from './field.ts'
+import { svgFrom, type Palette } from './render.ts'
 
 /**
  * The file a mark on the identity is declared against. A visitor's click is a
@@ -107,6 +124,58 @@ export function visitorDeviation(p: Vec, i: number, date: string, id?: string): 
     w: DEVIATION_W,
     receipt: { id: id ?? 'not on the record', kind: 'deviation', target: 'a mark on the field', hand: 'human visitor', date },
   }
+}
+
+/* ---------- an adopter's field ---------- */
+
+/** What a host brings: its colours, resolved, and the two seeds that shape the field. */
+export interface Adoption {
+  /** Five strings the host reads from its own theme. The engine writes no colour of its own. */
+  palette: Palette
+  /** Settle length and kernel sharpness. Defaults to what this repository's own field is drawn with. */
+  energy?: number
+  /** Level count. Same default. */
+  density?: number
+}
+
+/** The two files a host ships from its record, as this repository does: the seed at tab size, the mark at four levels. */
+export type Shipped = 'favicon' | 'mark'
+
+export interface AdoptedField {
+  state: IdentityState
+  palette: Palette
+  /**
+   * One frame of the field, settled by default — `t` is Infinity, every
+   * decision arrived — at `n` cells per world unit and the station's level
+   * count. Hand it to `draw` for a canvas or `svgFrom` for a file.
+   */
+  frame(station: Station, opts?: { t?: number; n?: number; aspect?: number }): Frame
+  /** The favicon or the mark as SVG, at the sizes this repository emits them, with the ink as a custom property. */
+  svg(station: Shipped, size?: number, inks?: { dark: string; light: string; house?: 'dark' | 'light' }): string
+}
+
+/** The seeds this repository draws its own field with; an adopter passes their own. */
+export const ADOPTION_DEFAULTS = { energy: 0.35, density: 1 } as const
+
+/**
+ * A field of a host's own, from a host's own record. The record arrives as
+ * its text — the file, read or fetched — or as decisions already parsed;
+ * the palette is the host's, resolved; and what comes back is the same
+ * derivation, the same frames and the same files this repository's identity
+ * is made of. Nothing here reads a filesystem, so a page can call it with
+ * what it fetched and a script with what it read. `scripts/identity.test.ts`
+ * is the worked example: a record in a temp directory, three decisions on
+ * it, the mark rendered as SVG.
+ */
+export function fieldFrom(record: string | readonly Decision[], adoption: Adoption): AdoptedField {
+  const { palette } = adoption
+  const energy = adoption.energy ?? ADOPTION_DEFAULTS.energy
+  const density = adoption.density ?? ADOPTION_DEFAULTS.density
+  const state = stateFrom(typeof record === 'string' ? parseRecord(record) : record)
+  const frame: AdoptedField['frame'] = (station, opts = {}) =>
+    frameAt(state, opts.t ?? Infinity, { energy, density, n: opts.n ?? (station === 'favicon' ? 24 : 64), levels: levelCount(station, density), aspect: opts.aspect })
+  const svg: AdoptedField['svg'] = (station, size = station === 'favicon' ? 32 : 160, inks) => svgFrom(frame(station), size, palette, { dot: station === 'favicon', inks })
+  return { state, palette, frame, svg }
 }
 
 /* ---------- a synthetic record, for what the real one has not done yet ---------- */

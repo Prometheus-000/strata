@@ -667,6 +667,19 @@ the record is not removed; the owner who wants it shut disables the workflow.
 A click on the hub's hero stays in the session: the hero has no receipt, and
 the identity page is where a mark is signed.
 
+An adopter's record draws an adopter's field. `fieldFrom(record, { palette })`
+in `identity/src/record.ts` takes the record as its text — the file, read or
+fetched — or as decisions already parsed, and a palette of five strings the
+host resolves from its own theme, and returns the state, a `frame()` for any
+station, and `svg()` for the two files this repository ships; `energy` and
+`density` shape the field the way they shape this one. Nothing in it reads a
+filesystem, so a page calls it with what it fetched and a script with what
+it read. The worked example is the last test in `scripts/identity.test.ts`:
+three decisions written into a temp record through `decide()`, the record
+read back as text, the mark rendered with `svgFrom`. There is no adapter
+from a git history, on purpose: a commit log is activity, not judgement,
+and the field draws judgement.
+
 ## Examples
 
 **A token is cut.** A person decides; the projections regenerate in the same

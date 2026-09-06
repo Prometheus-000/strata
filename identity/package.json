@@ -2,7 +2,7 @@
   "name": "@strata/identity",
   "private": true,
   "version": "0.1.0",
-  "description": "The identity as a projection of the record — an append-only state of events, a field over the unit square, four ways to draw it. The engine has no dependencies; the record adapter depends on the substrate's decision type; a host supplies the palette.",
+  "description": "The identity as a projection of the record — an append-only state of events, a field over the unit square, four ways to draw it. The engine has no dependencies; the record adapter depends on the substrate's decision type; a host supplies the palette, and fieldFrom(record, { palette }) is a host's own field from its own record.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

@@ -9,7 +9,7 @@ import { problemsWith, type Decision } from '@strata/substrate/decision'
 import { PROMOTION_CANDIDATE_AT } from '@strata/substrate/precedent'
 import * as field from '@strata/identity/field'
 import { append, CONVERGE_AT, fieldAt, fnv1a, frameAt, marchingSquares, positionFor, strataAt, type FieldOptions } from '@strata/identity/field'
-import { deriveEvents, IDENTITY_FILE, markValue, parseMark, stateFrom, syntheticStream, visitorDeviation } from '@strata/identity/record'
+import { deriveEvents, fieldFrom, IDENTITY_FILE, markValue, parseMark, stateFrom, syntheticStream, visitorDeviation } from '@strata/identity/record'
 import { svgFrom } from '@strata/identity/render'
 import { OBSIDIAN } from '../src/theme/generateTheme'
 import { decide, resetHandlers } from '@strata/substrate/decide'
@@ -247,4 +247,44 @@ test('a mark from the published site: the page composes an issue, the writer rea
   assert.match(workflow, /scripts\/mark\.ts/)
   assert.match(workflow, /startsWith\(github\.event\.issue\.title, 'mark '\)/)
   assert.match(workflow, /gh workflow run pages\.yml/, 'a push with the workflow token starts no deploy on its own')
+})
+
+test("an adopter's field: point fieldFrom at a record of your own, with a palette of your own, and the mark comes out as SVG", () => {
+  // The worked example. A product that keeps a Strata record — here, three
+  // decisions written through decide() into a temp directory — gets its own
+  // field from the same derivation this repository's identity is made of.
+  resetHandlers()
+  registerTheme({ root: REPO })
+  registerIdentity()
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'strata-adopter-'))
+  fs.mkdirSync(path.join(dir, '.strata'), { recursive: true })
+  const ctx = { root: dir, decided: { kind: 'human' as const, actor: 'an-adopter' }, written: { kind: 'human' as const, actor: 'an-adopter' }, via: 'test', at: '2026-09-08T00:00:00.000Z' }
+  assert.ok(decide({ kind: 'deviation', file: IDENTITY_FILE, line: 1, value: markValue([0.3, 0.4]) }, ctx).ok)
+  assert.ok(decide({ kind: 'deviation', file: IDENTITY_FILE, line: 2, value: markValue([0.7, 0.6]) }, { ...ctx, at: '2026-09-08T00:01:00.000Z' }).ok)
+  assert.ok(decide({ kind: 'ready' }, { ...ctx, at: '2026-09-08T00:02:00.000Z' }).ok)
+
+  // The record as text — the file, read — and the host's colours, resolved. No filesystem below this line.
+  const text = fs.readFileSync(path.join(dir, '.strata/decisions.jsonl'), 'utf8')
+  const palette = { ink: 'oklch(0.2 0 0)', faint: 'oklch(0.2 0 0 / 0.4)', line: 'oklch(0.2 0 0 / 0.1)', ground: 'oklch(0.98 0 0)' }
+  const field = fieldFrom(text, { palette, energy: 0.5, density: 1 })
+  assert.equal(field.state.events.length, 3)
+  assert.deepEqual(field.state.events.map((e) => e.kind), ['deviation', 'deviation', 'generic'])
+  assert.deepEqual(field.state.events[0].p, [0.3, 0.4], 'a mark lands where the record says')
+
+  const mark = field.svg('mark')
+  assert.ok(mark.startsWith('<svg'))
+  assert.match(mark, /viewBox="0 0 160 160"/)
+  assert.match(mark, /<path d="M/)
+  assert.match(mark, /--ink:oklch\(0\.2 0 0\)/, 'the ink is the palette the host passed')
+  assert.ok(!/NaN|Infinity/.test(mark))
+  const favicon = field.svg('favicon')
+  assert.match(favicon, /viewBox="0 0 32 32"/)
+  assert.equal((favicon.match(/<circle/g) ?? []).length, 1)
+
+  // The same frame by hand, through svgFrom, is the same bytes: the entry point adds nothing the pieces do not have.
+  assert.equal(svgFrom(field.frame('mark'), 160, palette, { dot: false }), mark)
+  // Decisions already parsed are the other door, and it opens onto the same state.
+  assert.deepEqual(fieldFrom(readAll(dir), { palette }).frame('contours').contours, fieldFrom(text, { palette }).frame('contours').contours)
+  // A frame before the record has arrived is a frame of less.
+  assert.ok(field.frame('contours', { t: 1.5 }).arrived.length < field.frame('contours').arrived.length)
 })

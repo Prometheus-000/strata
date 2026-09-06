@@ -382,6 +382,25 @@ npm run check     # what happened
 npm run build     # tokens → check --enforce → tsc → vite
 ```
 
+Your own record draws your own field. The identity engine in `identity/` is
+the derivation this repository's favicon, mark and hero are made of, and
+`fieldFrom` in `identity/src/record.ts` is its door for a product that keeps a
+Strata record: pass the record's text (or its decisions) and five colours
+resolved from your own theme, and it returns frames and the two SVGs. The
+last test in `scripts/identity.test.ts` is the worked example, end to end.
+
+```ts
+import { fieldFrom } from '@strata/identity/record'
+
+const field = fieldFrom(fs.readFileSync('.strata/decisions.jsonl', 'utf8'), {
+  palette: { ink: 'oklch(0.2 0 0)', faint: 'oklch(0.2 0 0 / 0.4)', line: 'oklch(0.2 0 0 / 0.1)', ground: 'oklch(0.98 0 0)' },
+  energy: 0.35,
+  density: 1,
+})
+fs.writeFileSync('public/favicon.svg', field.svg('favicon'))
+fs.writeFileSync('src/mark.svg', field.svg('mark'))
+```
+
 That layer also runs alone:
 
 ```bash
