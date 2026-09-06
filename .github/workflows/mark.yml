@@ -1,0 +1,61 @@
+# A mark made on the published site reaches the record through here. The site
+# is static and holds no token, so the identity page composes an issue — the
+# request it would have posted to the dev server, in a fenced block — and the
+# visitor signs it by opening it. This reads the issue, mounts the identity's
+# handler and nothing else, calls decide() with the account that opened the
+# issue as the deciding hand and this workflow as the writing one, commits the
+# line to main with the favicon and the mark regenerated, and redeploys the
+# site. The issue is answered with the decision's id, or with the refusal,
+# and closed either way. Any GitHub account can open one, and a line on the
+# record is not removed; the owner who wants this door shut disables the
+# workflow.
+name: mark
+on:
+  issues:
+    types: [opened]
+permissions:
+  contents: write
+  issues: write
+  actions: write
+concurrency:
+  group: mark
+jobs:
+  write:
+    if: startsWith(github.event.issue.title, 'mark ')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - id: mark
+        run: node --import tsx/esm scripts/mark.ts
+        env:
+          MARK_BODY: ${{ github.event.issue.body }}
+          MARK_ACTOR: ${{ github.event.issue.user.login }}
+      - if: steps.mark.outputs.ok == 'true'
+        run: |
+          npm run identity
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .strata/decisions.jsonl public/favicon.svg src/identity/mark.svg
+          git commit -m "A mark on the field, put on the record by $MARK_ACTOR from the published site (#$ISSUE)"
+          git push origin HEAD:main
+          # A push made with the workflow's own token starts no other workflow; the deploy is asked for by name.
+          gh workflow run pages.yml --ref main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MARK_ACTOR: ${{ github.event.issue.user.login }}
+          ISSUE: ${{ github.event.issue.number }}
+      - if: always() && steps.mark.outcome != 'skipped'
+        run: |
+          gh issue comment "$ISSUE" --body "$MESSAGE"
+          gh issue close "$ISSUE"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+          MESSAGE: ${{ steps.mark.outputs.message }}

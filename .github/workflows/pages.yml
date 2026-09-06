@@ -5,7 +5,9 @@
 # can fail it. A design that is different is reported, never refused.
 # The write-through endpoint is dev-server only; on the static site the
 # harness falls back to localStorage, which its provider already does when
-# no server answers.
+# no server answers. A mark on the field takes the other road, through an
+# issue and mark.yml, which asks for this deploy by name once the line is on
+# main.
 name: pages
 on:
   push:

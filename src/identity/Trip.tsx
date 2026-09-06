@@ -64,7 +64,7 @@ export function Trip() {
   /** `?still`: open settled, without the replay — for an embed or a still. */
   const still = params.has('still')
   const synthetic = seedParam !== null
-  const { state, palette, reduced, pb, pick, stationOpts, dotOpts, heroOpts } = useIdentity({ seed: synthetic ? Number(seedParam) || 7 : undefined, still })
+  const { state, palette, reduced, pb, pick, sign, stationOpts, dotOpts, heroOpts } = useIdentity({ seed: synthetic ? Number(seedParam) || 7 : undefined, still })
 
   const max = state.events.length
   const arrivedIndex = Math.min(max, Math.ceil(pb.t)) - 1
@@ -122,6 +122,15 @@ export function Trip() {
           <p className="identity-open__note">
             {max} decisions {synthetic ? 'in a synthetic record' : 'on the record'} · {status} · move to disturb, click to decide
           </p>
+          {sign && (
+            // The published site cannot write. The newest mark is offered as an issue; opening it is the signature.
+            <p className="identity-open__note identity-open__sign">
+              {sign.count} {sign.count === 1 ? 'mark' : 'marks'} in this session, not on the record ·{' '}
+              <a href={sign.url} target="_blank" rel="noopener noreferrer">
+                sign the newest onto the record
+              </a>
+            </p>
+          )}
         </div>
       </section>
 

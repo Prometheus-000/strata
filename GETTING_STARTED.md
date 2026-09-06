@@ -106,7 +106,10 @@ One server, five pages — open <http://localhost:5173>:
 
 The dev server **writes through**: every one of those gestures appends a
 decision to `.strata/decisions.jsonl` in this repo. The published static site
-cannot write; it only shows what was decided.
+cannot write; it only shows what was decided. The one exception is a mark on
+the field, which a visitor signs onto the record by opening the GitHub issue
+the identity page composes — the README's *Projections* section says how,
+and what such a mark carries.
 
 Start dragging on `/malleable.html`, then come back to the terminal and run
 `npm run strata -- log` — your gestures are on the record, decided `human`,

@@ -641,6 +641,32 @@ no dependencies of its own; the adapter from the record sits beside it in
 field of their own from it. The rules, with their reasons, are the header of
 `identity/src/field.ts`.
 
+On the published site a click cannot reach the record: the site is static,
+holds no token, and a page that held one would be handing it to everyone who
+opened it. It has one road, and the road is the visitor's rather than the
+page's. The identity page composes the request it would have posted — the
+same `{ request, decided, written, via }` the dev server takes — into a
+GitHub issue and hands the visitor the link; opening the issue is the
+signature. `.github/workflows/mark.yml` reads it, runs `scripts/mark.ts`,
+which mounts the identity's handler and nothing else and calls `decide()`
+with the account that opened the issue as the deciding hand and the workflow
+as the writing one, commits the line to `main` with the favicon and the mark
+regenerated, redeploys, and answers the issue with the decision's id. The
+shape both ends agree on is `src/identity/sign.ts`, and one test holds them
+together.
+
+Provenance, plainly. A pointer on a public page is a hand nobody named, and
+the record does not take one; the handler notes an unnamed hand on the dev
+server too. What a signed mark carries is a GitHub login —
+`decided: human <login>`, `written: agent github-actions`, `via: identity` —
+which is the account's name and nothing else about the person: not that they
+are who the account says, not that the place meant anything. The writer
+counts the mark's line from the record rather than taking it from the page,
+whose count was a session's. The door is open to any account, and a line on
+the record is not removed; the owner who wants it shut disables the workflow.
+A click on the hub's hero stays in the session: the hero has no receipt, and
+the identity page is where a mark is signed.
+
 ## Examples
 
 **A token is cut.** A person decides; the projections regenerate in the same

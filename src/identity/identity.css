@@ -101,6 +101,20 @@ body {
   color: var(--ink-faint);
   margin: 0;
 }
+/* The offer to sign a mark: the same line, one word underlined. */
+.identity-open__sign {
+  margin-top: var(--strata-space-2);
+}
+.identity-open__sign a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--motion-fast) var(--motion-ease);
+}
+.identity-open__sign a:hover,
+.identity-open__sign a:focus-visible {
+  color: var(--ink-muted);
+}
 
 /* ---------- the trip ---------- */
 .identity-trip {

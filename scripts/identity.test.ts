@@ -15,7 +15,9 @@ import { OBSIDIAN } from '../src/theme/generateTheme'
 import { decide, resetHandlers } from '@strata/substrate/decide'
 import { registerTheme } from '../src/theme/handlers'
 import { registerIdentity } from '../src/identity/handler'
+import { markIssue, parseMarkIssue, postedMark, RECORD_REPO, signUrl } from '../src/identity/sign'
 import { emitIdentity, FAVICON_PATH, MARK_PATH } from './emit-identity'
+import { WRITER, writeMark } from './mark'
 
 const REPO = path.join(path.dirname(new URL(import.meta.url).pathname), '..')
 const OPTS: FieldOptions = { energy: OBSIDIAN.energy, density: OBSIDIAN.density, n: 64, levels: 6 }
@@ -167,6 +169,7 @@ test('a click on the field is a deviation on identity.html: accepted by the iden
   assert.equal(ok.written.length, 0, 'no file was written')
   assert.equal(fs.readFileSync(path.join(REPO, IDENTITY_FILE), 'utf8'), before, 'the surface is untouched')
   assert.match(ok.decision.consequence.note ?? '', /a mark on the field at 0\.3100,0\.7200/)
+  assert.match(ok.decision.consequence.note ?? '', /the hand that chose is not named/, 'a pointer is a hand nobody named, and the note says so')
   assert.equal(readAll(dir).length, 1)
 
   const [ev] = deriveEvents(readAll(dir))
@@ -189,4 +192,59 @@ test('a click on the field is a deviation on identity.html: accepted by the iden
   registerIdentity()
   const alone = decide({ kind: 'deviation', file: 'src/site/site.css', line: 1, value: '0', reason: 'x' }, { ...ctx, root: REPO, dryRun: true })
   assert.ok(!alone.ok && /answers only for identity\.html/.test(alone.error))
+})
+
+test('a mark from the published site: the page composes an issue, the writer reads it back, and the record names the account and the workflow', () => {
+  // One shape, both ends: what the page puts in the issue is what the writer parses.
+  const posted = postedMark(3, markValue([0.31, 0.72]))
+  const issue = markIssue(posted)
+  assert.ok(issue.title.startsWith('mark '), 'the workflow gates on the title')
+  assert.deepEqual(parseMarkIssue(issue.body), posted)
+  const url = new URL(signUrl(posted))
+  assert.equal(url.origin, 'https://github.com')
+  assert.equal(url.pathname, `/${RECORD_REPO}/issues/new`)
+  assert.equal(url.searchParams.get('title'), issue.title)
+  assert.equal(url.searchParams.get('body'), issue.body)
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'strata-identity-sign-'))
+  fs.mkdirSync(path.join(dir, '.strata'), { recursive: true })
+  const first = writeMark(dir, issue.body, 'a-visitor', '2026-09-07T00:00:00.000Z')
+  assert.ok(first.ok, first.ok ? '' : first.error)
+  const [d] = readAll(dir)
+  assert.equal(d.kind, 'deviation')
+  if (d.kind !== 'deviation') return
+  assert.equal(d.file, IDENTITY_FILE)
+  assert.equal(d.value, '0.3100,0.7200')
+  assert.equal(d.line, 1, 'the line is counted from the record, not taken from the page')
+  assert.deepEqual(d.decided, { kind: 'human', actor: 'a-visitor' })
+  assert.deepEqual(d.written, { kind: 'agent', actor: WRITER })
+  assert.equal(d.via, 'identity')
+  assert.match(d.because ?? '', /GitHub account/)
+  assert.ok(!/not named/.test(d.consequence.note ?? ''), 'the hand is named')
+  assert.deepEqual(deriveEvents([d])[0].p, [0.31, 0.72])
+
+  const second = writeMark(dir, markIssue(postedMark(1, markValue([0.5, 0.5]))).body, 'a-visitor', '2026-09-07T00:01:00.000Z')
+  assert.ok(second.ok && second.line === 2)
+
+  // Refusals: no account, no block, a block that is not a mark, a place that is not one. None touches the record.
+  const before = readAll(dir).length
+  const noHand = writeMark(dir, issue.body, undefined)
+  assert.ok(!noHand.ok && /no hand to name/.test(noHand.error))
+  const noBlock = writeMark(dir, 'a mark on the field at 0.31,0.72', 'a-visitor')
+  assert.ok(!noBlock.ok && /carries no mark/.test(noBlock.error))
+  const token = { request: { kind: 'token', token: '--accent', action: 'cut' }, decided: 'human', written: 'human', via: 'identity' }
+  const notAMark = writeMark(dir, `\`\`\`json\n${JSON.stringify(token)}\n\`\`\``, 'a-visitor')
+  assert.ok(!notAMark.ok && /carries no mark/.test(notAMark.error), 'an issue can put a mark on the field and can do nothing else')
+  const elsewhere = { ...posted, request: { ...posted.request, file: 'src/site/site.css' } }
+  assert.equal(parseMarkIssue(`\`\`\`json\n${JSON.stringify(elsewhere)}\n\`\`\``), undefined)
+  const offField = { ...posted, request: { ...posted.request, value: '1.5,0.2' } }
+  const bad = writeMark(dir, `\`\`\`json\n${JSON.stringify(offField)}\n\`\`\``, 'a-visitor')
+  assert.ok(!bad.ok && /a place in the unit square/.test(bad.error))
+  assert.equal(readAll(dir).length, before, 'a refusal is returned, not recorded')
+
+  // The workflow runs this writer, and only on an issue whose title says mark.
+  const workflow = fs.readFileSync(path.join(REPO, '.github/workflows/mark.yml'), 'utf8')
+  assert.match(workflow, /scripts\/mark\.ts/)
+  assert.match(workflow, /startsWith\(github\.event\.issue\.title, 'mark '\)/)
+  assert.match(workflow, /gh workflow run pages\.yml/, 'a push with the workflow token starts no deploy on its own')
 })

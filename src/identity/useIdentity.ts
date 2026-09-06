@@ -6,9 +6,11 @@
  * A click appends a deviation to the state at once, so every projection
  * responds now. On the dev server it is also written through to the record
  * as a decision on `identity.html`, and the receipt then carries the id the
- * record gave it; the published site cannot write, so there the mark lives
- * for the session and the receipt says it is not on the record. Either way
- * the state only grows.
+ * record gave it. The published site cannot write, so there the mark lives
+ * for the session and the receipt says it is not on the record — and the
+ * same request is composed into an issue the visitor can open to sign it
+ * (`sign.ts`), which is the one road a static page has to the record.
+ * Either way the state only grows.
  */
 import { useCallback, useMemo, useRef, useState } from 'react'
 import raw from '../../.strata/decisions.jsonl?raw'
@@ -20,6 +22,7 @@ import { IDENTITY_FILE, markValue, parseRecord, stateFrom, syntheticStream, visi
 import { paletteFrom } from './palette'
 import { useReducedMotion } from './Identity'
 import { usePlayback } from './usePlayback'
+import { postedMark, signUrl, type PostedMark } from './sign'
 
 // The record is imported as text at build time. On the dev server a write
 // changes that text and Vite would reload this module and, with it, the
@@ -53,6 +56,9 @@ export function useIdentity({ seed, still = false }: IdentitySource = {}) {
   const latest = useRef(state)
   latest.current = state
 
+  // On a static host: the newest mark not on the record, and how many there are. The page offers to sign the newest.
+  const [unsigned, setUnsigned] = useState<{ posted: PostedMark; count: number } | null>(null)
+
   const pick = useCallback(
     (p: Vec) => {
       const before = latest.current
@@ -62,17 +68,18 @@ export function useIdentity({ seed, still = false }: IdentitySource = {}) {
       latest.current = next
       setState(next)
       pb.extendTo(next.events.length)
-      if (!import.meta.env.DEV || seed !== undefined) return
-      // The dev server writes through; a static host has no endpoint, and the fetch simply fails.
+      if (seed !== undefined) return
+      const posted = postedMark(line, markValue(p))
+      if (!import.meta.env.DEV) {
+        // A static host has no endpoint. The mark stays in the session, and the visitor is offered the issue that signs it.
+        setUnsigned((u) => ({ posted, count: (u?.count ?? 0) + 1 }))
+        return
+      }
+      // The dev server writes through.
       void fetch('/__strata/decide', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          request: { kind: 'deviation', file: IDENTITY_FILE, line, value: markValue(p) },
-          decided: 'human',
-          written: 'human',
-          via: 'identity',
-        }),
+        body: JSON.stringify(posted),
       })
         .then((r) => (r.ok ? (r.json() as Promise<{ ok: boolean; decision?: { id: string } }>) : null))
         .then((res) => {
@@ -86,5 +93,8 @@ export function useIdentity({ seed, still = false }: IdentitySource = {}) {
     [pb, seed],
   )
 
-  return { state, seeds, palette, reduced, pb, pick, stationOpts, dotOpts, heroOpts }
+  /** On a static host, after a click: the link that signs the newest mark onto the record, and how many marks this session holds. */
+  const sign = useMemo(() => (unsigned ? { url: signUrl(unsigned.posted), count: unsigned.count } : null), [unsigned])
+
+  return { state, seeds, palette, reduced, pb, pick, sign, stationOpts, dotOpts, heroOpts }
 }
