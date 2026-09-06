@@ -4,6 +4,13 @@
  * an end user actually wants: say a mood, or pick one. The same engine
  * runs underneath — the product just exposes less of it.
  * "The most important design choices are what you don't see."
+ *
+ * The field is not the ground here, as it is on the hub's hero and on
+ * `identity.html`: the field is Strata's record drawn, and a click on it is a
+ * decision on Strata's record, while this is Visionary's surface — an end
+ * user with two controls over their own seeds and no record of their own on
+ * this page — so another product's memory under their console would be
+ * decoration, and a click that wrote to it would be worse than that.
  */
 import { useEffect, useRef, useState } from 'react'
 import { PRESETS, type ThemeSeeds } from '../theme/generateTheme'
