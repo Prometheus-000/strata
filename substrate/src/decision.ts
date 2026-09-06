@@ -43,7 +43,7 @@ export type Value = { token: string } | { literal: string }
 /** A prop value as source can state it, or null when the attribute is absent or an expression. */
 export type PropValue = string | number | boolean | null
 
-/** A theme is six numbers. */
+/** A theme is seven numbers; the seventh, lightness, is optional because the record's seed decisions predate it. */
 export interface ThemeSeeds {
   hue: number
   chroma: number
@@ -51,6 +51,7 @@ export interface ThemeSeeds {
   energy: number
   density: number
   appearance: 'dark' | 'light'
+  lightness?: number
 }
 
 /* ---- provenance ---- */
@@ -212,6 +213,7 @@ const isValue = (v: unknown) => isObj(v) && (isStr(v.token) || isStr(v.literal))
 const isSeeds = (v: unknown) =>
   isObj(v) &&
   ['hue', 'chroma', 'warmth', 'energy', 'density'].every((k) => isNum(v[k])) &&
+  (v.lightness === undefined || isNum(v.lightness)) &&
   (v.appearance === 'dark' || v.appearance === 'light')
 const isPropValue = (v: unknown) => v === null || isStr(v) || isNum(v) || typeof v === 'boolean'
 
@@ -256,7 +258,7 @@ export function problemsWith(x: unknown): string[] {
       if (!isPropValue(x.from) || !isPropValue(x.to)) p.push('prop from/to must be literals or null')
       break
     case 'seed':
-      if (!isSeeds(x.seeds)) p.push('seed needs six seeds')
+      if (!isSeeds(x.seeds)) p.push('seed needs its seven seeds — five numbers, an appearance, and lightness when it is stated')
       break
     case 'deviation':
       if (!isStr(x.file) || !isNum(x.line) || !isStr(x.value)) p.push('deviation needs file, line, value')

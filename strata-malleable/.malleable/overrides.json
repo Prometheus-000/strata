@@ -3,10 +3,64 @@
   "seeds": {
     "hue": 250,
     "chroma": 0,
-    "warmth": -0.6,
+    "warmth": 0,
     "energy": 0.35,
     "density": 1,
-    "appearance": "light"
+    "appearance": "light",
+    "lightness": 1
   },
-  "overrides": []
+  "overrides": [
+    {
+      "id": "instance:settings/0::Button.button.st-button:gap",
+      "target": {
+        "scope": "instance",
+        "selector": "settings/0::Button.button.st-button"
+      },
+      "property": "gap",
+      "value": {
+        "token": "--surface-pad"
+      },
+      "author": "human",
+      "ts": 1788698194857
+    },
+    {
+      "id": "instance:gallery/0::Card.div.st-card__head:gap",
+      "target": {
+        "scope": "instance",
+        "selector": "gallery/0::Card.div.st-card__head"
+      },
+      "property": "gap",
+      "value": {
+        "token": "--control-pad-x"
+      },
+      "author": "human",
+      "ts": 1788698254146
+    },
+    {
+      "id": "instance:gallery/2::Button.button.st-button:radius",
+      "target": {
+        "scope": "instance",
+        "selector": "gallery/2::Button.button.st-button"
+      },
+      "property": "radius",
+      "value": {
+        "literal": "36px"
+      },
+      "author": "human",
+      "ts": 1788698262436
+    },
+    {
+      "id": "instance:gallery/2::Button.button.st-button:gap",
+      "target": {
+        "scope": "instance",
+        "selector": "gallery/2::Button.button.st-button"
+      },
+      "property": "gap",
+      "value": {
+        "token": "--control-pad-x"
+      },
+      "author": "human",
+      "ts": 1788698278327
+    }
+  ]
 }

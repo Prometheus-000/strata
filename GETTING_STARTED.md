@@ -35,7 +35,7 @@ That links the three workspaces into the packages above them: `identity/` — th
 identity engine, an append-only state drawn as a field, with the adapter from
 the record beside it; `substrate/` — the
 dependency-free core holding the decision type, the log, and `decide()` — and
-`engine/`, the semantic compiler that turns six numbers into every token. It
+`engine/`, the semantic compiler that turns seven numbers into every token. It
 takes a few seconds.
 
 ## 3. Check that it works
@@ -98,7 +98,7 @@ One server, six pages — open <http://localhost:5173>:
 
 | Page | What it is |
 | --- | --- |
-| `/` | **The hub.** The showcase and the **Theme Lab**: six dials — hue, chroma, warmth, energy, density, and dark/light — recompile every color, radius, rhythm and easing on the page, deterministically, in OKLCH. The URL is the theme, so a link carries the seeds. The record itself is rendered further down. |
+| `/` | **The hub.** The showcase and the **Theme Lab**: seven dials — hue, chroma, lightness, warmth, energy, density, and dark/light — recompile every color, radius, rhythm and easing on the page, deterministically, in OKLCH. The URL is the theme, so a link carries the seeds. The record itself is rendered further down. |
 | `/personalize.html` | **The personalizer.** The same engine with the two controls an end user actually wants: say a mood, or pick one. Remembered on the device. |
 | `/malleable.html` | **The malleable layer.** A live page you change by hand. Drag a corner and it is an override; drag a region into another landmark and the JSX rewrites itself; pick a value on a component's own control and the attribute is rewritten. The promote control asks one question — how far does this go — in four words. |
 | `/lab.html` | **The Theme Lab, alone.** The same instrument without the hub around it, for a frame that only has room for one. |
@@ -271,7 +271,7 @@ npm run strata -- skill
   move-region      Move a region — a component call site under a landmark — into another landmark …
   pick-prop        Change one prop at one call site to a value the component declared it allows …
   promote          Decide how far an override goes — just this, all here, the component, the system …
-  retheme          Move the product to a new appearance by emitting a seed set — six numbers …
+  retheme          Move the product to a new appearance by emitting a seed set — seven numbers …
   review-handoff   Take what the designer decided as given, make the code fit it …
 ```
 

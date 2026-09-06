@@ -1,7 +1,7 @@
 ---
 name: retheme
-description: Use when asked to change the look of the product — warmer, calmer, a colour, a mood, a brand — or to produce a new theme from a phrase or an image. A theme is six seeds; never edit CSS.
-purpose: Move the product to a new appearance by emitting a seed set — six numbers — and never by editing a stylesheet, with the reason on the record.
+description: Use when asked to change the look of the product — warmer, calmer, a colour, a mood, a brand — or to produce a new theme from a phrase or an image. A theme is seven seeds; never edit CSS.
+purpose: Move the product to a new appearance by emitting a seed set — seven numbers — and never by editing a stylesheet, with the reason on the record.
 inputs: [intent]
 context:
   state: [tokens]
@@ -17,7 +17,7 @@ typicalDecisions: [seed]
 examples: []
 reasons: |
   Meaning, behaviour and expression change at different rates. A theme is the
-  fastest-changing layer, so it is the smallest record: six numbers that fit
+  fastest-changing layer, so it is the smallest record: seven numbers that fit
   in a URL hash. Everything derived from them is a projection you can throw
   away. A light appearance is not inverted dark — the engine deepens accents
   to hold AA on paper, so nobody has to remember to.
@@ -41,7 +41,7 @@ reasons: |
    the engine, or the store's seeds) and record it:
 
    ```bash
-   strata retheme --hue 250 --chroma 0.08 --warmth -0.6 --energy 0.35 --density 1 --appearance dark --why "…" --decided-by agent
+   strata retheme --hue 250 --chroma 0.08 --warmth 0 --lightness -1 --energy 0.35 --density 1 --appearance dark --why "…" --decided-by agent
    ```
 
 4. Regenerate the projections (`npm run tokens`) and run `strata check`.

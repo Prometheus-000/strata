@@ -1,10 +1,10 @@
 /**
- * The six seeds as controls — the picker every surface shares. The Theme Lab
+ * The seven seeds as controls — the picker every surface shares. The Theme Lab
  * grew these first; the identity page draws the same ones, because a second
  * picker would be a second place for a range to disagree with the engine.
  * Ranges are the engine's own (`SEED_RANGE`), read rather than restated.
  */
-import { SEED_RANGE, type ThemeSeeds } from '../theme/generateTheme'
+import { flipAppearance, SEED_RANGE, type ThemeSeeds } from '../theme/generateTheme'
 
 export function Ground({ value, onChange }: { value: ThemeSeeds['appearance']; onChange: (a: ThemeSeeds['appearance']) => void }) {
   return (
@@ -49,14 +49,17 @@ export function SeedDials({ seeds, onChange }: { seeds: ThemeSeeds; onChange: (n
   const [w0, w1] = range('warmth', [-1, 1])
   const [e0, e1] = range('energy', [0, 1])
   const [d0, d1] = range('density', [0.85, 1.15])
+  const [l0, l1] = range('lightness', [-1, 1])
+  const lightness = seeds.lightness ?? 0
   return (
     <>
       <Slider name="Hue" value={seeds.hue} min={h0} max={h1} step={1} display={`${seeds.hue}°`} onChange={(hue) => set({ hue })} hue />
       <Slider name="Chroma" value={seeds.chroma} min={c0} max={c1} step={0.005} display={seeds.chroma.toFixed(3)} onChange={(chroma) => set({ chroma })} />
+      <Slider name="Lightness" value={lightness} min={l0} max={l1} step={0.05} display={`${lightness > 0 ? '+' : ''}${lightness.toFixed(2)}`} onChange={(lightness) => set({ lightness })} />
       <Slider name="Warmth" value={seeds.warmth} min={w0} max={w1} step={0.05} display={seeds.warmth.toFixed(2)} onChange={(warmth) => set({ warmth })} />
       <Slider name="Energy" value={seeds.energy} min={e0} max={e1} step={0.05} display={seeds.energy.toFixed(2)} onChange={(energy) => set({ energy })} />
       <Slider name="Density" value={seeds.density} min={d0} max={d1} step={0.01} display={`×${seeds.density.toFixed(2)}`} onChange={(density) => set({ density })} />
-      <Ground value={seeds.appearance} onChange={(appearance) => set({ appearance })} />
+      <Ground value={seeds.appearance} onChange={(appearance) => (appearance === seeds.appearance ? undefined : onChange(flipAppearance(seeds)))} />
     </>
   )
 }

@@ -88,7 +88,7 @@ function Hero() {
         </Reveal>
         <Reveal delay={160}>
           <p className="hero__lede">
-            Strata works the way the products it serves work: six seeds, one deterministic
+            Strata works the way the products it serves work: seven seeds, one deterministic
             derivation, endless coherent variation. Themes as sampling, not styling — a grammar
             written for product teams shipping models, and for the agents building beside them.
           </p>
@@ -118,7 +118,7 @@ function Hero() {
 const SURFACES = [
   {
     tag: 'THEME LAB',
-    what: 'Six dials, a phrase, or a dropped image. The whole page recompiles on every drag, and every compiled word shows its receipt.',
+    what: 'Seven dials, a phrase, or a dropped image. The whole page recompiles on every drag, and every compiled word shows its receipt.',
     href: '#lab',
     cta: 'on this page',
   },
@@ -181,7 +181,7 @@ const CREDO = [
   {
     line: 'Less but better.',
     proof:
-      'Six seeds instead of a thousand hand-picked values. One filled action per surface. Components enter the system only after proving themselves three times in the wild — the inventory stays small because everything in it was earned.',
+      'Seven seeds instead of a thousand hand-picked values. One filled action per surface. Components enter the system only after proving themselves three times in the wild — the inventory stays small because everything in it was earned.',
   },
 ]
 
@@ -556,8 +556,8 @@ export default function App() {
         <Surfaces />
         <Section
           kicker="Theme Lab"
-          title="Six seeds in. A design system out."
-          sub="Drag anything. Hue, chroma, warmth, energy and density recompute every color, radius, rhythm and easing on this page — deterministically, in OKLCH."
+          title="Seven seeds in. A design system out."
+          sub="Drag anything. Hue, chroma, lightness, warmth, energy and density recompute every color, radius, rhythm and easing on this page — deterministically, in OKLCH."
           id="lab"
         >
           <Reveal>

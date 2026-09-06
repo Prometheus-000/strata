@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { generateTheme, PRESETS, type ThemeSeeds } from '../theme/generateTheme'
+import { flipAppearance, generateTheme, PRESETS, type ThemeSeeds } from '../theme/generateTheme'
 import { themeTokens, type Ledger } from '../theme/ledger'
 import LEDGER from '../theme/ledger.json'
 import { hashFromSeeds, useTheme } from '../theme/ThemeContext'
@@ -35,6 +35,7 @@ const round = (s: ThemeSeeds): ThemeSeeds => ({
   warmth: Math.round(s.warmth * 100) / 100,
   energy: Math.round(s.energy * 100) / 100,
   density: Math.round(s.density * 100) / 100,
+  lightness: Math.round((s.lightness ?? 0) * 100) / 100,
 })
 
 interface Keeper {
@@ -176,11 +177,12 @@ export function ThemeLab() {
 
         <Slider name="Hue" value={seeds.hue} min={0} max={360} step={1} display={`${seeds.hue}°`} onChange={(hue) => set({ hue })} hue />
         <Slider name="Chroma" value={seeds.chroma} min={0} max={0.25} step={0.005} display={seeds.chroma.toFixed(3)} onChange={(chroma) => set({ chroma })} />
+        <Slider name="Lightness" value={seeds.lightness ?? 0} min={-1} max={1} step={0.05} display={`${(seeds.lightness ?? 0) > 0 ? '+' : ''}${(seeds.lightness ?? 0).toFixed(2)}`} onChange={(lightness) => set({ lightness })} />
         <Slider name="Warmth" value={seeds.warmth} min={-1} max={1} step={0.05} display={seeds.warmth.toFixed(2)} onChange={(warmth) => set({ warmth })} />
         <Slider name="Energy" value={seeds.energy} min={0} max={1} step={0.05} display={seeds.energy.toFixed(2)} onChange={(energy) => set({ energy })} />
         <Slider name="Density" value={seeds.density} min={0.85} max={1.15} step={0.01} display={`×${seeds.density.toFixed(2)}`} onChange={(density) => set({ density })} />
 
-        <Ground value={seeds.appearance} onChange={(appearance) => set({ appearance })} />
+        <Ground value={seeds.appearance} onChange={(appearance) => (appearance === seeds.appearance ? undefined : setSeeds((prev) => flipAppearance(prev)))} />
 
         <pre className="lab__seeds" aria-label="Current theme seeds as JSON">
           {JSON.stringify(seeds, null, 2)}

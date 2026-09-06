@@ -21,7 +21,7 @@
  *     named there give their mass to the promoted place;
  *   - an override's or a prop's value travels with the event as text, so the
  *     engine can compute candidacy the way `precedent` does;
- *   - a seed decision carries its six numbers: the theme it put in force;
+ *   - a seed decision carries its seven numbers: the theme it put in force;
  *   - anything refused is a line with nothing on it, because the attempt is
  *     on the record;
  *   - everything else is a smaller bump.

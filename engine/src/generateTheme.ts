@@ -1,7 +1,7 @@
 /**
  * STRATA THEME ENGINE — the single author of the semantic tier.
  * ------------------------------------------------------------
- * A theme is not a stylesheet — it is six numbers. From these seeds every
+ * A theme is not a stylesheet — it is seven numbers. From these seeds every
  * semantic role is derived, in OKLCH, so any generated theme stays
  * perceptually coherent.
  *
@@ -41,16 +41,30 @@ export interface ThemeSeeds {
   /** 0.85 (compact) … 1.15 (airy). Scales controls, padding, gaps. */
   density: number
   appearance: 'dark' | 'light'
+  /**
+   * −1 (deeper) … 0 (the house ground) … 1 (lifted). Where the ground sits
+   * within its appearance: a dark theme from OLED black to charcoal, a light
+   * one from bone to paper-white. Optional, because the record's seed
+   * decisions were six numbers before it existed, and absent means the house.
+   */
+  lightness?: number
 }
 
 /**
  * The house theme: monochrome by default, colour by choice. Chroma 0 means
- * the one filled action on a screen is ink, not a hue; warmth −0.6 casts the
- * neutrals toward slate. This is the same voice as Visionary's production
- * Midnight, where applying it writes nothing and the stylesheet is the theme.
+ * the one filled action on a screen is ink, not a hue. Warmth 0 and lightness
+ * 1 are Visionary's own: its production ground is #010102 — black, and its
+ * engine says "the page is black; warmth is a cast on it, never a lift off
+ * it" — and its house theme is warmth 0. The first reading of that palette
+ * lifted the ground to 0.17 and cast it slate at warmth −0.6, which is a dark
+ * teal, because there was no lightness seed to say otherwise and the 260°
+ * it measured was the hue of Visionary's muted ink, not of its ground. The
+ * seventh seed is what lets the house say black.
+ *
  * The ground is paper: the house decided on 2026-09-05 that the identity's
  * field drawn on a light ground is the default (`seed` decision on the
- * record), and dark is the same six numbers with one bit flipped.
+ * record). Dark is the same seven numbers with one bit flipped and lightness
+ * mirrored — `flipAppearance` — so black and white are one theme.
  *
  * The constant keeps the name it had when the ground was dark, because the
  * malleable layer's ship verb addresses the seed constant by this name and
@@ -59,16 +73,20 @@ export interface ThemeSeeds {
 export const OBSIDIAN: ThemeSeeds = {
   hue: 250,
   chroma: 0,
-  warmth: -0.6,
+  warmth: 0,
   energy: 0.35,
   density: 1,
   appearance: 'light',
+  lightness: 1,
 }
+
+/** The other ground of the same theme: the appearance bit flipped, and lightness mirrored, so black becomes white and charcoal becomes bone. */
+export const flipAppearance = (s: ThemeSeeds): ThemeSeeds => ({ ...s, appearance: s.appearance === 'dark' ? 'light' : 'dark', lightness: -(s.lightness ?? 0) || 0 })
 
 /** The two grounds of the house theme, by name: Obsidian is the dark pole, Gallery the paper. */
 export const PRESETS: Record<string, ThemeSeeds> = {
-  Obsidian: { ...OBSIDIAN, appearance: 'dark' },
-  Gallery: { ...OBSIDIAN, appearance: 'light' },
+  Obsidian: flipAppearance(OBSIDIAN),
+  Gallery: { ...OBSIDIAN },
   Ember: { hue: 40, chroma: 0.17, warmth: 0.8, energy: 0.75, density: 1, appearance: 'dark' },
   Ultraviolet: { hue: 300, chroma: 0.2, warmth: -0.6, energy: 0.9, density: 0.95, appearance: 'dark' },
   Meadow: { hue: 135, chroma: 0.12, warmth: 0.5, energy: 0.3, density: 1.1, appearance: 'light' },
@@ -81,6 +99,7 @@ export const SEED_RANGE: Record<string, [number, number]> = {
   warmth: [-1, 1],
   energy: [0, 1],
   density: [0.85, 1.15],
+  lightness: [-1, 1],
 }
 
 export const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
@@ -146,6 +165,7 @@ export function generateTheme(seeds: ThemeSeeds, opts: ThemeForm = {}): Record<s
   const warmth = clamp(seeds.warmth, -1, 1)
   const energy = clamp(seeds.energy, 0, 1)
   const density = clamp(seeds.density, 0.85, 1.15)
+  const lightness = clamp(seeds.lightness ?? 0, -1, 1)
   const dark = seeds.appearance === 'dark'
 
   // A monochrome accent is ink, not grey. Below chroma 0.04 the accent is
@@ -156,26 +176,29 @@ export function generateTheme(seeds: ThemeSeeds, opts: ThemeForm = {}): Record<s
   // remember it.
   const mono = 1 - clamp(chroma / 0.04, 0, 1)
 
-  // Neutrals inherit a whisper of hue: warm pulls toward paper (95°),
-  // cool toward slate (260° — calibrated against Visionary's production
-  // palette, whose neutrals sit at 260.6°), neutral rests at 200°.
-  const neutralHue = warmth >= 0 ? lerp(200, 95, warmth) : lerp(200, 260, -warmth)
+  // Neutrals inherit a whisper of hue: warm pulls toward paper (85°), cool
+  // toward slate (250°), neutral rests at 200°. The anchors are Visionary's
+  // own engine's; an earlier 260° here was measured off its muted ink.
+  const neutralHue = warmth >= 0 ? lerp(200, 85, warmth) : lerp(200, 250, -warmth)
   const neutralChroma = 0.006 + Math.abs(warmth) * 0.014
 
   const t: Record<string, string> = {}
 
   if (dark) {
-    t['--surface-page'] = oklch(0.17, neutralChroma, neutralHue)
-    t['--surface-sunken'] = oklch(0.14, neutralChroma * 0.9, neutralHue)
-    t['--surface-raised'] = oklch(0.21, neutralChroma * 1.1, neutralHue)
-    t['--surface-overlay'] = oklch(0.24, neutralChroma * 1.2, neutralHue)
-    t['--surface-veil'] = oklch(0.1, neutralChroma, neutralHue, 0.62)
+    // Lightness places the ground between OLED black and charcoal; every surface is a fixed step off it.
+    const pageL = 0.17 + (lightness < 0 ? lightness * 0.1 : lightness * 0.1)
+    t['--surface-page'] = oklch(pageL, neutralChroma, neutralHue)
+    t['--surface-sunken'] = oklch(Math.max(0.04, pageL - 0.03), neutralChroma * 0.9, neutralHue)
+    t['--surface-raised'] = oklch(pageL + 0.04, neutralChroma * 1.1, neutralHue)
+    t['--surface-overlay'] = oklch(pageL + 0.07, neutralChroma * 1.2, neutralHue)
+    t['--surface-veil'] = oklch(Math.max(0.03, pageL - 0.07), neutralChroma, neutralHue, 0.62)
     t['--ink'] = oklch(0.94, 0.008, neutralHue)
     t['--ink-muted'] = oklch(0.72, 0.012, neutralHue)
     t['--ink-faint'] = oklch(0.54, 0.012, neutralHue)
     t['--ink-inverse'] = oklch(0.16, 0.01, neutralHue)
 
-    const accentL = lerp(lerp(0.84, 0.78, chroma / 0.25), 0.93, mono)
+    // A lifted ground lifts the accent a little with it, so the one filled action keeps its distance from the page.
+    const accentL = lerp(lerp(0.84, 0.78, chroma / 0.25), 0.93, mono) + 0.04 * Math.max(0, lightness)
     t['--accent'] = oklch(accentL, chroma, hue)
     t['--accent-strong'] = oklch(accentL + 0.06, chroma * 1.1, hue)
     t['--accent-ink'] = oklch(0.16, Math.min(chroma * 0.35, 0.06), hue)
@@ -192,18 +215,20 @@ export function generateTheme(seeds: ThemeSeeds, opts: ThemeForm = {}): Record<s
     t['--danger-soft'] = oklch(0.68, 0.19, 22, 0.15)
     t['--shadow-color'] = oklch(0.05, 0.01, neutralHue, 0.5)
   } else {
-    t['--surface-page'] = oklch(0.97, neutralChroma, neutralHue)
-    t['--surface-sunken'] = oklch(0.94, neutralChroma * 1.1, neutralHue)
-    t['--surface-raised'] = oklch(0.995, neutralChroma * 0.5, neutralHue)
-    t['--surface-overlay'] = oklch(1, 0, 0)
+    // Lightness places the ground between bone and paper-white; raised and overlay stay above it, never past white.
+    const pageL = 0.97 + (lightness < 0 ? lightness * 0.09 : lightness * 0.015)
+    t['--surface-page'] = oklch(pageL, neutralChroma, neutralHue)
+    t['--surface-sunken'] = oklch(pageL - 0.03, neutralChroma * 1.1, neutralHue)
+    t['--surface-raised'] = oklch(Math.min(0.995, pageL + 0.025), neutralChroma * 0.5, neutralHue)
+    t['--surface-overlay'] = oklch(Math.min(1, pageL + 0.03), 0, 0)
     t['--surface-veil'] = oklch(0.3, 0.01, neutralHue, 0.4)
     t['--ink'] = oklch(0.24, 0.015, neutralHue)
     t['--ink-muted'] = oklch(0.45, 0.015, neutralHue)
     t['--ink-faint'] = oklch(0.6, 0.012, neutralHue)
     t['--ink-inverse'] = oklch(0.97, 0.005, neutralHue)
 
-    // Light appearances need darker, denser accents to hold AA contrast.
-    const accentL = lerp(lerp(0.58, 0.52, chroma / 0.25), 0.3, mono)
+    // Light appearances need darker, denser accents to hold AA contrast, and a darkened ground needs them darker still.
+    const accentL = lerp(lerp(0.58, 0.52, chroma / 0.25), 0.3, mono) - 0.06 * Math.max(0, -lightness)
     const accentC = chroma * 0.87
     t['--accent'] = oklch(accentL, accentC, hue)
     t['--accent-strong'] = oklch(accentL - 0.08, accentC, hue)

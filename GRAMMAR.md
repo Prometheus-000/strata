@@ -18,7 +18,7 @@ Two commitments, stated once, enacted everywhere below:
 light grounds to hold AA contrast, honors reduced-motion at both the stylesheet and the
 runtime, and an evaluator reads every diff. None of it has a UI. All of it is the design.
 
-**Less but better.** Six seeds instead of a thousand hand-picked values. One filled action
+**Less but better.** Seven seeds instead of a thousand hand-picked values. One filled action
 per surface. Promotion is earned by three appearances in the wild, so the inventory stays
 small because everything in it was proven necessary. The credo applies to itself: four
 philosophies were candidates for this section, and it kept two.
@@ -43,12 +43,17 @@ nothing but this vocabulary still cohere.
 this repo already grew its own drift in week one: the hand-written CSS said surface chroma
 0.012 while the engine computed 0.006. Nobody chose that; transcription did.
 
-**A theme is six seeds, and light is not inverted dark.** Light appearances compile accents
+**A theme is seven seeds, and light is not inverted dark.** Light appearances compile accents
 at 0.87× chroma and lower lightness because a light accent that merely inverts fails AA on
-paper. The engine encodes the correction so no one has to remember it.
+paper. The engine encodes the correction so no one has to remember it. The seventh seed is
+lightness: a theme is L, C and H, and for a year the lab offered C and H with no L — the
+ground sat at one lightness per appearance that no hand could reach. Lightness places the
+ground within its appearance, OLED black to charcoal, bone to paper-white, and every surface is
+a fixed step off the ground, so the room moves as one. It is optional on the record, because
+the seed decisions written before it existed are still decisions.
 
 **Warmth tints every neutral.** A pure mid-grey reads as unconsidered. Neutrals borrow a
-whisper of hue — toward paper (95°) or slate (245°) — so even "grey" is a chosen color.
+whisper of hue — toward paper (85°) or slate (250°), Visionary's own anchors — so even "grey" is a chosen color.
 
 **Energy buys shape as well as speed.** Kinetic themes get spring easing, shorter durations
 *and* rounder corners; calm themes glide and stay architectural. Motion personality that
@@ -130,7 +135,8 @@ the identity's field was first drawn on it: hairlines of ink on a light ground r
 not a console, and the decision is on the record as a `seed`. The rule used to run the other way —
 the portfolio's review had named *"dark theme, minimal monochrome typography, and a technical
 'research lab' feel"* as the baseline — and what survives the reversal is the shape: `Obsidian` is
-`Gallery` with `appearance` flipped and nothing else changed, because the two poles are one
+`Gallery` with `appearance` flipped and lightness mirrored, which is nothing else changed — black
+and white are one theme — because the two poles are one
 theme's two grounds, and the dot after the wordmark is the one click between them.
 
 ## Layer 1 — Behavior (never forked)

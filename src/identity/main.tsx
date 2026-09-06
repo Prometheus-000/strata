@@ -9,7 +9,7 @@ import { Trip } from './Trip'
 
 /**
  * The identity, on its own page. The same ThemeProvider as every other
- * surface, so the six seeds and the hash URL work here too: the theme changes
+ * surface, so the seven seeds and the hash URL work here too: the theme changes
  * how the field is drawn, never what it holds.
  */
 createRoot(document.getElementById('root')!).render(

@@ -18,6 +18,7 @@ type Effect = Partial<{
   warmth: number
   energy: number
   density: number
+  lightness?: number
   appearance: 'dark' | 'light'
 }>
 
@@ -48,13 +49,18 @@ const WORDS: Record<string, Effect> = {
   calm: { energy: 0.15 }, still: { energy: 0.1 }, quiet: { energy: 0.2 },
   slow: { energy: 0.15 }, serene: { energy: 0.15 }, museum: { energy: 0.2, density: 1.12 },
   library: { energy: 0.2, warmth: 0.4 },
+  // lightness
+  bright: { lightness: 0.5 }, luminous: { lightness: 0.6 }, white: { appearance: 'light', lightness: 1 },
+  bone: { appearance: 'light', lightness: -0.5 }, parchment: { appearance: 'light', lightness: -0.7, warmth: 0.6 },
+  deep: { lightness: -0.5 }, dim: { lightness: -0.4 }, pitch: { appearance: 'dark', lightness: -1 }, oled: { appearance: 'dark', lightness: -1 },
+  charcoal: { appearance: 'dark', lightness: 0.8 }, ash: { appearance: 'dark', lightness: 0.6, warmth: -0.2 },
   // density
   airy: { density: 1.1 }, spacious: { density: 1.12 }, roomy: { density: 1.08 },
   dense: { density: 0.9 }, compact: { density: 0.88 }, console: { density: 0.9 },
   cockpit: { density: 0.87, appearance: 'dark' },
   // appearance
-  night: { appearance: 'dark' }, midnight: { appearance: 'dark', hue: 250, chroma: 0.01, warmth: -0.6 },
-  polar: { appearance: 'light', hue: 250, chroma: 0.01, warmth: -0.6 }, noir: { appearance: 'dark', chroma: 0.05 },
+  night: { appearance: 'dark' }, midnight: { appearance: 'dark', hue: 250, chroma: 0.01, warmth: 0, lightness: -1 },
+  polar: { appearance: 'light', hue: 250, chroma: 0.01, warmth: 0, lightness: 1 }, noir: { appearance: 'dark', chroma: 0.05 },
   dusk: { appearance: 'dark' }, '3am': { appearance: 'dark' }, nocturne: { appearance: 'dark' },
   obsidian: { appearance: 'dark' }, cave: { appearance: 'dark' },
   day: { appearance: 'light' }, daylight: { appearance: 'light' }, morning: { appearance: 'light' },

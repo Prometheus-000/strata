@@ -141,7 +141,7 @@ export function Personalize() {
                 Reset
               </button>
             </div>
-            <p className="pz-panel__note">Remembered on this device. The whole platform follows — every surface derives from six numbers.</p>
+            <p className="pz-panel__note">Remembered on this device. The whole platform follows — every surface derives from seven numbers.</p>
           </aside>
         )}
       </main>

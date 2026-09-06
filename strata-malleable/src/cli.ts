@@ -318,21 +318,21 @@ export function runMalleable(argv: string[], home: CliHome, env: Record<string, 
         const seeds: ThemeSeeds = {
           ...store.seeds,
           ...Object.fromEntries(
-            (['hue', 'chroma', 'warmth', 'energy', 'density'] as const)
+            (['hue', 'chroma', 'warmth', 'energy', 'density', 'lightness'] as const)
               .map((k) => [k, num(k)])
               .filter(([, v]) => v !== undefined && Number.isFinite(v)),
           ),
           ...(appearance ? { appearance } : {}),
         }
         for (const [k, [lo, hi]] of Object.entries(SEED_RANGE))
-          if (seeds[k as keyof ThemeSeeds] as number < lo || (seeds[k as keyof ThemeSeeds] as number) > hi)
+          if (seeds[k as keyof ThemeSeeds] !== undefined && ((seeds[k as keyof ThemeSeeds] as number) < lo || (seeds[k as keyof ThemeSeeds] as number) > hi))
             return fail(`${k} is ${String(seeds[k as keyof ThemeSeeds])}; the engine clamps it to ${lo}–${hi}, so say a value it can hold`)
 
         const ctx = context()
         if ('error' in ctx) return fail(ctx.error)
         const result = write({ kind: 'seed', seeds, reason: flag('why') }, ctx)
         if (!result) return 1
-        const moved = (['hue', 'chroma', 'warmth', 'energy', 'density', 'appearance'] as const)
+        const moved = (['hue', 'chroma', 'warmth', 'energy', 'density', 'lightness', 'appearance'] as const)
           .filter((k) => store.seeds[k] !== seeds[k])
           .map((k) => `${k} ${String(store.seeds[k])} → ${String(seeds[k])}`)
         io.out(`\n  ${moved.length ? moved.join(' · ') : 'nothing moved — these are the seeds already'}`)

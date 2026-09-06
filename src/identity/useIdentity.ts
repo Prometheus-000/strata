@@ -41,7 +41,7 @@ export function useIdentity({ seed, still = false }: IdentitySource = {}) {
   const [state, setState] = useState<IdentityState>(() => stateFrom(seed !== undefined ? syntheticStream(seed) : parseRecord(raw)))
   const { seeds, setSeeds } = useTheme()
   const palette = useMemo(() => paletteFrom(seeds, LEDGER as Ledger), [seeds])
-  // The theme each stratum closed under, resolved once per distinct six numbers.
+  // The theme each stratum closed under, resolved once per distinct seven numbers.
   const paletteFor = useMemo(() => {
     const cache = new Map<string, ReturnType<typeof paletteFrom>>()
     return (s: Seeds) => {

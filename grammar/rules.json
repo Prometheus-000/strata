@@ -5,7 +5,7 @@
     {
       "id": "layer0",
       "name": "Meaning",
-      "what": "Semantic roles, derived by the engine from six seeds. The one vocabulary everything else speaks — consistency is predictability of meaning, not visual sameness.",
+      "what": "Semantic roles, derived by the engine from seven seeds. The one vocabulary everything else speaks — consistency is predictability of meaning, not visual sameness.",
       "governance": "one author · never forked · every role decided"
     },
     {
@@ -90,10 +90,11 @@
     {
       "id": "layer0.light-not-inverted-dark",
       "authority": "policy",
-      "statement": "A theme is six seeds, and light is not inverted dark: light appearances compile accents at 0.87× chroma and lower lightness.",
+      "statement": "A theme is seven seeds, and light is not inverted dark: light appearances compile accents at 0.87× chroma and lower lightness. The seventh seed, lightness, places the ground within its appearance — OLED black to charcoal, bone to paper-white — and every surface is a fixed step off the ground.",
       "reason": "A light accent that merely inverts fails AA on paper. The engine encodes the correction so no one has to remember it.",
-      "source": "GRAMMAR.md › Layer 0 — Meaning › A theme is six seeds",
-      "check": "none"
+      "source": "GRAMMAR.md › Layer 0 — Meaning › A theme is seven seeds",
+      "check": "none",
+      "incident": "The seventh seed was added on 2026-09-06: a theme is L, C and H, and the Theme Lab had C and H but no L — the ground's lightness was fixed at one value per appearance and unreachable by any hand."
     },
     {
       "id": "layer0.warmth-tints-neutrals",
@@ -189,7 +190,7 @@
       "id": "voice.light-first",
       "authority": "policy",
       "statement": "Light is the first ground; dark is one flipped bit.",
-      "reason": "Hairlines of ink on paper read as a drawing, not a console. Obsidian is Gallery with appearance flipped and nothing else changed, because the two poles are one theme’s two grounds.",
+      "reason": "Hairlines of ink on paper read as a drawing, not a console. Obsidian is Gallery with appearance flipped and lightness mirrored, which is nothing else changed — black and white are one theme — because the two poles are one theme’s two grounds.",
       "source": "GRAMMAR.md › The voice › Light is the first ground",
       "scope": "product",
       "check": "none",

@@ -43,7 +43,7 @@ const SYSTEM = [
   ['src/tokens/tokens.json', 'GENERATED. The machine-readable contract: seeds, their ranges, and the reason for each dial.'],
   ['src/tokens/primitives.css', 'Tier 1. Raw, context-free scales. Components never reference these.'],
   ['src/tokens/semantic.css', 'GENERATED from the engine. Tier 2 — the only vocabulary components may speak.'],
-  ['src/theme/generateTheme.ts', 'THE ENGINE. Six seeds in, the whole semantic tier out, in OKLCH.'],
+  ['src/theme/generateTheme.ts', 'THE ENGINE. Seven seeds in, the whole semantic tier out, in OKLCH.'],
   ['src/theme/ledger.ts', 'THE LEDGER. Every generated token is a proposal; a cut one collapses to a declared fallback, never vanishes.'],
   ['src/theme/ledger.json', 'PROJECTED from the record. What people decided about each token: proposed, kept, or cut — with a reason, a name, and the decision id.'],
   ['src/theme/handlers.ts', 'The theme projection: how a token decision and a deviation are applied; how the ledger imports and rebuilds.'],
@@ -80,7 +80,7 @@ const out = []
 
 out.push(`# Strata — complete source bundle
 
-A design system for AI product teams. Themes are data: six seeds
+A design system for AI product teams. Themes are data: seven seeds
 (\`hue\`, \`chroma\`, \`warmth\`, \`energy\`, \`density\`, \`appearance\`) derive every
 colour, radius, rhythm and easing, in perceptually-uniform OKLCH.
 

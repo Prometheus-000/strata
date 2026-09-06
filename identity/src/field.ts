@@ -32,7 +32,7 @@
  *   - Candidacy is computed; promotion is decided. Three live decisions on
  *     distinct targets sharing one value are a candidate until a hand
  *     promotes them, and the picture says which of the two it is showing.
- *   - The theme in force is a decision. A seed event carries six numbers, and
+ *   - The theme in force is a decision. A seed event carries seven numbers, and
  *     a stratum keeps the seeds its epoch closed under; what to paint with
  *     them is the host's, so this file never names a colour.
  *   - Presence disturbs; only a decision is remembered. The pointer is an
@@ -73,6 +73,7 @@ export interface Seeds {
   energy: number
   density: number
   appearance: 'dark' | 'light'
+  lightness?: number
 }
 
 export interface IdentityEvent {

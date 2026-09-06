@@ -1,7 +1,7 @@
 /**
  * THE TOKEN LEDGER — every generated token is a proposal; people keep or cut.
  *
- * The engine emits forty-odd semantic roles from six seeds, and each one is a
+ * The engine emits forty-odd semantic roles from seven seeds, and each one is a
  * proposal until a hand decides it: `kept`, `cut`, or minted into existence by
  * a hand in the first place.
  *

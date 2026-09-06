@@ -54,7 +54,7 @@ const RULES: Array<[string, string]> = [
   ['A ship closes an epoch.', 'The live field carries only what has happened since the last ship; what came before is the stratum that ship froze, kept beneath, receding. Memory accumulates as strata, not as height, so the plane cannot fill.'],
   ['Flow is mass moving along a recorded consequence.', 'A promotion drains the decisions whose convergence earned it into the promoted place, and leaves a hollow where each was. A source already shipped rises out of its stratum.'],
   ['Candidacy is computed; promotion is decided.', 'Three decisions on distinct targets sharing one value are a dashed constellation until a hand promotes them. The picture says which of the two it is showing.'],
-  ['The theme in force is a decision.', 'The live epoch wears the six seeds in force now; each stratum keeps the seeds its epoch closed under. Colour has no other source.'],
+  ['The theme in force is a decision.', 'The live epoch wears the seven seeds in force now; each stratum keeps the seeds its epoch closed under. Colour has no other source.'],
   ['Presence disturbs; only a decision is remembered.', 'The pointer bends the field and leaves no trace. A click is a deviation, and it stays.'],
   ['Nothing loops.', 'The record replays once and holds. What breathes afterwards is noise that never returns to its start.'],
 ]
@@ -267,7 +267,7 @@ export function Trip() {
         </div>
       </Section>
 
-      <Section kicker="The theme in force" title="Six seeds. The live epoch wears them; the strata keep theirs." sub="The same picker as the Theme Lab, driving the same engine. Here it is a trial: what you set paints the live field and the frame around it, and the strata beneath keep the theme the record says they closed under. The URL carries the seeds." id="theme">
+      <Section kicker="The theme in force" title="Seven seeds. The live epoch wears them; the strata keep theirs." sub="The same picker as the Theme Lab, driving the same engine. Here it is a trial: what you set paints the live field and the frame around it, and the strata beneath keep the theme the record says they closed under. The URL carries the seeds." id="theme">
         <div className="identity-theme">
           <div className="identity-theme__dials">
             <SeedDials seeds={seeds} onChange={setSeeds} />
@@ -275,7 +275,7 @@ export function Trip() {
           <dl className="identity-receipt identity-theme__receipt">
             <div>
               <dt>In force</dt>
-              <dd>{`${seeds.hue}° · c${seeds.chroma.toFixed(3)} · w${seeds.warmth.toFixed(2)} · e${seeds.energy.toFixed(2)} · d${seeds.density.toFixed(2)} · ${seeds.appearance}`}</dd>
+              <dd>{`${seeds.hue}° · c${seeds.chroma.toFixed(3)} · l${(seeds.lightness ?? 0).toFixed(2)} · w${seeds.warmth.toFixed(2)} · e${seeds.energy.toFixed(2)} · d${seeds.density.toFixed(2)} · ${seeds.appearance}`}</dd>
             </div>
             <div>
               <dt>The record says</dt>

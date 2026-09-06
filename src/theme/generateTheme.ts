@@ -13,6 +13,7 @@ export {
   ROLES_AGAINST_PRIMITIVES,
   SEED_RANGE,
   clamp,
+  flipAppearance,
   generateTheme,
   lerp,
   type ApplyOptions,

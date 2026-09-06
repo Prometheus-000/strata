@@ -1,4 +1,4 @@
-import { generateTheme } from '../theme/generateTheme'
+import { flipAppearance, generateTheme } from '../theme/generateTheme'
 import { themeTokens, type Ledger } from '../theme/ledger'
 import LEDGER from '../theme/ledger.json'
 import { useTheme } from '../theme/ThemeContext'
@@ -22,7 +22,7 @@ export function AppearanceDot() {
       aria-label={dark ? 'Switch to light appearance' : 'Switch to dark appearance'}
       aria-pressed={!dark}
       style={dot ? ({ ['--dot' as string]: dot } as React.CSSProperties) : undefined}
-      onClick={() => setSeeds((prev) => ({ ...prev, appearance: dark ? 'light' : 'dark' }))}
+      onClick={() => setSeeds((prev) => flipAppearance(prev))}
     >
       <span />
     </button>

@@ -44,7 +44,7 @@ const WITHIN_THE_WORK = {
   override: 'set one property on one node, at some scope',
   move: 'move one region to another landmark',
   prop: 'pick one value a component already declared',
-  seed: 'move the six numbers the engine derives from',
+  seed: 'move the seven numbers the engine derives from',
   deviation: 'declare one raw literal, where it sits',
   ship: 'collapse what was promoted; freeze the rest',
   ready: 'hand off what changed, for review',

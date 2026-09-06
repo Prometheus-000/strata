@@ -48,7 +48,7 @@ export interface EmitResult {
  */
 /**
  * The roles a hand coined, from the record. The engine derives everything it
- * can from six numbers; these are the names usage earned that no seed
+ * can from seven numbers; these are the names usage earned that no seed
  * produces, and the record is their source — which is why they arrive here
  * rather than from `generateTheme`.
  */
@@ -179,7 +179,7 @@ ${block((HOUSE === 'light' ? light : dark).tokens, againstPrimitive)}
   const json = {
     $schema: 'https://design-tokens.github.io/community-group/format/',
     $description:
-      'Strata design tokens — GENERATED from src/theme/generateTheme.ts (npm run tokens). A theme is six seeds; every color below is a compiled projection, never a source. Agents: retheme by writing seeds and regenerating — never by editing values here. Each token carries its ledger decision under $extensions["strata.ledger"]: a cut token is emitted as its fallback and should not be reached for.',
+      'Strata design tokens — GENERATED from src/theme/generateTheme.ts (npm run tokens). A theme is seven seeds; every color below is a compiled projection, never a source. Agents: retheme by writing seeds and regenerating — never by editing values here. Each token carries its ledger decision under $extensions["strata.ledger"]: a cut token is emitted as its fallback and should not be reached for.',
     strata: {
       themeEngine: {
         $description:
@@ -189,9 +189,10 @@ ${block((HOUSE === 'light' ? light : dark).tokens, againstPrimitive)}
           $reasons: {
             hue: 'Accent hue on the OKLCH wheel — perceptually uniform, so any hue yields the same apparent vividness.',
             chroma: 'Muted ↔ electric. 0 is monochrome — the house default — and a monochrome accent compiles to ink, not grey. Light appearances compile at 0.87× and lower lightness to hold AA contrast.',
-            warmth: 'Tints ALL neutrals toward paper (95°) or slate (260°). Neutrals are chosen, never default grey; an accent hue never reaches them.',
+            warmth: 'Tints ALL neutrals toward paper (85°) or slate (250°) — Visionary\'s own anchors. Neutrals are chosen, never default grey; an accent hue never reaches them.',
             energy: 'Motion personality AND shape: kinetic themes snap (spring easing, shorter durations) and round off; calm themes glide and stay architectural.',
             density: 'Scales control heights, paddings and gaps together so rhythm compresses uniformly.',
+            lightness: 'Where the ground sits within its appearance: −1 is OLED black or bone, 0 the house ground, +1 charcoal or paper-white. Every surface is a fixed step off the ground, and the accent moves with it to keep its distance. Optional: absent means the house.',
           },
           compiled: { dark: seedJson(DARK), light: seedJson(LIGHT) },
         },
