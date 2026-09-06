@@ -11,6 +11,8 @@
 import { useMemo } from 'react'
 import { Button } from '../components'
 import { Section } from '../site/Section'
+import { SeedDials } from '../site/ThemeControls'
+import { hashFromSeeds } from '../theme/ThemeContext'
 import { AppearanceDot } from '../site/AppearanceDot'
 import markUrl from './mark.svg'
 import { seedState, type IdentityState } from '@strata/identity/field'
@@ -49,7 +51,10 @@ const RULES: Array<[string, string]> = [
   ['Time is sequence, not the clock.', 'Two builds of one record look alike; two visitors see the same structure.'],
   ['Age spreads and settles; it never erases.', 'An old decision is broad, low relief. The floor is the rule that nothing returns to zero.'],
   ['A cut is mass moving to its fallback, and it leaves a hollow.', 'The record says a cut collapses to something; the picture says the same.'],
-  ['A ship freezes a stratum.', 'The isolines at that moment stay beneath everything after. The strata are the ships, not the rocks.'],
+  ['A ship closes an epoch.', 'The live field carries only what has happened since the last ship; what came before is the stratum that ship froze, kept beneath, receding. Memory accumulates as strata, not as height, so the plane cannot fill.'],
+  ['Flow is mass moving along a recorded consequence.', 'A promotion drains the decisions whose convergence earned it into the promoted place, and leaves a hollow where each was. A source already shipped rises out of its stratum.'],
+  ['Candidacy is computed; promotion is decided.', 'Three decisions on distinct targets sharing one value are a dashed constellation until a hand promotes them. The picture says which of the two it is showing.'],
+  ['The theme in force is a decision.', 'The live epoch wears the six seeds in force now; each stratum keeps the seeds its epoch closed under. Colour has no other source.'],
   ['Presence disturbs; only a decision is remembered.', 'The pointer bends the field and leaves no trace. A click is a deviation, and it stays.'],
   ['Nothing loops.', 'The record replays once and holds. What breathes afterwards is noise that never returns to its start.'],
 ]
@@ -64,9 +69,14 @@ export function Trip() {
   /** `?still`: open settled, without the replay — for an embed or a still. */
   const still = params.has('still')
   const synthetic = seedParam !== null
-  const { state, palette, reduced, pb, pick, stationOpts, dotOpts, heroOpts } = useIdentity({ seed: synthetic ? Number(seedParam) || 7 : undefined, still })
+  const { state, seeds, setSeeds, palette, paletteFor, reduced, pb, pick, stationOpts, dotOpts, heroOpts } = useIdentity({ seed: synthetic ? Number(seedParam) || 7 : undefined, still })
 
   const max = state.events.length
+  const recordSeeds = useMemo(() => {
+    let out: IdentityState['events'][number]['seeds']
+    for (const e of state.events) if (e.seeds && e.i < pb.t) out = e.seeds
+    return out
+  }, [state, pb.t])
   const arrivedIndex = Math.min(max, Math.ceil(pb.t)) - 1
   const current = arrivedIndex >= 0 ? state.events[arrivedIndex] : undefined
   const status = pb.playing ? 'replaying' : pb.t >= max ? 'settled' : 'held'
@@ -79,7 +89,7 @@ export function Trip() {
           state={state}
           t={pb.t}
           opts={heroOpts}
-          palette={palette}
+          palette={palette} paletteFor={paletteFor}
           presence={pb.presence}
           label="Strata, the field"
           className="identity-full__canvas"
@@ -101,7 +111,7 @@ export function Trip() {
           state={state}
           t={pb.t}
           opts={heroOpts}
-          palette={palette}
+          palette={palette} paletteFor={paletteFor}
           presence={pb.presence}
           label="Strata, the field"
           className="identity-open__canvas"
@@ -135,7 +145,7 @@ export function Trip() {
                   state={state}
                   t={pb.t}
                   opts={s.projection === 'dot' ? dotOpts : stationOpts}
-                  palette={palette}
+                  palette={palette} paletteFor={paletteFor}
                   presence={s.projection === 'layers' ? undefined : pb.presence}
                   label={s.name}
                   className="identity-station__canvas"
@@ -144,7 +154,7 @@ export function Trip() {
                 />
                 {s.projection === 'dot' && (
                   <div className="identity-station__tiny" aria-hidden>
-                    <Identity projection="dot" state={state} t={pb.t} opts={dotOpts} palette={palette} n={16} label="The favicon at size" />
+                    <Identity projection="dot" state={state} t={pb.t} opts={dotOpts} palette={palette} paletteFor={paletteFor} n={16} label="The favicon at size" />
                   </div>
                 )}
               </div>
@@ -219,7 +229,7 @@ export function Trip() {
         <div className="identity-scale">
           <figure className="identity-scale__item">
             <div className="identity-scale__box identity-scale__box--favicon">
-              <Identity projection="dot" state={state} t={pb.t} opts={dotOpts} palette={palette} n={24} label="Favicon" />
+              <Identity projection="dot" state={state} t={pb.t} opts={dotOpts} palette={palette} paletteFor={paletteFor} n={24} label="Favicon" />
             </div>
             <figcaption>
               <span className="identity-station__name">Favicon</span>
@@ -237,7 +247,7 @@ export function Trip() {
           </figure>
           <figure className="identity-scale__item">
             <div className="identity-scale__box identity-scale__box--loading">
-              <Identity projection="dot" state={SEED} t={1.5} opts={{ ...dotOpts, breath: pb.breath }} palette={palette} n={48} zoom={5} label="Loading" />
+              <Identity projection="dot" state={SEED} t={1.5} opts={{ ...dotOpts, breath: pb.breath }} palette={palette} paletteFor={paletteFor} n={48} zoom={5} label="Loading" />
             </div>
             <figcaption>
               <span className="identity-station__name">Loading</span>
@@ -253,6 +263,28 @@ export function Trip() {
               <span className="identity-station__note">The field alone, at the size of the room. The pointer as presence; a click as a decision.</span>
             </figcaption>
           </figure>
+        </div>
+      </Section>
+
+      <Section kicker="The theme in force" title="Six seeds. The live epoch wears them; the strata keep theirs." sub="The same picker as the Theme Lab, driving the same engine. Here it is a trial: what you set paints the live field and the frame around it, and the strata beneath keep the theme the record says they closed under. The URL carries the seeds." id="theme">
+        <div className="identity-theme">
+          <div className="identity-theme__dials">
+            <SeedDials seeds={seeds} onChange={setSeeds} />
+          </div>
+          <dl className="identity-receipt identity-theme__receipt">
+            <div>
+              <dt>In force</dt>
+              <dd>{`${seeds.hue}° · c${seeds.chroma.toFixed(3)} · w${seeds.warmth.toFixed(2)} · e${seeds.energy.toFixed(2)} · d${seeds.density.toFixed(2)} · ${seeds.appearance}`}</dd>
+            </div>
+            <div>
+              <dt>The record says</dt>
+              <dd>{recordSeeds ? `${recordSeeds.hue}° · c${recordSeeds.chroma} · ${recordSeeds.appearance}, decided` : 'no seed decision has arrived'}</dd>
+            </div>
+            <div>
+              <dt>Share</dt>
+              <dd>{hashFromSeeds(seeds)}</dd>
+            </div>
+          </dl>
         </div>
       </Section>
 

@@ -14,41 +14,7 @@ import { compilePrompt, type Receipt } from '../theme/compilePrompt'
 import { seedsFromImage } from '../theme/imageSeeds'
 import { contrastRatio } from '../theme/color'
 import { Avatar, Badge, Button, Card, Input, Progress, Switch } from '../components'
-
-function Ground({ value, onChange }: { value: ThemeSeeds['appearance']; onChange: (a: ThemeSeeds['appearance']) => void }) {
-  return (
-    <div className="lab-ground">
-      <span className="lab-ground__name">Ground</span>
-      <div className="lab-ground__switch" role="group" aria-label="Ground">
-        {(['dark', 'light'] as const).map((a) => (
-          <button key={a} type="button" aria-pressed={value === a} onClick={() => onChange(a)}>
-            {a === 'dark' ? 'Dark' : 'Light'}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/* ---------- primitives ---------- */
-
-function Slider({
-  name, value, min, max, step, display, onChange, hue,
-}: {
-  name: string; value: number; min: number; max: number; step: number
-  display: string; onChange: (v: number) => void; hue?: boolean
-}) {
-  return (
-    <label className={`lab-slider ${hue ? 'lab-slider--hue' : ''}`}>
-      <span className="lab-slider__head">
-        <span className="lab-slider__name">{name}</span>
-        <span className="lab-slider__value">{display}</span>
-      </span>
-      <input type="range" min={min} max={max} step={step} value={value}
-        onChange={(e) => onChange(Number(e.target.value))} aria-label={name} />
-    </label>
-  )
-}
+import { Ground, Slider } from './ThemeControls'
 
 const jitter = (s: ThemeSeeds, t: number): ThemeSeeds => {
   const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))

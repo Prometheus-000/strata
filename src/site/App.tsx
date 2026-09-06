@@ -61,7 +61,7 @@ function TopBar() {
    a decision — on the dev server, one that reaches the record. The bloom that
    used to sit here was a picture of depth; this is the depth. */
 function Hero() {
-  const { state, palette, pb, pick, heroOpts } = useIdentity()
+  const { state, palette, paletteFor, pb, pick, heroOpts } = useIdentity()
   return (
     <section className="hero" id="top">
       <Identity
@@ -70,6 +70,7 @@ function Hero() {
         t={pb.t}
         opts={heroOpts}
         palette={palette}
+        paletteFor={paletteFor}
         presence={pb.presence}
         label="Strata, the field"
         className="hero__field"

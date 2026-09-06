@@ -630,8 +630,14 @@ It is listed here so the next reader inherits the test and not the verdict.
 The identity is a projection too. `identity.html` reads the record and draws
 it as a field: every decision is a bump whose place is a hash of its target,
 so precedent lands on precedent; a cut moves to its fallback and leaves a
-hollow; age spreads and settles and never erases; a ship freezes a stratum.
-The favicon and the mark are that field at two sizes, emitted by
+hollow; age spreads and settles and never erases; a ship closes an epoch, and
+what it froze stays beneath as a stratum, receding; a promotion drains the
+decisions whose convergence earned it into the promoted place; three of a
+value are a dashed candidate until a hand decides; and the theme in force is
+a decision — the live epoch wears the six seeds set now, the strata keep the
+seeds their epochs closed under, and the page carries the Theme Lab's picker
+so the seeds can be tried there. The favicon and the mark are that field at
+two sizes, emitted by
 `npm run identity`, and the hub's hero is the same field, live. A click on it
 is a decision: a deviation declared against `identity.html`, whose value is
 the place, and the dev server writes it to the record through the one write

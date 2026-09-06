@@ -17,8 +17,20 @@
  *     radius grows. An old decision is broad, low relief.
  *   - A cut is mass moving to its fallback, and it leaves a hollow.
  *   - A deviation breaks away and is drawn as one.
- *   - A ship freezes a stratum: the isolines at that moment, kept beneath
- *     everything after. The strata are the ships.
+ *   - A ship closes an epoch. The live field carries only what has happened
+ *     since the last ship; what came before is the stratum that ship froze,
+ *     kept beneath everything after. Memory accumulates as strata, not as
+ *     height, so the plane cannot saturate. The strata are the ships.
+ *   - Flow is mass moving along a recorded consequence. A promotion — a
+ *     mint's `from`, a rescope's `absorbed` — drains its sources into the
+ *     promoted place and leaves a hollow where each was. A source already
+ *     shipped still drains: its mass rises out of the stratum.
+ *   - Candidacy is computed; promotion is decided. Three live decisions on
+ *     distinct targets sharing one value are a candidate until a hand
+ *     promotes them, and the picture says which of the two it is showing.
+ *   - The theme in force is a decision. A seed event carries six numbers, and
+ *     a stratum keeps the seeds its epoch closed under; what to paint with
+ *     them is the host's, so this file never names a colour.
  *   - Presence disturbs; only a decision is remembered. The pointer is an
  *     option to the sampler, never an event.
  *   - Nothing loops. The breath after the last event is aperiodic noise.
@@ -49,6 +61,16 @@ export interface Receipt {
   date: string
 }
 
+/** Six numbers. Structurally the engine's `ThemeSeeds`, restated so this file has no import. */
+export interface Seeds {
+  hue: number
+  chroma: number
+  warmth: number
+  energy: number
+  density: number
+  appearance: 'dark' | 'light'
+}
+
 export interface IdentityEvent {
   /** Sequence index — the only clock. */
   i: number
@@ -61,6 +83,12 @@ export interface IdentityEvent {
   w: number
   /** Cut only: where the mass goes — the position of what it collapses to. */
   to?: Vec
+  /** A promotion: the indices of the decisions whose convergence earned it. Their mass drains here. */
+  drains?: number[]
+  /** The value this decision reached, as text, when it reached one — the ground candidacy is computed on. */
+  value?: string
+  /** A seed decision: the theme it put in force. */
+  seeds?: Seeds
   receipt: Receipt
 }
 
@@ -90,6 +118,8 @@ export interface FieldOptions {
   breath?: number
   /** The pointer, as a force. Never remembered. */
   presence?: Presence
+  /** Ships close epochs. Default true; false is the old reading, where every decision stays live forever. */
+  epochs?: boolean
 }
 
 export interface Cluster {
@@ -116,9 +146,18 @@ export interface Frame {
   /** Isolines below zero: hollows and presence. */
   hollows: Array<{ level: number; lines: Polyline[] }>
   clusters: Cluster[]
-  strata: Array<{ atIndex: number; lines: Polyline[] }>
+  /** Each ship that has arrived: the isolines its epoch closed with, and the seeds in force when it did. */
+  strata: Array<{ atIndex: number; lines: Polyline[]; seeds?: Seeds }>
   /** Current world position of every arrived event (a cut drifts), by index into `arrived`. */
   positions: Vec[]
+  /** The ship that opened the live epoch, or -1. */
+  epochStart: number
+  /** The seeds the record says are in force at t, if any seed decision has arrived. */
+  seeds?: Seeds
+  /** Live candidates: three or more decisions sharing one value, not yet promoted. World positions. */
+  candidates: Array<{ value: string; points: Vec[] }>
+  /** Drains in motion: from where, to where, how far along. World positions. */
+  flows: Array<{ from: Vec; to: Vec; k: number }>
 }
 
 /** Unit-square coordinates to world: x spreads across the aspect, y is the height. */
@@ -253,28 +292,75 @@ function breathFactor(ev: IdentityEvent, breath: number | undefined): number {
   return 1 + BREATH_AMPLITUDE * valueNoise1D(breath * BREATH_RATE, fnv1a(ev.id))
 }
 
+/** The index of the last ship that has arrived by t, or -1: the start of the live epoch. */
+export function epochStartAt(state: IdentityState, t: number, epochs = true): number {
+  if (!epochs) return -1
+  let m = -1
+  for (const ev of state.events) if (ev.kind === 'ship' && ev.w === 0 && ev.i < t && ev.i > m) m = ev.i
+  return m
+}
+
+/** The seeds the record put in force by t: the latest seed event that has arrived. */
+export function seedsAt(state: IdentityState, t: number): Seeds | undefined {
+  let out: Seeds | undefined
+  for (const ev of state.events) if (ev.seeds && ev.i < t) out = ev.seeds
+  return out
+}
+
+interface Drain {
+  at: number
+  to: Vec
+}
+
 /** Every bump and hollow in the field at `t`, with where each arrived event currently sits. */
-function terms(state: IdentityState, t: number, opts: FieldOptions): { terms: Term[]; arrived: IdentityEvent[]; positions: Vec[] } {
+function terms(state: IdentityState, t: number, opts: FieldOptions, epochStart: number): { terms: Term[]; arrived: IdentityEvent[]; positions: Vec[]; flows: Frame['flows'] } {
   const sigma = settleLength(opts.energy)
   const aspect = opts.aspect ?? 1
+  const epochs = opts.epochs ?? true
   const out: Term[] = []
   const arrived: IdentityEvent[] = []
   const positions: Vec[] = []
+  const flows: Frame['flows'] = []
+  // Who drains whom: a promotion that has arrived, and is still live, pulls each source toward its place.
+  const drainOf = new Map<number, Drain>()
+  for (const ev of state.events) {
+    if (!ev.drains || ev.i >= t) continue
+    if (epochs && ev.i <= epochStart) continue
+    for (const src of ev.drains) drainOf.set(src, { at: ev.i, to: ev.p })
+  }
   for (const ev of state.events) {
     const age = t - ev.i
     if (age <= 0) continue
-    arrived.push(ev)
-    const q = toWorld(ev.kind === 'cut' ? cutPosition(ev, age, sigma) : ev.p, aspect)
-    positions.push(q)
+    const live = !epochs || ev.i > epochStart
+    const drain = drainOf.get(ev.i)
+    if (!live && !drain) continue
+    let q: Vec = ev.kind === 'cut' ? cutPosition(ev, age, sigma) : ev.p
+    let env = envelope(age, sigma)
+    const a0 = ev.w * amplitude(age)
+    let hollowAt: Vec | undefined = ev.kind === 'cut' ? ev.p : undefined
+    let hollowScale = 1
+    if (drain) {
+      // The promotion arrived at `at`; the mass leaves from then, over two settles.
+      const k = sigma <= 0 ? 1 : smoothstep((t - drain.at) / (2 * sigma))
+      const from = q
+      q = [lerp(from[0], drain.to[0], k), lerp(from[1], drain.to[1], k)]
+      hollowAt = from
+      hollowScale = k
+      if (k < 1) flows.push({ from: toWorld(from, aspect), to: toWorld(drain.to, aspect), k })
+      // A shipped source arrives from the stratum: it has no envelope of its own to replay.
+      if (!live) env = k
+    }
+    if (live) {
+      arrived.push(ev)
+      positions.push(toWorld(q, aspect))
+    }
     if (ev.w === 0) continue
-    const env = envelope(age, sigma)
-    const a = ev.w * env * amplitude(age)
     const r = radius(age) * breathFactor(ev, opts.breath)
-    out.push({ q, r, a })
-    if (ev.kind === 'cut') out.push({ q: toWorld(ev.p, aspect), r, a: -TRACE * env * amplitude(age) })
+    out.push({ q: toWorld(q, aspect), r, a: a0 * env })
+    if (hollowAt) out.push({ q: toWorld(hollowAt, aspect), r, a: -TRACE * a0 * env * hollowScale })
   }
   if (opts.presence && opts.presence.w > 0) out.push({ q: opts.presence.p, r: PRESENCE_RADIUS, a: -PRESENCE_W * opts.presence.w })
-  return { terms: out, arrived, positions }
+  return { terms: out, arrived, positions, flows }
 }
 
 /**
@@ -297,11 +383,11 @@ const evaluate = (ts: readonly Term[], x: number, y: number) => {
 }
 
 /** The field at one point. */
-export const fieldAt = (state: IdentityState, t: number, x: number, y: number, opts: FieldOptions) => evaluate(terms(state, t, opts).terms, x, y)
+export const fieldAt = (state: IdentityState, t: number, x: number, y: number, opts: FieldOptions) => evaluate(terms(state, t, opts, epochStartAt(state, t, opts.epochs ?? true)).terms, x, y)
 
 /** The field sampled on an (nx+1)·(n+1) lattice at spacing 1/n, row-major, each term visiting only the cells inside its support. */
 export function sampleField(state: IdentityState, t: number, opts: FieldOptions): Float32Array {
-  return sampleTerms(terms(state, t, opts).terms, opts.n, gridWidth(opts.n, opts.aspect ?? 1))
+  return sampleTerms(terms(state, t, opts, epochStartAt(state, t, opts.epochs ?? true)).terms, opts.n, gridWidth(opts.n, opts.aspect ?? 1))
 }
 
 function sampleTerms(ts: readonly Term[], n: number, nx: number): Float32Array {
@@ -555,7 +641,12 @@ function innermostAround(c: Vec, contours: Frame['contours']): Polyline | undefi
 
 const strataCache = new WeakMap<IdentityState, Map<string, Polyline[]>>()
 
-/** The isolines at each ship that has arrived by `t`, frozen: the past cannot change, so the cache never invalidates. */
+/**
+ * The isolines each ship froze, for every ship that has arrived by `t`. With
+ * epochs on, a ship freezes only its own epoch — what happened since the ship
+ * before it — so the strata are a stack, not a cumulative heap. The past
+ * cannot change, so the cache never invalidates.
+ */
 export function strataAt(state: IdentityState, t: number, opts: FieldOptions): Frame['strata'] {
   const out: Frame['strata'] = []
   let cache = strataCache.get(state)
@@ -563,20 +654,41 @@ export function strataAt(state: IdentityState, t: number, opts: FieldOptions): F
     cache = new Map()
     strataCache.set(state, cache)
   }
+  const epochs = opts.epochs ?? true
   const still: FieldOptions = { ...opts, breath: undefined, presence: undefined }
   for (const ev of state.events) {
     if (ev.kind !== 'ship' || t - ev.i <= 0) continue
     const aspect = opts.aspect ?? 1
-    const key = `${ev.i}:${opts.n}:${opts.levels}:${opts.energy}:${opts.density}:${aspect}`
+    const key = `${ev.i}:${opts.n}:${opts.levels}:${opts.energy}:${opts.density}:${aspect}:${epochs}`
     let lines = cache.get(key)
     if (!lines) {
-      const grid = sampleField(state, ev.i, still)
+      const start = epochStartAt(state, ev.i, epochs)
+      const grid = sampleTerms(terms(state, ev.i, still, start).terms, opts.n, gridWidth(opts.n, aspect))
       lines = levelsFor(opts.levels).flatMap((L) => marchingSquares(grid, opts.n, L, gridWidth(opts.n, aspect)))
       cache.set(key, lines)
     }
-    out.push({ atIndex: ev.i, lines })
+    out.push({ atIndex: ev.i, lines, seeds: seedsAt(state, ev.i) })
   }
   return out
+}
+
+/** Live candidates at t: arrived, in the live epoch, sharing one value on distinct targets, not yet drained. */
+export function candidatesAt(state: IdentityState, t: number, epochStart: number, aspect: number): Frame['candidates'] {
+  const drained = new Set<number>()
+  for (const ev of state.events) if (ev.drains && ev.i < t) for (const src of ev.drains) drained.add(src)
+  const groups = new Map<string, Map<string, IdentityEvent>>()
+  for (const ev of state.events) {
+    if (!ev.value || ev.i >= t || ev.i <= epochStart || ev.w === 0 || drained.has(ev.i)) continue
+    const g = groups.get(ev.value) ?? new Map<string, IdentityEvent>()
+    g.set(ev.key, ev) // the latest decision on a target represents it
+    groups.set(ev.value, g)
+  }
+  const out: Frame['candidates'] = []
+  for (const [value, members] of groups) {
+    if (members.size < CONVERGE_AT) continue
+    out.push({ value, points: [...members.values()].sort((a, b) => a.i - b.i).map((e) => toWorld(e.p, aspect)) })
+  }
+  return out.sort((a, b) => (a.value < b.value ? -1 : 1))
 }
 
 /* ---------- the frame: everything a renderer needs ---------- */
@@ -584,7 +696,8 @@ export function strataAt(state: IdentityState, t: number, opts: FieldOptions): F
 export function frameAt(state: IdentityState, t: number, opts: FieldOptions): Frame {
   const aspect = opts.aspect ?? 1
   const nx = gridWidth(opts.n, aspect)
-  const { terms: ts, arrived, positions } = terms(state, t, opts)
+  const epochStart = epochStartAt(state, t, opts.epochs ?? true)
+  const { terms: ts, arrived, positions, flows } = terms(state, t, opts, epochStart)
   const grid = sampleTerms(ts, opts.n, nx)
   const levels = levelsFor(opts.levels)
   const contours = levels.map((level) => ({ level, lines: marchingSquares(grid, opts.n, level, nx) }))
@@ -598,5 +711,24 @@ export function frameAt(state: IdentityState, t: number, opts: FieldOptions): Fr
     newest = { event: ev, age, q: positions[k], r: radius(age) * HALF_RADIUS }
     break
   }
-  return { t, n: opts.n, nx, aspect, total: state.events.length, arrived, newest, grid, levels, contours, hollows, clusters: found, strata: strataAt(state, t, opts), positions }
+  return {
+    t,
+    n: opts.n,
+    nx,
+    aspect,
+    total: state.events.length,
+    arrived,
+    newest,
+    grid,
+    levels,
+    contours,
+    hollows,
+    clusters: found,
+    strata: strataAt(state, t, opts),
+    positions,
+    epochStart,
+    seeds: seedsAt(state, t),
+    candidates: candidatesAt(state, t, epochStart, aspect),
+    flows,
+  }
 }

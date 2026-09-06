@@ -15,6 +15,11 @@
  *     mark made on the identity itself, which lands exactly where the hand
  *     put it, because the value on the record is the place;
  *   - a ship is a stratum: weight zero, and the isolines frozen at that moment;
+ *   - a mint's `from` and a rescope's `absorbed` are drains: the decisions
+ *     named there give their mass to the promoted place;
+ *   - an override's or a prop's value travels with the event as text, so the
+ *     engine can compute candidacy the way `precedent` does;
+ *   - a seed decision carries its six numbers: the theme it put in force;
  *   - anything refused is a line with nothing on it, because the attempt is
  *     on the record;
  *   - everything else is a smaller bump.
@@ -63,8 +68,20 @@ export function parseRecord(text: string): Decision[] {
 
 const fallbackKey = (to: string | undefined) => (to === undefined ? 'literal:none' : to.startsWith('--') ? `token:${to}` : `literal:${to}`)
 
+/** The value a decision reached, as `precedent` reads it: a token reference or a literal. */
+const valueText = (d: Decision): string | undefined => {
+  if (d.kind === 'override' && d.value) return 'token' in d.value ? `var(${d.value.token})` : d.value.literal
+  if (d.kind === 'prop') return d.to === null ? undefined : String(d.to)
+  return undefined
+}
+
 /** One derivation, for the page and the script alike. */
 export function deriveEvents(decisions: readonly Decision[]): IdentityEvent[] {
+  const byId = new Map(decisions.map((d, i) => [d.id, i]))
+  const drainsOf = (ids: readonly string[] | undefined, i: number): number[] | undefined => {
+    const out = (ids ?? []).map((id) => byId.get(id)).filter((s): s is number => s !== undefined && s < i)
+    return out.length ? out : undefined
+  }
   return decisions.map((d, i) => {
     const key = targetKey(d)
     const receipt: Receipt = { id: d.id, kind: d.kind, target: key, hand: handText(d.decided), date: d.at.slice(0, 10) }
@@ -73,7 +90,14 @@ export function deriveEvents(decisions: readonly Decision[]): IdentityEvent[] {
     switch (d.kind) {
       case 'token':
         if (d.action === 'cut') return { ...base, kind: 'cut', p: positionFor(key), w: 1, to: positionFor(fallbackKey(d.consequence.collapsesTo)) }
+        if (d.action === 'mint') return { ...base, kind: 'keep', p: positionFor(key), w: 1, drains: drainsOf(d.from, i) }
         return { ...base, kind: 'keep', p: positionFor(key), w: 1 }
+      case 'override':
+        return { ...base, kind: 'generic', p: positionFor(key), w: GENERIC_W, value: valueText(d), drains: d.action === 'rescope' ? drainsOf(d.consequence.absorbed, i) : undefined }
+      case 'prop':
+        return { ...base, kind: 'generic', p: positionFor(key), w: GENERIC_W, value: valueText(d) }
+      case 'seed':
+        return { ...base, kind: 'generic', p: positionFor(key), w: GENERIC_W, seeds: d.seeds }
       case 'deviation': {
         const mark = d.file === IDENTITY_FILE ? parseMark(d.value) : undefined
         return { ...base, kind: 'deviation', p: mark ?? deviationPosition(key), w: DEVIATION_W, receipt: mark ? { ...receipt, target: 'a mark on the field' } : receipt }

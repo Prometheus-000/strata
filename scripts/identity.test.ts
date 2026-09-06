@@ -8,7 +8,7 @@ import { readAll } from '@strata/substrate/log'
 import { problemsWith, type Decision } from '@strata/substrate/decision'
 import { PROMOTION_CANDIDATE_AT } from '@strata/substrate/precedent'
 import * as field from '@strata/identity/field'
-import { append, CONVERGE_AT, fieldAt, fnv1a, frameAt, marchingSquares, positionFor, strataAt, type FieldOptions } from '@strata/identity/field'
+import { append, CONVERGE_AT, epochStartAt, fieldAt, fnv1a, frameAt, marchingSquares, positionFor, seedsAt, strataAt, type FieldOptions } from '@strata/identity/field'
 import { deriveEvents, IDENTITY_FILE, markValue, parseMark, stateFrom, syntheticStream, visitorDeviation } from '@strata/identity/record'
 import { svgFrom } from '@strata/identity/render'
 import { OBSIDIAN } from '../src/theme/generateTheme'
@@ -189,4 +189,58 @@ test('a click on the field is a deviation on identity.html: accepted by the iden
   registerIdentity()
   const alone = decide({ kind: 'deviation', file: 'src/site/site.css', line: 1, value: '0', reason: 'x' }, { ...ctx, root: REPO, dryRun: true })
   assert.ok(!alone.ok && /answers only for identity\.html/.test(alone.error))
+})
+
+test('epochs, drains and candidates: a ship closes the live field, a mint drains its sources, three of a value are a candidate until then, and a seed decision is the theme in force', () => {
+  const prov = (n: number) => ({
+    id: `d0000000${String(n).padStart(2, '0')}-0000`,
+    at: `2026-09-01T00:${String(n).padStart(2, '0')}:00.000Z`,
+    decided: { kind: 'human' as const, actor: 'p' },
+    written: { kind: 'human' as const, actor: 'p' },
+    via: 'test',
+  })
+  const seeds = { hue: 40, chroma: 0.17, warmth: 0.8, energy: 0.75, density: 1, appearance: 'dark' as const }
+  const record: Decision[] = [
+    { kind: 'seed', seeds, ...prov(0), consequence: {} },
+    { kind: 'token', token: '--a', action: 'keep', ...prov(1), consequence: {} },
+    { kind: 'override', action: 'set', scope: 'instance', selector: '.card', property: 'padding', value: { literal: '12px' }, ...prov(2), consequence: {} },
+    { kind: 'override', action: 'set', scope: 'instance', selector: '.sheet', property: 'padding', value: { literal: '12px' }, ...prov(3), consequence: {} },
+    { kind: 'override', action: 'set', scope: 'instance', selector: '.toast', property: 'padding', value: { literal: '12px' }, ...prov(4), consequence: {} },
+    { kind: 'token', token: '--space-card', action: 'mint', value: { literal: '12px' }, from: [prov(2).id, prov(3).id, prov(4).id], ...prov(5), consequence: {} },
+    { kind: 'ship', promoted: { system: 1, component: 0 }, frozen: 0, ...prov(6), consequence: {} },
+    { kind: 'token', token: '--b', action: 'keep', ...prov(7), consequence: {} },
+  ]
+  for (const d of record) assert.deepEqual(problemsWith(d), [])
+  const state = stateFrom(record)
+  assert.deepEqual(state.events[5].drains, [2, 3, 4], 'a mint drains the decisions its from names')
+  assert.equal(state.events[2].value, '12px')
+  assert.deepEqual(state.events[0].seeds, seeds)
+
+  // Candidacy: three of a value, before the mint arrives; none once it has.
+  assert.equal(frameAt(state, 4.5, OPTS).candidates.length, 1)
+  assert.deepEqual(frameAt(state, 4.5, OPTS).candidates[0].points.length, 3)
+  assert.equal(frameAt(state, 5.5, OPTS).candidates.length, 0)
+
+  // Drains: mass leaves each source for the mint's place; a flow is in motion right after, and done a few settles later.
+  const src = state.events[2].p
+  const before = fieldAt(state, 4.9, src[0], src[1], OPTS)
+  const after = fieldAt(state, 6.0, src[0], src[1], OPTS)
+  assert.ok(after < before, `the source drains: ${before} → ${after}`)
+  assert.ok(frameAt(state, 5.2, OPTS).flows.length > 0, 'a drain in motion is a flow')
+  assert.equal(frameAt(state, 8, OPTS).flows.length, 0)
+
+  // Epochs: after the ship, only --b is live; the stratum holds the epoch that closed, with its seeds.
+  assert.equal(epochStartAt(state, 7.5), 6)
+  const f = frameAt(state, 7.5, OPTS)
+  assert.deepEqual(f.arrived.map((e) => e.key), ['token:--b'])
+  assert.equal(f.strata.length, 1)
+  assert.equal(f.strata[0].atIndex, 6)
+  assert.deepEqual(f.strata[0].seeds, seeds)
+  assert.deepEqual(f.seeds, seeds)
+  assert.equal(seedsAt(state, 0), undefined, 'before any seed decision, the record says nothing')
+  assert.ok(f.strata[0].lines.length > 0, 'the stratum has isolines')
+  // The old reading is still available, and differs.
+  const flat = frameAt(state, 7.5, { ...OPTS, epochs: false })
+  assert.equal(flat.arrived.length, 8)
+  assert.equal(flat.epochStart, -1)
 })

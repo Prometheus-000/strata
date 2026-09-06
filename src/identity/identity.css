@@ -273,6 +273,30 @@ body {
   border-color: var(--line-strong);
 }
 
+/* ---------- the theme in force ---------- */
+.identity-theme {
+  display: grid;
+  grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+  gap: var(--strata-space-7);
+  align-items: start;
+}
+@media (max-width: 720px) {
+  .identity-theme {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.identity-theme__dials {
+  display: flex;
+  flex-direction: column;
+  gap: var(--strata-space-5);
+}
+.identity-theme__receipt {
+  grid-column: auto;
+  padding-top: 0;
+  border-top: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+
 /* ---------- rules ---------- */
 .identity-rules {
   margin: 0;

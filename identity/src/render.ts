@@ -31,11 +31,19 @@ export interface Size {
 
 /** Alpha of contour level k of N: the ground faint, the crest near full ink. */
 export const levelAlpha = (k: number, N: number) => (N <= 1 ? 0.75 : lerp(0.25, 0.9, k / (N - 1)))
-export const STRATUM_ALPHA = 0.12
+export const STRATUM_ALPHA = 0.14
+/** Each stratum beneath the last is this much fainter: memory recedes. */
+export const STRATUM_RECEDE = 0.7
+export const stratumAlpha = (depth: number) => STRATUM_ALPHA * Math.pow(STRATUM_RECEDE, depth)
+
+export interface Extras {
+  /** A palette per stratum, by index into `frame.strata` — the theme each epoch closed under. Missing entries use the live palette. */
+  strata?: Array<Palette | undefined>
+}
 /** How many events the newest ring stays visible for. */
 export const NEWEST_FOR = 3
 
-export function draw(ctx: CanvasRenderingContext2D, projection: Projection, frame: Frame, size: Size, pal: Palette): void {
+export function draw(ctx: CanvasRenderingContext2D, projection: Projection, frame: Frame, size: Size, pal: Palette, extras: Extras = {}): void {
   ctx.clearRect(0, 0, size.w, size.h)
   ctx.lineWidth = 1
   ctx.lineJoin = 'round'
@@ -44,12 +52,18 @@ export function draw(ctx: CanvasRenderingContext2D, projection: Projection, fram
     case 'layers':
       return drawLayers(ctx, frame, size, pal)
     case 'contours':
-      return drawContours(ctx, frame, size, pal)
+      return drawContours(ctx, frame, size, pal, extras)
     case 'field':
       return drawField(ctx, frame, size, pal)
     case 'dot':
-      return drawDot(ctx, frame, size, pal)
+      return drawDot(ctx, frame, size, pal, extras)
   }
+}
+
+/** The strata, oldest first, each in its own palette, each one beneath the last fainter. */
+function drawStrata(ctx: CanvasRenderingContext2D, frame: Frame, S: number, pal: Palette, extras: Extras) {
+  const depthOf = frame.strata.length
+  frame.strata.forEach((s, k) => strokeLines(ctx, s.lines, S, stratumAlpha(depthOf - 1 - k), (extras.strata?.[k] ?? pal).ink))
 }
 
 /* ---------- shared strokes ---------- */
@@ -142,9 +156,9 @@ export function drawLayers(ctx: CanvasRenderingContext2D, frame: Frame, size: Si
 
 /* ---------- 2. Contours — isolines of the field ---------- */
 
-export function drawContours(ctx: CanvasRenderingContext2D, frame: Frame, size: Size, pal: Palette) {
+export function drawContours(ctx: CanvasRenderingContext2D, frame: Frame, size: Size, pal: Palette, extras: Extras = {}) {
   const S = scaleOf(size)
-  for (const s of frame.strata) strokeLines(ctx, s.lines, S, STRATUM_ALPHA, pal.ink)
+  drawStrata(ctx, frame, S, pal, extras)
   const N = frame.contours.length
   frame.contours.forEach(({ lines }, k) => strokeLines(ctx, lines, S, levelAlpha(k, N), pal.ink))
   // Below the ground, dashed: a cut's hollow, and a hand pressing on the field.
@@ -159,6 +173,35 @@ export function drawContours(ctx: CanvasRenderingContext2D, frame: Frame, size: 
     const extent = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) * S
     if (extent < 4) continue
     strokeLines(ctx, [concentric(cl.line, cl.c, 1 + 5 / extent)], S, 0.9, pal.ink)
+  }
+  // Candidates: computed, not decided — dashed, from each member to the group's centre.
+  ctx.strokeStyle = pal.ink
+  for (const c of frame.candidates) {
+    const cx = c.points.reduce((s, p) => s + p[0], 0) / c.points.length
+    const cy = c.points.reduce((s, p) => s + p[1], 0) / c.points.length
+    ctx.globalAlpha = 0.45
+    ctx.setLineDash([3, 5])
+    for (const p of c.points) {
+      ctx.beginPath()
+      ctx.moveTo(p[0] * S, p[1] * S)
+      ctx.lineTo(cx * S, cy * S)
+      ctx.stroke()
+    }
+    ctx.setLineDash([])
+    ctx.globalAlpha = 0.6
+    ctx.beginPath()
+    ctx.arc(cx * S, cy * S, 3, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  // Drains in motion: the path, fading as the mass arrives.
+  for (const f of frame.flows) {
+    ctx.globalAlpha = 0.5 * (1 - f.k)
+    ctx.setLineDash([1, 4])
+    ctx.beginPath()
+    ctx.moveTo(f.from[0] * S, f.from[1] * S)
+    ctx.lineTo(f.to[0] * S, f.to[1] * S)
+    ctx.stroke()
+    ctx.setLineDash([])
   }
   // Who chose, small, under the lines.
   const mr = Math.max(1.25, Math.min(2.5, S / 220))
@@ -222,9 +265,9 @@ export function drawField(ctx: CanvasRenderingContext2D, frame: Frame, size: Siz
  * what a record looks like before anything much is decided, and it is also
  * the favicon, so the icon is not a second drawing.
  */
-export function drawDot(ctx: CanvasRenderingContext2D, frame: Frame, size: Size, pal: Palette) {
+export function drawDot(ctx: CanvasRenderingContext2D, frame: Frame, size: Size, pal: Palette, extras: Extras = {}) {
   const S = scaleOf(size)
-  for (const s of frame.strata) strokeLines(ctx, s.lines, S, STRATUM_ALPHA, pal.ink)
+  drawStrata(ctx, frame, S, pal, extras)
   const N = frame.contours.length
   const pick = frame.contours[Math.floor(N / 2)] ?? frame.contours[0]
   if (pick) {
@@ -287,7 +330,7 @@ export function svgFrom(frame: Frame, size: number, pal: Palette, opts: { dot: b
     const d = pathData(line, S)
     if (d) parts.push(`<path d="${d}" fill="none" stroke="${stroke}" stroke-opacity="${f2(alpha)}" stroke-width="${f2(width)}" stroke-linejoin="round" stroke-linecap="round"/>`)
   }
-  for (const s of frame.strata) for (const l of s.lines) path(l, STRATUM_ALPHA)
+  frame.strata.forEach((s, k) => s.lines.forEach((l) => path(l, stratumAlpha(frame.strata.length - 1 - k))))
   const N = frame.contours.length
   if (opts.dot) {
     const pick = frame.contours[Math.floor(N / 2)] ?? frame.contours[0]

@@ -12,6 +12,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { frameAt, toUnit, toWorld, type FieldOptions, type IdentityState, type Presence, type Vec } from '@strata/identity/field'
 import { draw, type Palette, type Projection } from '@strata/identity/render'
+import type { Seeds } from '@strata/identity/field'
 
 export interface IdentityProps {
   projection: Projection
@@ -20,6 +21,8 @@ export interface IdentityProps {
   /** Everything but `n`, `aspect` and `presence`, which this component supplies. */
   opts: Omit<FieldOptions, 'n' | 'aspect' | 'presence'>
   palette: Palette
+  /** The theme each stratum closed under, as a palette; the live palette is used where a stratum has no seeds. */
+  paletteFor?: (seeds: Seeds) => Palette
   /** The pointer in unit coordinates, and how hard it presses. */
   presence?: { p: Vec; w: number } | null
   /** Cells per world unit; defaults from the rendered height. */

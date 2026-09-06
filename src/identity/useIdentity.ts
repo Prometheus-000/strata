@@ -15,7 +15,7 @@ import raw from '../../.strata/decisions.jsonl?raw'
 import LEDGER from '../theme/ledger.json'
 import type { Ledger } from '../theme/ledger'
 import { useTheme } from '../theme/ThemeContext'
-import { append, levelCount, type IdentityState, type Vec } from '@strata/identity/field'
+import { append, levelCount, type IdentityState, type Seeds, type Vec } from '@strata/identity/field'
 import { IDENTITY_FILE, markValue, parseRecord, stateFrom, syntheticStream, visitorDeviation } from '@strata/identity/record'
 import { paletteFrom } from './palette'
 import { useReducedMotion } from './Identity'
@@ -39,8 +39,21 @@ export interface IdentitySource {
 
 export function useIdentity({ seed, still = false }: IdentitySource = {}) {
   const [state, setState] = useState<IdentityState>(() => stateFrom(seed !== undefined ? syntheticStream(seed) : parseRecord(raw)))
-  const { seeds } = useTheme()
+  const { seeds, setSeeds } = useTheme()
   const palette = useMemo(() => paletteFrom(seeds, LEDGER as Ledger), [seeds])
+  // The theme each stratum closed under, resolved once per distinct six numbers.
+  const paletteFor = useMemo(() => {
+    const cache = new Map<string, ReturnType<typeof paletteFrom>>()
+    return (s: Seeds) => {
+      const key = JSON.stringify(s)
+      let p = cache.get(key)
+      if (!p) {
+        p = paletteFrom(s, LEDGER as Ledger)
+        cache.set(key, p)
+      }
+      return p
+    }
+  }, [])
   const reduced = useReducedMotion()
   const pb = usePlayback(state.events.length, seeds.energy, reduced, !still)
 
@@ -86,5 +99,5 @@ export function useIdentity({ seed, still = false }: IdentitySource = {}) {
     [pb, seed],
   )
 
-  return { state, seeds, palette, reduced, pb, pick, stationOpts, dotOpts, heroOpts }
+  return { state, seeds, setSeeds, palette, paletteFor, reduced, pb, pick, stationOpts, dotOpts, heroOpts }
 }
