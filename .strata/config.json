@@ -1,0 +1,6 @@
+{
+  "source": ["src/components", "src/behavior", "src/site", "src/personalize", "src/identity", "src/sky"],
+  "tokens": "src/tokens",
+  "ledger": "src/theme/ledger.json",
+  "malleable": { "root": "strata-malleable", "source": "fixtures/app" }
+}

@@ -1,7 +1,13 @@
 # Getting started with Strata
 
-A guide for the first hour. Install it, run it, read the record, make one
-decision, and hand it off.
+A guide for the first hour **with this repository**, which is itself a Strata
+product: clone it, run it, read the record, make one decision, hand it off.
+
+To put Strata in **your own** repository instead — an existing product or an
+empty directory — [ADOPTING.md](ADOPTING.md) is that path, and it is two
+commands: `npm install --save-dev strata-design && npx strata init`. Nothing
+below applies to it; this repository already has a record, so it needs no
+`init`.
 
 If you have not read [README.md](README.md) yet, one paragraph is enough to
 start: **Strata keeps a record of what a product decided** — every token cut,
@@ -26,7 +32,7 @@ agent brings its own harness.
 ## 2. Install
 
 ```bash
-git clone git@github.com:Prometheus-000/strata.git
+git clone https://github.com/Prometheus-000/strata.git
 cd strata
 npm install
 ```
@@ -56,7 +62,7 @@ npm run check
 ```
 INVARIANTS
 ──────────────
-✓ record.parses — 37 decision(s)
+✓ record.parses — 66 decision(s)
 ✓ projections.match-record
 ✓ fallbacks.total-acyclic
 ✓ css.vars-defined
@@ -79,14 +85,14 @@ you and never enforced:
 
 A design that is different is evidence, not an error.
 
-> **How to run the CLI.** Use `npm run strata -- <command>`. The `--` matters:
-> it passes the rest through to `strata` instead of to npm.
+> **How to run the CLI.** `npx strata <command>`, here and in any product that
+> installed it.
 > ```bash
-> npm run strata -- check
-> npm run strata -- log
+> npx strata check
+> npx strata log
 > ```
-> (`npx strata` is listed in the README but does not work from a clone — see
-> [Troubleshooting](#9-troubleshooting).)
+> (`npx strata <command>` runs the same thing, and is what the npm
+> scripts use.)
 
 ## 4. Run it
 
@@ -110,7 +116,7 @@ decision to `.strata/decisions.jsonl` in this repo. The published static site
 cannot write; it only shows what was decided.
 
 Start dragging on `/malleable.html`, then come back to the terminal and run
-`npm run strata -- log` — your gestures are on the record, decided `human`,
+`npx strata log` — your gestures are on the record, decided `human`,
 via the overlay. A pointer is a hand, so the overlay never has to ask.
 
 ## 5. Read the record
@@ -118,10 +124,10 @@ via the overlay. A pointer is a hand, so the overlay never has to ask.
 Four commands cover most of it.
 
 ```bash
-npm run strata -- log                              # every decision, one line each
-npm run strata -- show d0mtlrb8y8-xsnb             # one decision
-npm run strata -- history token:--accent-strong    # everything ever decided about one target
-npm run strata -- explain token:--shadow-color     # the glass box
+npx strata log                              # every decision, one line each
+npx strata show <id>                        # one decision — take an id from the log
+npx strata history token:--accent-strong    # everything ever decided about one target
+npx strata explain token:--shadow-color     # the glass box
 ```
 
 `explain` is the one to learn. It prints four blocks — **DECISION** (what, who,
@@ -133,9 +139,9 @@ line says where it came from.
 And to ask what has been decided before:
 
 ```bash
-npm run strata -- precedent --property padding
-npm run strata -- precedent --actor prometheus-000
-npm run strata -- precedent --unpromoted            # drift nobody has promoted yet
+npx strata precedent --property padding
+npx strata precedent --actor prometheus-000
+npx strata precedent --unpromoted            # drift nobody has promoted yet
 ```
 
 Precedent is *computed* over the record, never declared. "37 instances
@@ -180,7 +186,7 @@ Every write takes `--why "…"` and accepts `--dry`. Start with `--dry` — it
 prints exactly what would happen and writes nothing:
 
 ```bash
-npm run strata -- cut --motion-instant --why "trying it out" --decided-by human --actor you --dry
+npx strata cut --motion-instant --why "trying it out" --decided-by human --actor you --dry
 ```
 
 ```
@@ -205,7 +211,7 @@ regenerates every projection it touches, in one step.
 Then confirm nothing drifted:
 
 ```bash
-npm run strata -- rebuild --check
+npx strata rebuild --check
 ```
 
 ```
@@ -217,7 +223,7 @@ npm run strata -- rebuild --check
   every projection matches the record
 ```
 
-`--check` only reports. `npm run strata -- rebuild` (no flag) rewrites all four
+`--check` only reports. `npx strata rebuild` (no flag) rewrites all four
 files from the record — which is the point: you can delete them and get them
 back.
 
@@ -230,7 +236,7 @@ before that.
 When you are done designing, say so:
 
 ```bash
-npm run strata -- ready --why "gallery pass" --decided-by human --actor you
+npx strata ready --why "gallery pass" --decided-by human --actor you
 ```
 
 That marks a point on the record. The reviewer then reads what changed since
@@ -238,7 +244,7 @@ the last one — moves, picks and overrides, with reversals collapsed away —
 rather than a diff of generated files:
 
 ```bash
-npm run strata -- handoff
+npx strata handoff
 ```
 
 Each line names both hands, so a proposal an agent made and a person confirmed
@@ -257,13 +263,13 @@ An agent gets no private door: same `decide()`, same record, same flags — it
 just has to say which hand decided.
 
 ```bash
-npm run strata -- cut --accent-strong --why "one filled action per surface" --decided-by agent --actor claude-code
+npx strata cut --accent-strong --why "one filled action per surface" --decided-by agent --actor claude-code
 ```
 
 An agent does not read the design system — it performs a **skill**. List them:
 
 ```bash
-npm run strata -- skill
+npx strata skill
 ```
 
 ```
@@ -280,7 +286,7 @@ the precedent found, the current state, worked examples resolved from this
 product's own record, and the evidence a decision must carry:
 
 ```bash
-npm run strata -- skill cut-token --token --accent-strong
+npx strata skill cut-token --token --accent-strong
 ```
 
 The harness's model performs that procedure. Strata calls no model itself.
@@ -303,7 +309,7 @@ question. Add `--decided-by human` or `--decided-by agent`, and `--actor
 
 **`npx strata` fails with `Cannot find module …/src/theme/generateTheme`.**
 The `strata` bin has a plain `#!/usr/bin/env node` shebang but the CLI imports
-TypeScript, so it needs a loader. Use `npm run strata -- <command>` (or, if you
+TypeScript, so it needs a loader. Use `npx strata <command>` (or, if you
 want the raw form, `node --import tsx/esm bin/strata.mjs <command>`).
 
 **`npm run dev` says the port is taken.** Something is already on 5173; stop it,
@@ -311,7 +317,7 @@ or run `npm run dev -- --port 5174`.
 
 **`rebuild --check` says projections differ.** Someone hand-edited a generated
 file, or a decision landed without regenerating. Run
-`npm run strata -- rebuild`. The record wins, always.
+`npx strata rebuild`. The record wins, always.
 
 **The build fails.** `npm run build` runs `check --enforce`, so it fails only on
 one of the four invariants — the record does not parse, a projection disagrees
@@ -323,6 +329,10 @@ is a bug in the invariant.
 `scripts/prose.test.ts` doing its job. It reads every markdown file and every
 comment in the repo and checks that each npm script, `strata` verb and repo
 path named there actually exists — including in this guide. Fix the name.
+
+**A projection is in a directory I did not expect.** `.strata/config.json`
+says where this product keeps its source and its tokens. It is frame, not a
+decision: edit it by hand, then `npx strata rebuild`.
 
 **I want to undo something.** You do not rewrite the record; you decide again.
 The new decision supersedes the old one and both stay readable — that is what
@@ -341,6 +351,7 @@ The new decision supersedes the old one and both stay readable — that is what
 | `strata-malleable/.malleable/overrides.json` | Generated. Do not edit. |
 | `grammar/rules.json` | The rules, as data — cited by skills, evaluated by `check`. |
 | `skills/` | The six `SKILL.md` files an agent performs. |
+| `.strata/config.json` | Where this product keeps its source and its tokens. Frame: edited by hand, never decided. |
 | `.agents/skills/`, `.claude/skills/`, `skills-lock.json` | Harness skills, vendored and pinned — today one, `oklch-skill`: conversion, gamut and contrast, for whoever works on the engine. `.claude/skills` is shared ground: what makes a `SKILL.md` Strata's is that it states a `purpose`, and one without is the harness's, left alone. |
 | `mcp/server.mjs` | The same door over MCP. |
 | `bench/README.md` | The experiment: does a record of reasons change what an agent builds? |
@@ -349,6 +360,10 @@ The new decision supersedes the old one and both stay readable — that is what
 ## 12. Command cheatsheet
 
 ```
+starting
+  init [--yes] [--source d] [--tokens d | --no-theme] [--no-skills] [--mcp] [--dry]
+                               begin a product: the record, the grammar, the skills, the tokens
+
 the record
   check [--enforce] [--json]   invariants, then policy, preference, knowledge, precedent, handoff
   explain <id | targetKey>     one decision as a glass box
@@ -361,13 +376,15 @@ the record
   import                       bring an old ledger and store onto the record, once
   rebuild [--check]            write every projection from the record
 
-tokens
+the theme
+  retheme [--hue n] [--chroma n] [--warmth n] [--energy n] [--density n] [--lightness n] [--appearance dark|light] [--link <url>]
   list · cut · keep · propose · mint --<token> [--why …]
   deviate <file>:<line> --why …
+  survey
 
 the layer a designer changes by hand
   id · regions · manifest · resolve · reconcile · drift · handoff
-  set · remove · move · prop · retheme · ship
+  set · remove · move · prop · ship
 
 every write names two hands, takes --why "…", and accepts --dry
   --decided-by human|agent · --actor <handle> · --written-by human|agent
@@ -389,5 +406,6 @@ cd strata-malleable && npm install && npm test && npm run dev
 
 ---
 
-**Next:** [GRAMMAR.md](GRAMMAR.md) for the rules and their authority, and the
-README's *Governance* section for why only four things can ever fail a build.
+**Next:** [GRAMMAR.md](GRAMMAR.md) for the rules and their authority, the
+README's *Governance* section for why only four things can ever fail a build,
+and [ADOPTING.md](ADOPTING.md) to put Strata in a repository of your own.

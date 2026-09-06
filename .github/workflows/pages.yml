@@ -19,6 +19,37 @@ concurrency:
   group: pages
   cancel-in-progress: true
 jobs:
+  # The newcomer's path, from a clean checkout, on every push. Nothing else
+  # here exercises it: `npm test` and `npm run build` reach the CLI only
+  # through `npm run`, which supplies the loader and the working directory,
+  # and for a year that is why `npx strata` stayed broken in the README while
+  # every check was green.
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: the CLI, as a product that installed it runs it
+        run: |
+          npx strata check
+          npx strata skill
+          npx strata rebuild --check
+      - name: a product Strata starts, in an empty directory
+        run: |
+          npm pack --pack-destination /tmp
+          mkdir /tmp/new && cd /tmp/new && git init -q && npm init -y
+          npm i -D /tmp/strata-design-*.tgz
+          npx strata init --yes
+          npx strata check --enforce
+          npx strata retheme --hue 20 --chroma 0.12 --why "a smoke test" --decided-by human --actor ci
+          npx strata check --enforce
+          npx strata rebuild --check
+          test -s .strata/decisions.jsonl
+
   build:
     runs-on: ubuntu-latest
     steps:

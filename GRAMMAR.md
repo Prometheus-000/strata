@@ -84,9 +84,42 @@ grammar.
 
 What is worth keeping is the shape, not the content: a taste is a set of decisions with
 reasons, written the way everything else here is. It is enacted in three places, none of them
-a stylesheet: the `Obsidian` seeds in `generateTheme.ts`, the decisions in
-`src/theme/ledger.json`, and the rules below. Retune the seeds or reverse a decision and the
-voice follows; nothing below is enforced by hand.
+a stylesheet: the seeds the record holds in force (`strata retheme`), the token decisions on
+the record, and the rules below. Retune the seeds or reverse a decision and the voice
+follows; nothing below is enforced by hand.
+
+### Writing your own
+
+An adopter inherits the system's rules and writes none of this section. `npx strata init`
+copies the rules whose `scope` is the system's into `grammar/rules.json` and leaves the voice
+empty, with the shape of a rule and nothing in it.
+
+A rule is an object, and every field is load-bearing:
+
+```json
+{
+  "id": "voice.one-family",
+  "authority": "policy",
+  "scope": "product",
+  "statement": "One family. Hierarchy is weight, size and measure — never a second voice.",
+  "reason": "Display and body are the same face; a second face is a second voice competing with the first.",
+  "incident": "v0.2 shipped a variable serif with italic accents and a green display line; the owner's correction is the record: “overly designed text.”",
+  "source": "GRAMMAR.md › The voice › One family",
+  "check": "none"
+}
+```
+
+`authority` is one of **invariant**, **policy**, **preference** (which carries its `value`) or
+**knowledge**; a rule you write is almost always a policy. `scope: "product"` says it is your
+taste and not the system's, so a reader can tell them apart and every skill packet carries it
+under *this product's voice*. `check` names the evaluator that speaks for it, or says `none`
+out loud — an evaluator is code somebody writes later, and `strata check` lists a cited rule
+rather than passing over it in silence.
+
+The interview that produces five to nine of these — references, rejections, the incidents
+behind them — is a skill: `/write-grammar` in Claude Code, `npx strata skill write-grammar`
+in any harness. It reads what your stylesheets already decided (`npx strata survey`) and asks
+which of it was decided and which was an accident.
 
 **One family. Hierarchy is weight, size and measure — never a second voice.** Display and body
 are the same system face; headings are the body face set at 600–700 and tracked tight. This
@@ -186,22 +219,27 @@ never granted by proposal.
 
 ## The machine layer
 
-- `npm run tokens` — regenerate all Layer 0 projections from the engine, through the
-  ledger. Adds a `proposed` line for any new token; never edits a decision.
+- `npx strata rebuild` — write every projection from the record: the ledger, the stylesheet,
+  the contract. Adds a `proposed` line for any new token; never edits a decision.
+  (`npm run tokens` does the same for this repository's build.)
+- `npx strata retheme --hue … --why "…"` — move the seeds, on the record. A theme is seven
+  numbers, and every projection is compiled from them in the same call. There is no file to
+  edit: the record is the source of the seeds.
 - `npm run identity` — regenerate the favicon and the mark from the record. The identity is
   the record projected as a field, and its rules live in `identity/src/field.ts`.
-- `strata cut|keep --<token> --why "…"` — decide one generated token, on the record. A cut
+- `npx strata cut|keep --<token> --why "…"` — decide one generated token, on the record. A cut
   token collapses to its fallback (`src/theme/ledger.ts`, beside the engine, with a reason
   per entry) in every projection, and the decision is emitted beside the declaration.
   Omitting the property instead would fail every `var()` that names it, silently, at the
   consumer — which is the behaviour this repo calls the worst available.
-- `strata check` — evaluates everything and fails nothing: invariants first, then every
+- `npx strata check` — evaluates everything and fails nothing: invariants first, then every
   finding under its authority, then the handoff. `strata check --enforce` runs in
   `npm run build` and fails only on an invariant: the record parses, the projections match
   it, every fallback chain ends, every `var()` resolves. A design that is different is
   reported, never refused.
-- `strata explain <id | target>` — one decision as four blocks: DECISION, CONTEXT, EVIDENCE,
-  CONSEQUENCE. `strata precedent …` — what was decided before, with convergence counted.
+- `npx strata explain <id | target>` — one decision as four blocks: DECISION, CONTEXT,
+  EVIDENCE, CONSEQUENCE. `npx strata precedent …` — what was decided before, with convergence
+  counted.
 - `src/tokens/tokens.json` — the agent-readable contract: seeds, ranges, and the *reasons*
   for each dial, alongside compiled values; each token carries its ledger decision.
 - Next, in order of leverage: code→Figma regeneration on CI (the current Figma library was

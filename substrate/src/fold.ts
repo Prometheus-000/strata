@@ -3,7 +3,7 @@
  * filesystem, so the same functions run in a CLI that read the log and in a
  * page that fetched it.
  */
-import { targetKey, type Decision, type Kind } from './decision.ts'
+import { targetKey, type Decision, type Kind, type ThemeSeeds } from './decision.ts'
 
 /** Every decision on one target, oldest first. */
 export const history = (all: readonly Decision[], key: string): Decision[] =>
@@ -24,6 +24,25 @@ export function since(all: readonly Decision[], kind: Kind): Decision[] {
 }
 
 export const byId = (all: readonly Decision[], id: string): Decision | undefined => all.find((d) => d.id === id)
+
+/**
+ * The theme in force: the seeds the last retheme set, or the last ship that
+ * promoted to the system, folded in order; `initial` — the engine's default —
+ * when nothing on the record has moved them. Its own fold rather than a
+ * `current()` lookup, because a ship's target is `ship` and a lookup by the
+ * `seed` key would miss the seeds it carried. Every projection that compiles
+ * a theme reads this, so the record is the source of the seeds and no
+ * constant has to be rewritten to move them.
+ */
+export function seedsInForce(all: readonly Decision[], initial: ThemeSeeds): ThemeSeeds {
+  let seeds = initial
+  for (const d of all) {
+    if (d.consequence.refused) continue
+    if (d.kind === 'seed') seeds = d.seeds
+    else if (d.kind === 'ship' && d.seeds) seeds = d.seeds
+  }
+  return seeds
+}
 
 /** Brought onto the record from an old file, not decided since. */
 export const isImported = (d: Decision) => d.via.startsWith('import:')

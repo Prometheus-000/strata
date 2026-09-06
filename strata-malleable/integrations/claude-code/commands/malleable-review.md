@@ -1,6 +1,6 @@
 ---
 description: Review the designer's handoff — make the code fit the design, never move anything back, commit
-allowed-tools: Bash(strata:*), Bash(npx strata:*), Bash(npm run strata:*), Bash(npm test:*), Bash(npm run build:*), Bash(git status:*), Bash(git diff:*), Bash(git add:*), Bash(git commit:*)
+allowed-tools: Bash(npx strata:*), Bash(npm test:*), Bash(npm run build:*), Bash(git status:*), Bash(git diff:*), Bash(git add:*), Bash(git commit:*)
 ---
 
 The designer pressed **ready**. It is on the record; nothing was committed.

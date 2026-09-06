@@ -30,7 +30,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import type { Decision } from './decision.ts'
-import { loadRules, rulesFor, scopeOf, type Rule } from './grammar.ts'
+import { byScope, loadRules, rulesFor, scopeOf, RULES_PATH, type Rule } from './grammar.ts'
 import { byId, readAll } from './log.ts'
 import { buildIndex, search, type PrecedentQuery, type PrecedentResult } from './precedent.ts'
 import { describe } from './format.ts'
@@ -173,8 +173,46 @@ export function loadSkills(root: string, dirs = SKILL_DIRS): Skill[] {
 
 const providers = new Map<string, (root: string) => unknown>()
 export const registerState = (name: string, read: (root: string) => unknown) => providers.set(name, read)
-export const resetState = () => providers.clear()
 export const registeredState = () => [...providers.keys()]
+
+/**
+ * The grammar, as a skill reads it: how much of it is the system's and how
+ * much this product's own, and the shape a rule takes — so a skill that
+ * writes rules (`write-grammar`) knows what a rule is without a copy of the
+ * schema in its body. The substrate provides it because the grammar is the
+ * substrate's, the way `ready` is the one built-in handler.
+ */
+export function grammarState(root: string): string {
+  const rules = loadRules(root)
+  if (!rules.length) return `no grammar here — ${RULES_PATH} is missing or empty; the system's rules arrive with \`strata init\``
+  const system = byScope(rules, 'system')
+  const product = byScope(rules, 'product')
+  const count = (xs: readonly Rule[]) => (['invariant', 'policy', 'preference', 'knowledge'] as const).map((a) => `${a} ${xs.filter((r) => r.authority === a).length}`).join(' · ')
+  const out = [
+    `${system.length} rule(s) the system brings · ${product.length} this product's own`,
+    `  system: ${count(system)}`,
+    product.length
+      ? `  this product's voice: ${count(product)}`
+      : `  no voice yet — a rule with "scope": "product" is this product's; they go in ${RULES_PATH} beside the system's, each with its reason`,
+  ]
+  for (const r of product) out.push(`    ${r.id} — ${r.statement}`)
+  out.push(
+    '',
+    'a rule is: { id, authority: invariant | policy | preference | knowledge, statement, reason, source, check: <evaluator id> | "none", scope?: "product", incident?, layer?, value (a preference carries its number) }',
+    'only an invariant can fail a build; a rule with check "none" is cited into packets and read by a hand, and check says so',
+  )
+  return out.join('\n')
+}
+
+const BUILT_IN_STATE: Array<[string, (root: string) => unknown]> = [['grammar', grammarState]]
+const registerBuiltinState = () => {
+  for (const [name, read] of BUILT_IN_STATE) providers.set(name, read)
+}
+export const resetState = () => {
+  providers.clear()
+  registerBuiltinState()
+}
+registerBuiltinState()
 
 /* ---------------- the packet ---------------- */
 
@@ -183,6 +221,12 @@ export interface Packet {
   inputs: Record<string, string>
   missing: string[]
   rules: Rule[]
+  /** Rule ids the skill cites that this product's grammar does not have — said, not silently dropped. */
+  rulesMissing: string[]
+  /** Whether the product has a grammar at all. */
+  grammar: boolean
+  /** This product's own taste — every product-scoped rule, on every packet, because the frame travels with the work. */
+  voice: Rule[]
   precedent: PrecedentResult | null
   state: Record<string, unknown>
   examples: Decision[]
@@ -197,7 +241,11 @@ const substitute = (v: string, inputs: Record<string, string>) => v.replace(/\$(
 export function assemblePacket(skill: Skill, inputs: Record<string, string>, root: string): Packet {
   const missing = skill.inputs.filter((k) => !inputs[k])
   const log = readAll(root)
-  const rules = rulesFor(loadRules(root), skill.context.rules ?? [])
+  const all = loadRules(root)
+  const cited = skill.context.rules ?? []
+  const rules = rulesFor(all, cited)
+  const rulesMissing = cited.filter((id) => !rules.some((r) => r.id === id))
+  const voice = byScope(all, 'product').filter((r) => !rules.some((x) => x.id === r.id))
   let precedent: PrecedentResult | null = null
   if (skill.context.precedent) {
     const q: PrecedentQuery = {}
@@ -215,7 +263,7 @@ export function assemblePacket(skill: Skill, inputs: Record<string, string>, roo
     state[name] = read ? read(root) : `(no projection here provides "${name}")`
   }
   const examples = skill.examples.map((id) => byId(log, id)).filter((d): d is Decision => !!d)
-  return { skill, inputs, missing, rules, precedent, state, examples, evidenceRequired: skill.evidenceRequired, allowed: skill.typicalDecisions }
+  return { skill, inputs, missing, rules, rulesMissing, grammar: all.length > 0, voice, precedent, state, examples, evidenceRequired: skill.evidenceRequired, allowed: skill.typicalDecisions }
 }
 
 export function formatPacket(p: Packet): string {
@@ -225,10 +273,17 @@ export function formatPacket(p: Packet): string {
     for (const k of p.skill.inputs) out.push(`- ${k}: ${p.inputs[k] ?? '(missing — pass --' + k + ' …)'}`)
     out.push('')
   }
-  if (p.rules.length) {
+  const ruleLine = (r: Rule) => [`- **${r.id}** (${r.authority}${scopeOf(r) === 'product' ? ", this product's own taste, not the system's" : ''}) — ${r.statement}`, `  _${r.reason}_`]
+  if (p.rules.length || p.rulesMissing.length) {
     out.push('## Rules that bear on this', '')
-    for (const r of p.rules)
-      out.push(`- **${r.id}** (${r.authority}${scopeOf(r) === 'product' ? ", this product's own taste, not the system's" : ''}) — ${r.statement}`, `  _${r.reason}_`)
+    if (!p.grammar) out.push(`no grammar here — \`${RULES_PATH}\` is missing, so the ${p.rulesMissing.length} rule(s) this skill cites cannot be read; \`strata init\` brings the system's`)
+    else if (p.rulesMissing.length) out.push(`${p.rulesMissing.length} cited rule(s) are not in this product's grammar: ${p.rulesMissing.join(', ')}`)
+    for (const r of p.rules) out.push(...ruleLine(r))
+    out.push('')
+  }
+  if (p.voice.length) {
+    out.push("## This product's voice", '', 'Every rule this product added to the system’s, because the taste travels with every piece of work:', '')
+    for (const r of p.voice) out.push(...ruleLine(r))
     out.push('')
   }
   if (p.precedent) {
@@ -242,7 +297,8 @@ export function formatPacket(p: Packet): string {
   for (const [name, v] of Object.entries(p.state)) {
     out.push(`## State: ${name}`, '', '```', typeof v === 'string' ? v : JSON.stringify(v, null, 2), '```', '')
   }
-  out.push('## Procedure', '', p.skill.procedure, '')
+  // The body usually opens with its own `## Procedure`; one heading, not two.
+  out.push(...(/^##\s+Procedure\b/.test(p.skill.procedure) ? [p.skill.procedure, ''] : ['## Procedure', '', p.skill.procedure, '']))
   if (p.skill.constraints.length) {
     out.push('## Constraints', '')
     for (const c of p.skill.constraints) out.push(`- ${c}`)

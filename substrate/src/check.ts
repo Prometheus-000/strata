@@ -99,7 +99,7 @@ const RULE = '──────────────'
 export function formatCheck(r: CheckReport): string {
   const out: string[] = ['', 'INVARIANTS', RULE]
   for (const i of r.invariants) {
-    out.push(`${i.ok ? '✓' : '✗'} ${i.rule}${i.rule === 'record.parses' && i.ok ? ` — ${r.decisions} decision(s)` : ''}`)
+    out.push(`${i.ok ? '✓' : '✗'} ${i.rule}${i.rule === 'record.parses' && i.ok ? ` — ${r.decisions} decision(s)${r.decisions === 0 ? ' (nothing decided yet)' : ''}` : ''}`)
     for (const f of i.findings) out.push(`    ${f.where ? `${f.where}  ` : ''}${f.message}`)
   }
   out.push('')

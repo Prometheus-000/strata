@@ -1,11 +1,11 @@
 /* ============================================================
    STRATA · TIER 2 — SEMANTIC ROLES · GENERATED FILE
-   Do not edit. This file is a projection of src/theme/generateTheme.ts
-   compiled from the house seeds on both grounds — Gallery (light) and
-   Obsidian (dark) — through the decisions in src/theme/ledger.json; a
-   cut token is emitted as its fallback, with the decision beside it.
-   :root carries the ground the house decided (light).
-   Regenerate with: npm run tokens
+   Do not edit. This file is a projection of the record: the engine,
+   compiled from the seeds in force on both grounds — light and dark —
+   through the decisions in src/theme/ledger.json; a cut token is emitted as
+   its fallback, with the decision beside it.
+   :root carries the ground the record decided (light).
+   Regenerate with: npx strata rebuild
    ============================================================ */
 
 :root,

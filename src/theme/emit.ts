@@ -1,35 +1,57 @@
 /**
  * LAYER 0 EMITTER — one source, many surfaces.
- * `generateTheme.ts` is the single author of the semantic tier. This projects
- * it into `src/tokens/semantic.css` (the stylesheet components consume) and
- * `src/tokens/tokens.json` (the machine-readable contract). Neither file is
- * ever edited by hand.
+ * The engine is the single author of the semantic tier. This projects it
+ * into the product's stylesheet (`semantic.css`, what components consume) and
+ * its contract (`tokens.json`, machine-readable). Neither file is ever edited
+ * by hand, and where they live is the product's frame file's to say.
  *
- * Between the engine and the projections sits the ledger,
- * `src/theme/ledger.json`, itself a projection of the record: every token the
- * engine emits is a proposal there, and a person or an agent keeps or cuts
- * each one through `decide()`. This adds a `proposed` line for any token the
- * engine has started emitting and never touches a decision. A cut token is
- * projected as its fallback, with the decision written beside it, so the
- * stylesheet says what was decided rather than quietly lacking a name.
+ * Between the engine and the projections sits the ledger, itself a projection
+ * of the record: every token the engine emits is a proposal there, and a
+ * person or an agent keeps or cuts each one through `decide()`. This adds a
+ * `proposed` line for any token the engine has started emitting and never
+ * touches a decision. A cut token is projected as its fallback, with the
+ * decision written beside it, so the stylesheet says what was decided rather
+ * than quietly lacking a name.
+ *
+ * The seeds the tier is compiled from are the record's: the last retheme, or
+ * the last ship that promoted to the system, and the engine's default before
+ * either. They were a constant in the engine that `ship` rewrote in place —
+ * impossible for a product that installs the engine, and wrong in principle,
+ * because a seed decision is source and the constant was a copy of it.
  */
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { generateTheme, OBSIDIAN, PRESETS, ROLES_AGAINST_PRIMITIVES, SEED_RANGE, type ThemeSeeds } from './generateTheme'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { flipAppearance, generateTheme, OBSIDIAN, PRESETS, ROLES_AGAINST_PRIMITIVES, SEED_RANGE, type ThemeSeeds } from './generateTheme'
 import { applyLedger, emptyLedger, fallbacksFor, reconcileLedger, summarise, type Ledger, type TokenStatus } from './ledger'
-import { readAll } from '@strata/substrate/log'
+import { readAll, seedsInForce } from '@strata/substrate/log'
 import { current } from '@strata/substrate/fold'
 import type { Decision } from '@strata/substrate/decision'
 import { handText, type Hand } from '@strata/substrate/decision'
+import { loadConfig, tokenPaths } from '@strata/substrate/config'
 
-export const LEDGER_PATH = 'src/theme/ledger.json'
-export const SEMANTIC_PATH = 'src/tokens/semantic.css'
-export const TOKENS_PATH = 'src/tokens/tokens.json'
+/** Where this product's token projections live, from its frame file. */
+export function themePaths(root: string): { ledger: string; semantic: string; tokens: string; primitives: string } {
+  const paths = tokenPaths(loadConfig(root))
+  if (!paths) throw new Error('this product keeps its own tokens (`tokens` is null in .strata/config.json), so the theme projection writes nothing here')
+  return paths
+}
 
-export const readLedger = (root: string): Ledger =>
-  existsSync(join(root, LEDGER_PATH)) ? (JSON.parse(readFileSync(join(root, LEDGER_PATH), 'utf8')) as Ledger) : emptyLedger()
+export const readLedger = (root: string): Ledger => {
+  const p = join(root, themePaths(root).ledger)
+  return existsSync(p) ? (JSON.parse(readFileSync(p, 'utf8')) as Ledger) : emptyLedger()
+}
 
-export const writeLedger = (root: string, ledger: Ledger) => writeFileSync(join(root, LEDGER_PATH), JSON.stringify(ledger, null, 2) + '\n')
+export const writeLedger = (root: string, ledger: Ledger) => {
+  const p = join(root, themePaths(root).ledger)
+  mkdirSync(dirname(p), { recursive: true })
+  writeFileSync(p, JSON.stringify(ledger, null, 2) + '\n')
+}
+
+/** The two grounds of the theme in force: the house, and the same seeds with the appearance flipped. */
+export function grounds(seeds: ThemeSeeds): { house: ThemeSeeds; dark: ThemeSeeds; light: ThemeSeeds } {
+  const other = flipAppearance(seeds)
+  return { house: seeds, dark: seeds.appearance === 'dark' ? seeds : other, light: seeds.appearance === 'light' ? seeds : other }
+}
 
 export interface EmitResult {
   counts: Record<TokenStatus, number>
@@ -41,11 +63,6 @@ export interface EmitResult {
   written: string[]
 }
 
-/**
- * Project the engine through the ledger. `dryRun` computes everything and
- * writes nothing; `ledger` projects a ledger that is not on disk yet — the
- * one the record says — instead of reading the file.
- */
 /**
  * The roles a hand coined, from the record. The engine derives everything it
  * can from seven numbers; these are the names usage earned that no seed
@@ -61,15 +78,19 @@ export function mintedRoles(log: readonly Decision[]): Record<string, string> {
   return out
 }
 
+/**
+ * Project the engine through the ledger. `dryRun` computes everything and
+ * writes nothing; `ledger` projects a ledger that is not on disk yet — the
+ * one the record says — instead of reading the file; `log` is the record to
+ * read the seeds and the minted roles from, when the caller holds a decision
+ * the file does not yet.
+ */
 export function emitTokens(root: string, opts: { dryRun?: boolean; ledger?: Ledger; log?: readonly Decision[] } = {}): EmitResult {
-
-  // The two grounds are the house seeds with the one bit each way; `:root`
-  // carries whichever ground the house decided, so a page without the
-  // attribute is the house.
-  const DARK = PRESETS.Obsidian
-  const LIGHT = PRESETS.Gallery
-  const HOUSE = OBSIDIAN.appearance
-  const minted = mintedRoles(opts.log ?? readAll(root))
+  const paths = themePaths(root)
+  const log = opts.log ?? readAll(root)
+  const { house, dark: DARK, light: LIGHT } = grounds(seedsInForce(log, OBSIDIAN))
+  const HOUSE = house.appearance
+  const minted = mintedRoles(log)
   const fallbacks = fallbacksFor(minted)
   const theme = (seeds: ThemeSeeds) => ({ ...generateTheme(seeds), ...minted })
 
@@ -106,12 +127,12 @@ export function emitTokens(root: string, opts: { dryRun?: boolean; ledger?: Ledg
 
   const css = `/* ============================================================
    STRATA · TIER 2 — SEMANTIC ROLES · GENERATED FILE
-   Do not edit. This file is a projection of src/theme/generateTheme.ts
-   compiled from the house seeds on both grounds — Gallery (light) and
-   Obsidian (dark) — through the decisions in src/theme/ledger.json; a
-   cut token is emitted as its fallback, with the decision beside it.
-   :root carries the ground the house decided (${HOUSE}).
-   Regenerate with: npm run tokens
+   Do not edit. This file is a projection of the record: the engine,
+   compiled from the seeds in force on both grounds — light and dark —
+   through the decisions in ${paths.ledger}; a cut token is emitted as
+   its fallback, with the decision beside it.
+   :root carries the ground the record decided (${HOUSE}).
+   Regenerate with: npx strata rebuild
    ============================================================ */
 
 ${HOUSE === 'light' ? ':root,\n' : ''}[data-theme='light'] {
@@ -149,6 +170,7 @@ ${block((HOUSE === 'light' ? light : dark).tokens, againstPrimitive)}
     energy: s.energy,
     density: s.density,
     appearance: s.appearance,
+    ...(s.lightness !== undefined ? { lightness: s.lightness } : {}),
   })
 
   /** The decision, as an extension on every token so an agent reads it where it reads the value. */
@@ -179,7 +201,7 @@ ${block((HOUSE === 'light' ? light : dark).tokens, againstPrimitive)}
   const json = {
     $schema: 'https://design-tokens.github.io/community-group/format/',
     $description:
-      'Strata design tokens — GENERATED from src/theme/generateTheme.ts (npm run tokens). A theme is seven seeds; every color below is a compiled projection, never a source. Agents: retheme by writing seeds and regenerating — never by editing values here. Each token carries its ledger decision under $extensions["strata.ledger"]: a cut token is emitted as its fallback and should not be reached for.',
+      'Strata design tokens — GENERATED from the record by the engine (npx strata rebuild). A theme is seven seeds; every color below is a compiled projection, never a source. Agents: retheme with `npx strata retheme …`, which puts the seeds on the record and regenerates this — never by editing values here. Each token carries its ledger decision under $extensions["strata.ledger"]: a cut token is emitted as its fallback and should not be reached for.',
     strata: {
       themeEngine: {
         $description:
@@ -188,20 +210,21 @@ ${block((HOUSE === 'light' ? light : dark).tokens, againstPrimitive)}
           $ranges: SEED_RANGE,
           $reasons: {
             hue: 'Accent hue on the OKLCH wheel — perceptually uniform, so any hue yields the same apparent vividness.',
-            chroma: 'Muted ↔ electric. 0 is monochrome — the house default — and a monochrome accent compiles to ink, not grey. Light appearances compile at 0.87× and lower lightness to hold AA contrast.',
-            warmth: 'Tints ALL neutrals toward paper (85°) or slate (250°) — Visionary\'s own anchors. Neutrals are chosen, never default grey; an accent hue never reaches them.',
+            chroma: 'Muted ↔ electric. 0 is monochrome — the engine’s default — and a monochrome accent compiles to ink, not grey. Light appearances compile at 0.87× and lower lightness to hold AA contrast.',
+            warmth: 'Tints ALL neutrals toward paper (85°) or slate (250°). Neutrals are chosen, never default grey; an accent hue never reaches them.',
             energy: 'Motion personality AND shape: kinetic themes snap (spring easing, shorter durations) and round off; calm themes glide and stay architectural.',
             density: 'Scales control heights, paddings and gaps together so rhythm compresses uniformly.',
-            lightness: 'Where the ground sits within its appearance: −1 is OLED black or bone, 0 the house ground, +1 charcoal or paper-white. Every surface is a fixed step off the ground, and the accent moves with it to keep its distance. Optional: absent means the house.',
+            lightness: 'Where the ground sits within its appearance: −1 is OLED black or bone, 0 the default ground, +1 charcoal or paper-white. Every surface is a fixed step off the ground, and the accent moves with it to keep its distance. Optional: absent means the default.',
           },
+          inForce: seedJson(house),
           compiled: { dark: seedJson(DARK), light: seedJson(LIGHT) },
         },
         presets: Object.fromEntries(Object.entries(PRESETS).map(([k, v]) => [k, seedJson(v)])),
       },
       ledger: {
         $description:
-          'Every generated token is a proposal; src/theme/ledger.json records what people decided. proposed = unreviewed, ships as generated. kept = reviewed and wanted. cut = collapses to its fallback everywhere; the fallback is named on the token. Agents: never reach for a cut token; to cut or keep one, run npm run ledger -- cut|keep <token> --why "…".',
-        source: LEDGER_PATH,
+          'Every generated token is a proposal; the ledger records what people decided. proposed = unreviewed, ships as generated. kept = reviewed and wanted. cut = collapses to its fallback everywhere; the fallback is named on the token. Agents: never reach for a cut token; to cut or keep one, run npx strata cut|keep --<token> --why "…".',
+        source: paths.ledger,
         counts,
         cut: dark.receipts.map((r) => ({ token: r.token, fallback: r.to, decided: r.decided, reason: r.reason })),
       },
@@ -223,10 +246,11 @@ ${block((HOUSE === 'light' ? light : dark).tokens, againstPrimitive)}
     },
   }
 
-  const files = { [LEDGER_PATH]: JSON.stringify(ledger, null, 2) + '\n', [SEMANTIC_PATH]: css, [TOKENS_PATH]: JSON.stringify(json, null, 2) + '\n' }
+  const files = { [paths.ledger]: JSON.stringify(ledger, null, 2) + '\n', [paths.semantic]: css, [paths.tokens]: JSON.stringify(json, null, 2) + '\n' }
   const written: string[] = []
   if (!opts.dryRun) {
     for (const [file, text] of Object.entries(files)) {
+      mkdirSync(dirname(join(root, file)), { recursive: true })
       writeFileSync(join(root, file), text)
       written.push(file)
     }

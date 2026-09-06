@@ -8,15 +8,20 @@ packets, and the one call that changes anything.
 {
   "mcpServers": {
     "strata": {
-      "command": "node",
-      "args": ["--import", "tsx/esm", "/path/to/strata/mcp/server.mjs"]
+      "command": "npx",
+      "args": ["strata-mcp"]
     }
   }
 }
 ```
 
-`STRATA_ROOT` picks the product (default: the repository this file sits in),
-`STRATA_MALLEABLE` the library root, `MALLEABLE_ROOT` the app tree.
+`npx strata init --mcp` writes exactly that into `.mcp.json` for you.
+
+The server finds the product the way the CLI does: `STRATA_ROOT` when it is
+set, else the nearest `.strata/` at or above the working directory — so the
+client's working directory is the product. `STRATA_MALLEABLE` picks the
+library root and `MALLEABLE_ROOT` the app tree, for a product that mounts the
+malleable layer somewhere other than its frame file says.
 
 ## The tools
 

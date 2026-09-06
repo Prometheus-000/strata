@@ -45,6 +45,31 @@ the [malleable layer](https://prometheus-000.github.io/strata/malleable.html)
 one click away. The static site cannot write; it shows what was decided. The
 dev server writes through.
 
+## Start here
+
+**Put it in your repository** — an existing product or an empty directory;
+both are ordinary, and `init` asks three questions with defaults:
+
+```bash
+npm install --save-dev strata-design
+npx strata init
+npx strata check
+```
+
+[ADOPTING.md](ADOPTING.md) is that path in full: what `init` writes, what
+never to edit by hand, how to write your product's voice, and what this
+release does not carry.
+
+**Read this one instead** — the repository is itself a Strata product, and
+[GETTING_STARTED.md](GETTING_STARTED.md) is an hour with it: the record, the
+glass box, a first decision, a handoff.
+
+```bash
+git clone https://github.com/Prometheus-000/strata.git && cd strata
+npm install && npm test
+npx strata check && npm run dev
+```
+
 ## Thesis
 
 A design system used to be a library: a stylesheet somebody hand-tuned, a
@@ -350,8 +375,8 @@ Before a rule, there is what the record shows.
 $ strata precedent --property padding
 
   # ILLUSTRATIVE — the shape of the output, not a reading of this record.
-  # This product's record holds token decisions and two decisions made in a
-  # live session; it has no override convergence yet. Run it and see.
+  # This product's record holds token decisions and a handful of overlay
+  # gestures; no property has converged across enough targets yet. Run it and see.
   5 instances independently converged on padding = 12px across 2 views · 3 hands: prometheus-000, ada, and 1 decision by an unnamed hand · 4 by hand, 1 by agent — a candidate for promotion, which is a hand's to decide
   1 instance converged on padding = 16px · hands unnamed · 1 by hand
 ```
@@ -531,11 +556,13 @@ person who knows what is true. Both report under **policy** rather than
 failing a build, because prose is not the artifact. This repository chooses to
 fail its own build on them anyway, which is what `scripts/prose.test.ts` is.
 
-Six of the eighteen are marked `"scope": "product"` (eight rules carry that
+Seven of the nineteen are marked `"scope": "product"` (nine rules carry that
 mark; two of them gained evaluators and left the cited list): they are this
 product's taste — one family, two radii, lines not shadows — not the system's
-rules, and an adopter is expected to replace them. Everything in GRAMMAR.md's
-voice section is in that eight.
+rules, and an adopter does not inherit them. `npx strata init` copies the
+system's rules into a new product and none of the nine; every packet carries
+whatever voice that product wrote instead. Everything in GRAMMAR.md's voice
+section is in the nine.
 
 The grammar (`GRAMMAR.md`) is rules with reasons, in prose, co-authored: a
 human writes the incident — the stylesheet with thirty-four accidental white
@@ -545,18 +572,23 @@ The same rules are data in `grammar/rules.json`, each with its authority,
 and that is what `strata check` runs from:
 
 ```
-$ strata check
+$ npx strata check
 
 INVARIANTS
 ──────────────
-✓ record.parses — 37 decision(s)
+✓ record.parses — 66 decision(s)
 ✓ projections.match-record
 ✓ fallbacks.total-acyclic
 ✓ css.vars-defined
 
+POLICY
+──────────────
+safety.contrast  --ink-faint on --surface-page
+    4.14:1 on dark, under the 4.5:1 this measures text against. Reported, not refused — move the seeds, or keep the token with the reason it stands (strata keep --ink-faint --why "…") and the reason prints here. Kept by human prometheus-000: The label colour. Every kicker, key and rule-line is faint ink, never the accent — a coloured label is a second voice.
+
 KNOWLEDGE
 ──────────────
-deviation.declared  src/site/site.css:850
+deviation.declared  src/site/site.css:868
     declared: the hue slider paints the OKLCH wheel itself — a literal spectrum is the control's value, not themable surface
 token.unused  --motion-instant
     never used — a cut candidate, or headroom; only you know which
@@ -564,7 +596,7 @@ token.unused  --motion-instant
 HANDOFF
 ──────────────
   nothing changed since the last review
-not yet handed off
+ready for review — human prometheus-000, …
 
 every invariant holds; the rest is evaluation, and none of it blocks anything
 ```
@@ -765,6 +797,10 @@ One interface. Every write is a decision on the record and states two hands:
 `--dry`.
 
 ```
+starting
+  init [--yes] [--source d] [--tokens d | --no-theme] [--no-skills] [--mcp] [--dry]
+                              the record, the grammar, the skills, the tokens — in an empty repo or a full one
+
 the record
   check [--enforce] [--json]  here is what happened: invariants, then policy, preference, knowledge, precedent, handoff
   explain <id | targetKey>    one decision as a glass box: DECISION · CONTEXT · EVIDENCE · CONSEQUENCE
@@ -774,21 +810,25 @@ the record
   precedent [words] [--property p] [--value v] [--component C] [--token --x] [--author a] [--actor h] [--unpromoted]
   skill [name] [--<input> v]  the skills, or the packet for one
   ready [--why …]             hand off what changed since the last ready
-  import                      bring the old ledger and store onto the record, once
+  handoff                     what changed since the last ready
+  import                      bring an old ledger and store onto the record, once
   rebuild [--check]           write every projection from the record; --check only says which differ
 
-tokens (Layer 0)
+the theme (Layer 0)
+  retheme [--hue n] [--chroma n] [--warmth n] [--energy n] [--density n] [--lightness n] [--appearance dark|light] [--link <url>]
+                              move the seven seeds, on the record; every projection is compiled from them in the same call
   list · cut · keep · propose --<token> [--why …]
   mint --<token> --value <v> --why …   coin a name for a value usage kept reaching
   deviate <file>:<line> --why …
+  survey                      what the stylesheets already decided
 
 the malleable layer
   id · regions · manifest · resolve · reconcile · drift · handoff
-  set · remove · move · prop · retheme · ship
+  set · remove · move · prop · ship
 ```
 
 ```bash
-npm install                # links the substrate into both packages
+npm install                # links the three workspaces: the substrate, the engine, the identity
 npm run dev                # one server, six pages: /, /personalize.html, /malleable.html, /lab.html, /identity.html, /sky.html
 npm run identity           # the favicon and the mark, projected from the record
 npx strata check           # what happened
@@ -798,14 +838,17 @@ npm test                   # the substrate, the theme, the malleable layer
 npm run build              # tokens → check --enforce → tsc → vite; fails only on an invariant
 ```
 
+In a product that installed it, every one of those `npx strata` lines is the
+same command; `npm install --save-dev strata-design && npx strata init` is
+where that product starts. See [ADOPTING.md](ADOPTING.md).
+
 A harness without a shell reaches the same calls over MCP — `strata_skill`,
 `strata_precedent`, `strata_explain`, `strata_decide`, `strata_check`,
 `strata_log`, and no seventh tool that edits a file. See `mcp/README.md`;
 `strata_decide` requires `decided` and infers nothing, because a tool call
 carries no shell to read.
 
-`npm run ledger -- cut …` and `malleable move …` still work; they run the
-same functions. The library runs alone too:
+The library runs alone too:
 
 ```bash
 cd strata-malleable && npm install && npm test && npm run dev
@@ -852,9 +895,10 @@ Stated so the next reader inherits the test and not the verdict:
   no amount of care could restore three decisions nobody had written down. That
   is a record problem, and the answer to it is more refusals, not more
   supervision.
-- **The record is thirty-seven lines, and thirty-four of them were imported.**
-  Three were decided in a live session. That is a record of a vocabulary, not
-  yet a record of a product being designed.
+- **The record is sixty-six lines, and thirty-four of them were imported.**
+  The rest were decided in live sessions — overlay drags, a retheme, a dozen
+  declared deviations, one handoff. That is a record of a vocabulary and a few
+  sessions, not yet a record of a product being designed over months.
 - Code → Figma regeneration on CI. The Figma library was pushed by hand once
   and is a stale projection; `figma-library-state.json` is the evidence.
 - The hub renders the record but cannot evaluate it: evidence needs the

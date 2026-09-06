@@ -16,7 +16,7 @@ import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { test } from 'node:test'
-import { loadRules } from '@strata/substrate/grammar'
+import { byScope, loadRules } from '@strata/substrate/grammar'
 import { brokenCitations, ghosts } from '@strata/substrate/prose'
 import { registerTheme } from '../src/theme/handlers'
 import { registerMalleable } from '../strata-malleable/src/decide/index'
@@ -59,6 +59,20 @@ test('the count the README claims about the grammar is the count the grammar has
   assert.equal(Number(m[3]), rest, 'non-invariant rules')
   assert.equal(words[m[4]] ?? Number(m[4]), rest - cited, 'rules with an evaluator')
   assert.ok(readme.includes(`the other ${WORDS[cited] ?? cited} say`), 'cited count')
+
+  // And the other sentence of counts, which nothing checked: how much of the
+  // cited list is this product's own taste rather than the system's. It said
+  // "six of the eighteen … eight rules carry that mark" while nine did and
+  // the list was nineteen — the exact class of drift this file exists for,
+  // in the paragraph that tells an adopter what they inherit.
+  const product = byScope(rules, 'product')
+  const productCited = product.filter((r) => r.check === undefined || r.check === 'none')
+  const m2 = readme.match(/(\w+) of the (\w+) are marked `"scope": "product"` \((\w+) rules carry that\n\s*mark/)
+  assert.ok(m2, 'the README sentence that states the product-scoped counts has been reworded; teach this test its new shape')
+  const n = (w: string) => words[w.toLowerCase()] ?? Number(w)
+  assert.equal(n(m2![1]), productCited.length, "this product's rules in the cited list")
+  assert.equal(n(m2![2]), cited, 'the cited list')
+  assert.equal(n(m2![3]), product.length, "rules marked as this product's own")
 })
 
 test('the tools the MCP README lists are the tools the server has', () => {
@@ -66,7 +80,7 @@ test('the tools the MCP README lists are the tools the server has', () => {
   // and the server's descriptions are for a model, so those may differ — but a
   // seventh tool, or a renamed one, must not leave the human-facing page
   // describing a surface that is not there.
-  const server = new Set([...read('mcp/server.mjs').matchAll(/name: '(strata_[a-z_]+)'/g)].map((m) => m[1]))
+  const server = new Set([...read('mcp/main.mjs').matchAll(/name: '(strata_[a-z_]+)'/g)].map((m) => m[1]))
   const readme = new Set([...read('mcp/README.md').matchAll(/`(strata_[a-z_]+)`/g)].map((m) => m[1]))
   assert.deepEqual([...readme].sort().filter((t) => !server.has(t)), [], 'the README lists a tool the server does not serve')
   assert.deepEqual([...server].sort().filter((t) => !readme.has(t)), [], 'the server serves a tool the README never mentions')

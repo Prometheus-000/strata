@@ -6,7 +6,7 @@ inputs: [token]
 context:
   state: [tokens, consumers]
   precedent: { kind: token, token: $token }
-  rules: [layer0.semantic-names-only, layer0.engine-only-author, voice.lines-not-shadows, voice.two-radii, layer2.one-filled-action, knowledge.accent-gate, record.decided-not-written, record.use-is-not-decision]
+  rules: [layer0.semantic-names-only, layer0.engine-only-author, layer2.one-filled-action, knowledge.accent-gate, record.decided-not-written, record.use-is-not-decision]
 constraints:
   - never edit src/tokens or src/theme/ledger.json by hand — they are projections of the record
   - a cut collapses to the fallback beside the engine; you do not choose the floor, you decide whether the token stands
@@ -23,8 +23,11 @@ reasons: |
   with the decision emitted where the token is defined — and the projections
   say what was decided rather than quietly lacking a name.
 
-  The house voice is a set of cuts: no shadow colour, one easing curve, two
-  radii. Each one has a reason a reader can disagree with, which is the point.
+  A voice is often a set of cuts: no shadow colour, one easing curve, two
+  radii. Each one has a reason a reader can disagree with, which is the
+  point — and this product's own are in the packet above, under its voice,
+  because the taste travels with the work rather than being named by the
+  skill that happens to need it.
 ---
 
 ## Procedure

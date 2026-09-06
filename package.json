@@ -1,42 +1,78 @@
 {
-  "name": "strata",
-  "private": true,
-  "version": "0.1.0",
-  "description": "Strata — an adaptive, AI-native design system. Themes are data; components are instruments.",
+  "name": "strata-design",
+  "version": "0.2.0",
+  "description": "Strata — a persistent design decision system for humans and agents. One record of what a product decided; every stylesheet, token file and theme is a projection of it.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Prometheus-000/strata.git"
+  },
+  "homepage": "https://prometheus-000.github.io/strata/",
   "type": "module",
+  "bin": {
+    "strata": "bin/strata.mjs",
+    "strata-mcp": "mcp/server.mjs"
+  },
+  "engines": {
+    "node": ">=20.6"
+  },
+  "files": [
+    "bin",
+    "mcp",
+    "templates",
+    "skills",
+    "grammar",
+    "src/init.ts",
+    "src/theme/*.ts",
+    "src/identity/handler.ts",
+    "src/identity/palette.ts",
+    "src/tokens/primitives.css",
+    "scripts/prose.ts",
+    "strata-malleable/src",
+    "strata-malleable/package.json",
+    "strata-malleable/integrations",
+    "GRAMMAR.md",
+    "README.md",
+    "ADOPTING.md",
+    "GETTING_STARTED.md"
+  ],
   "scripts": {
     "dev": "vite",
     "tokens": "tsx scripts/emit-tokens.ts",
     "identity": "tsx scripts/emit-identity.ts",
-    "ledger": "node --import tsx/esm bin/strata.mjs",
+    "ledger": "node bin/strata.mjs",
     "test": "node --import tsx/esm --test scripts/*.test.ts && npm test --prefix substrate && npm test --prefix strata-malleable",
     "build": "npm run tokens && npm run identity && npm run check -- --enforce && tsc -b && vite build",
     "preview": "vite preview",
     "bundle": "node scripts/bundle.mjs",
-    "strata": "node --import tsx/esm bin/strata.mjs",
-    "check": "node --import tsx/esm bin/strata.mjs check"
+    "strata": "node bin/strata.mjs",
+    "check": "node bin/strata.mjs check"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "three": "^0.170.0"
+    "@strata/engine": "0.1.0",
+    "@strata/identity": "0.1.0",
+    "@strata/substrate": "0.1.0",
+    "tsx": "^4.23.12",
+    "typescript": "~5.6.2"
   },
+  "bundleDependencies": [
+    "@strata/engine",
+    "@strata/identity",
+    "@strata/substrate"
+  ],
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/three": "^0.170.0",
     "@vitejs/plugin-react": "^4.3.4",
-    "tsx": "^4.23.12",
-    "typescript": "~5.6.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.170.0",
     "vite": "^6.0.3"
   },
   "workspaces": [
     "engine",
     "substrate",
     "identity"
-  ],
-  "bin": {
-    "strata": "bin/strata.mjs"
-  }
+  ]
 }

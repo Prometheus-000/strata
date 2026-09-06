@@ -234,7 +234,15 @@ export function ghosts(root: string, opts: ProseOptions = {}): Ghost[] {
   // 1. An npm script. The one this repository retired outlived its
   //    definition, in three READMEs, by months.
   const scripts = new Set(o.packages.flatMap((p) => scriptsOf(root, p)))
-  for (const { where, text } of passages) for (const m of text.matchAll(/npm run ([a-z][a-z0-9:-]*)/g)) if (!scripts.has(m[1])) say(where, `\`npm run ${m[1]}\` — nothing defines that script`)
+  for (const { where, text } of passages)
+    for (const m of text.matchAll(/npm run ([a-z][a-z0-9:-]*)/g)) {
+      // A script name may carry a colon (`build:prod`); a *trailing* colon is
+      // a harness's permission glob — `Bash(npm run dev:*)` names the script
+      // `dev` and says "with any arguments". Reading the glob as the name
+      // reported three ghosts for three commands that run.
+      const script = m[1].replace(/:$/, '')
+      if (!scripts.has(script)) say(where, `\`npm run ${script}\` — nothing defines that script`)
+    }
 
   // 2. A CLI verb, but only where the line is an invocation rather than
   //    English: after a backtick, after a shell prompt, or carrying flags.

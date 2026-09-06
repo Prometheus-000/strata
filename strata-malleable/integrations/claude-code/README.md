@@ -27,22 +27,30 @@ receipt of who moved what.
 ## Install
 
 ```bash
-npm install --save-dev strata-malleable
-npx malleable init
+npm install --save-dev strata-design
+npx strata init --malleable
 ```
 
-`init` copies the skill and the two commands into `.claude/`. It installs no
-hook, touches no settings, and adds nothing to `.gitignore` — pressing ready
-writes one `ready` decision to `.strata/decisions.jsonl`, which is committed
-like every other decision. There is no handoff file to ignore, and there has
-not been one since the record replaced it.
+`init` starts the product — the record, the grammar, the skills — and
+`--malleable` adds this layer's four skills and the two commands under
+`.claude/`. It installs no hook, touches no settings, and adds nothing to
+`.gitignore`: pressing ready writes one `ready` decision to
+`.strata/decisions.jsonl`, which is committed like every other decision. There
+is no handoff file to ignore, and there has not been one since the record
+replaced it.
 
 Then:
 
 ```bash
-npx malleable id      # stamp identity on your nodes and regions
-npm run dev           # open the loop
+npx strata id      # stamp identity on your nodes and regions
+npm run dev        # open the loop
 ```
+
+**What this release carries, and what it does not.** The verbs are in the CLI
+and the loop runs in Strata's own repository — `npm run dev`, then
+`/malleable.html`. Wiring the overlay into *your* app — the harness, the
+dev-server plugin that writes through, `defineControls` beside your own
+components — is not packaged yet. `ADOPTING.md` says so in the same words.
 
 ## What each piece does
 
@@ -63,9 +71,10 @@ back.
 ## Alternative: install as a plugin
 
 ```
-/plugin marketplace add <this repo>
+/plugin marketplace add Prometheus-000/strata
 /plugin install strata-malleable
 ```
 
-The plugin carries the same skill and commands. `npx malleable init` is still
-worth running afterwards for the `.gitignore` line.
+The plugin carries the same skill and commands. `npx strata init --malleable`
+is still what puts the record, the grammar and the rest of the skills in the
+project; the plugin is the Claude Code half.

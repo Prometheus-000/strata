@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { problemsWith } from '@strata/substrate/decision'
 import { flipAppearance, generateTheme, OBSIDIAN, PRESETS, SEED_RANGE } from '../src/theme/generateTheme'
-import { hashFromSeeds, parseSeedHash } from '../src/theme/ThemeContext'
+import { hashFromSeeds, parseSeedHash } from '../src/theme/seedHash'
 
 const L = (css: string) => Number(/oklch\(([\d.]+)/.exec(css)?.[1])
 

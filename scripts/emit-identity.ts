@@ -13,9 +13,9 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { readAll } from '@strata/substrate/log'
-import { OBSIDIAN, PRESETS } from '../src/theme/generateTheme'
-import { readLedger } from '../src/theme/emit'
+import { readAll, seedsInForce } from '@strata/substrate/log'
+import { OBSIDIAN } from '../src/theme/generateTheme'
+import { grounds, readLedger } from '../src/theme/emit'
 import { frameAt, levelCount } from '@strata/identity/field'
 import { stateFrom } from '@strata/identity/record'
 import { svgFrom } from '@strata/identity/render'
@@ -28,11 +28,13 @@ export function emitIdentity(root: string): Record<string, string> {
   const ledger = readLedger(root)
   const record = readAll(root)
   const state = stateFrom(record)
-  const house = paletteFrom(OBSIDIAN, ledger)
-  const inks = { dark: paletteFrom(PRESETS.Obsidian, ledger).ink, light: paletteFrom(PRESETS.Gallery, ledger).ink, house: OBSIDIAN.appearance }
-  const base = { energy: OBSIDIAN.energy, density: OBSIDIAN.density }
-  const favicon = svgFrom(frameAt(state, Infinity, { ...base, n: 24, levels: levelCount('favicon', OBSIDIAN.density) }), 32, house, { dot: true, inks })
-  const mark = svgFrom(frameAt(state, Infinity, { ...base, n: 64, levels: levelCount('mark', OBSIDIAN.density) }), 160, house, { dot: false, inks })
+  // The theme in force is the record's — the same fold every projection reads.
+  const seeds = grounds(seedsInForce(record, OBSIDIAN))
+  const house = paletteFrom(seeds.house, ledger)
+  const inks = { dark: paletteFrom(seeds.dark, ledger).ink, light: paletteFrom(seeds.light, ledger).ink, house: seeds.house.appearance }
+  const base = { energy: seeds.house.energy, density: seeds.house.density }
+  const favicon = svgFrom(frameAt(state, Infinity, { ...base, n: 24, levels: levelCount('favicon', seeds.house.density) }), 32, house, { dot: true, inks })
+  const mark = svgFrom(frameAt(state, Infinity, { ...base, n: 64, levels: levelCount('mark', seeds.house.density) }), 160, house, { dot: false, inks })
   const files = { [FAVICON_PATH]: favicon, [MARK_PATH]: mark }
   for (const [rel, text] of Object.entries(files)) {
     mkdirSync(dirname(join(root, rel)), { recursive: true })

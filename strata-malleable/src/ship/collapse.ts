@@ -3,7 +3,12 @@
  *
  * Three destinations, chosen by scope, and none of them is a database:
  *
- *   system     → the seed constant. The engine keeps its monopoly on tokens.
+ *   system     → the seeds, on the record. The ship decision carries them, the
+ *                store projects them, and every token projection compiles
+ *                from the record. The engine keeps its monopoly on tokens.
+ *                (For a while this rewrote a constant in the engine's source,
+ *                which is not a place a product that installs the engine can
+ *                write, and was a copy of what the record already held.)
  *   component  → the recipe's own declaration, rewritten in place. A literal
  *                arrives with a `deviation:` comment, because Strata's grammar
  *                already has a sanctioned way to carry a raw value and inventing
@@ -25,29 +30,18 @@ import type { Manifest, Override, Store } from '../schema'
 import { driftReport, formatDrift } from './drift'
 
 export const FROZEN_PATH = 'fixtures/app/frozen.css'
-/**
- * Where the seed constant lives, relative to the app root ship is given.
- *
- * A system promotion does not write a token — it moves a seed, and the seeds
- * are declared once, in the engine module both this layer and its host
- * import. That module is `@strata/engine`, which sits beside this package in
- * the workspace; a product that installs the library from a registry passes
- * `seedsSource` pointing at wherever it declares its own seeds, because a
- * dependency's source is not a place to write.
- */
-export const SEEDS_SOURCE = '../engine/src/generateTheme.ts'
 
 export interface ShipOptions {
   dryRun?: boolean
   root?: string
-  /** Overrides SEEDS_SOURCE — see there for why a host may need to. */
-  seedsSource?: string
 }
 
 export interface ShipResult {
   store: Store
   log: string
   edits: Array<{ file: string; what: string }>
+  /** Seeds a system promotion moved — on the record, not in a file. */
+  moved: string[]
   refusals: string[]
   /** What went where, as counts — the body of the ship decision. */
   promoted: { system: number; component: number }
@@ -62,22 +56,12 @@ export function ship(store: Store, manifest: Manifest, opts: ShipOptions = {}): 
   const report = driftReport(store, manifest)
   const table = tokenTable(effectiveSeeds(store.seeds, store.overrides))
 
-  /* ---- 1. system → seeds ---- */
+  /* ---- 1. system → the seeds, on the record ---- */
   let seeds = store.seeds
+  const moved: string[] = []
   if (report.promoted.system.length) {
     seeds = effectiveSeeds(store.seeds, store.overrides)
-    const p = path.join(root, opts.seedsSource ?? SEEDS_SOURCE)
-    const src = fs.readFileSync(p, 'utf8')
-    const next = rewriteSeedConstant(src, 'OBSIDIAN', seeds)
-    if (next === src) refusals.push(`could not find the OBSIDIAN seed constant in ${opts.seedsSource ?? SEEDS_SOURCE}`)
-    else {
-      if (!dry) fs.writeFileSync(p, next)
-      for (const o of report.promoted.system)
-        edits.push({
-          file: opts.seedsSource ?? SEEDS_SOURCE,
-          what: `seed ${o.target.selector} → ${'literal' in o.value ? o.value.literal : ''} (from ${o.property})`,
-        })
-    }
+    for (const o of report.promoted.system) moved.push(`seed ${o.target.selector} → ${'literal' in o.value ? o.value.literal : ''} (from ${o.property})`)
   }
 
   /* ---- 2. component → the recipe's declaration ---- */
@@ -168,11 +152,12 @@ ${body || '/* none */'}
   const log = [
     formatDrift(report),
     'SHIP',
-    ...(edits.length ? edits.map((e) => `  ${e.file.padEnd(34)} ${e.what}`) : ['  nothing to collapse']),
+    ...moved.map((m) => `  ${'(the record)'.padEnd(34)} ${m}`),
+    ...(edits.length ? edits.map((e) => `  ${e.file.padEnd(34)} ${e.what}`) : moved.length ? [] : ['  nothing to collapse']),
     ...(refusals.length ? ['', 'REFUSED — needs a human'] : []),
     ...refusals.map((r) => `  ${r}`),
     '',
-    dry ? '(dry run — nothing written)' : `${edits.length} edit(s) written · store frozen to ${kept.length} override(s)`,
+    dry ? '(dry run — nothing written)' : `${edits.length} edit(s) written${moved.length ? ` · ${moved.length} seed(s) moved` : ''} · store frozen to ${kept.length} override(s)`,
     '',
   ].join('\n')
 
@@ -180,34 +165,9 @@ ${body || '/* none */'}
     store: dry ? store : next,
     log,
     edits,
+    moved,
     refusals,
     promoted: { system: report.promoted.system.length, component: report.promoted.component.length },
     frozen: kept.length,
   }
-}
-
-/** Rewrite the seed literal in the engine source, preserving its formatting. */
-export function rewriteSeedConstant(source: string, name: string, seeds: object): string {
-  const start = source.indexOf(`export const ${name}: ThemeSeeds = {`)
-  if (start < 0) return source
-  const open = source.indexOf('{', start)
-  let depth = 0
-  let end = open
-  for (let i = open; i < source.length; i++) {
-    if (source[i] === '{') depth++
-    else if (source[i] === '}') {
-      depth--
-      if (depth === 0) {
-        end = i
-        break
-      }
-    }
-  }
-  let body = source.slice(open + 1, end)
-  for (const [key, value] of Object.entries(seeds as Record<string, unknown>)) {
-    const literal = typeof value === 'string' ? `'${value}'` : String(value)
-    const re = new RegExp(`(\\n\\s*${key}\\s*:\\s*)[^,\\n]+`, 'g')
-    if (re.test(body)) body = body.replace(re, `$1${literal}`)
-  }
-  return source.slice(0, open + 1) + body + source.slice(end)
 }

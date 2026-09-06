@@ -36,6 +36,16 @@ export interface EvalContext {
 
 export interface Evaluator {
   id: string
+  /**
+   * The rule it speaks for, when it speaks for one. An evaluator that names
+   * a rule runs only where the product's grammar declares that rule: a
+   * product that has expressed no taste is not reported against another
+   * product's, and a rule an adopter removed does not go on being evaluated
+   * under a name their grammar never had. An evaluator that names none —
+   * usage counts, declared deviations, convergence — is computed knowledge
+   * and always runs.
+   */
+  rule?: string
   /** Decision kinds it can give evidence about. */
   kinds?: Kind[]
   /** Evidence about one decision. */
@@ -66,7 +76,12 @@ export function evaluate(d: Decision, ctx: EvalContext): Fact[] {
 /** Every finding every registered evaluator has about the product. */
 export function findings(ctx: EvalContext): Finding[] {
   const out: Finding[] = []
-  for (const e of evaluators.values()) if (e.findings) out.push(...e.findings(ctx))
+  const declared = new Set(ctx.rules.map((r) => r.id))
+  for (const e of evaluators.values()) {
+    if (!e.findings) continue
+    if (e.rule && !declared.has(e.rule)) continue
+    out.push(...e.findings(ctx))
+  }
   return out
 }
 

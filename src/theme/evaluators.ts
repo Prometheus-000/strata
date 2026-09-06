@@ -7,21 +7,32 @@
  * colour where a semantic name belongs is reported under the policy it bends,
  * with the way to declare it; a token nothing uses is knowledge, not a fault.
  * None of it runs while someone is designing.
+ *
+ * Which directories are read, and where the stylesheet is, come from the
+ * product's frame file. An evaluator that speaks for a rule says so, and is
+ * silent where the product's grammar does not declare that rule.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { join, relative, sep } from 'node:path'
 import type { Decision } from '@strata/substrate/decision'
+import { handText } from '@strata/substrate/decision'
 import { registerEvaluator, type EvalContext, type Finding } from '@strata/substrate/evidence'
 import type { Fact } from '@strata/substrate/format'
+import { seedsInForce } from '@strata/substrate/fold'
+import { loadConfig } from '@strata/substrate/config'
 import { contrastRatio } from './color'
-import { generateTheme, OBSIDIAN, PRESETS } from './generateTheme'
-import { fallbacksFor, FALLBACKS, themeTokens } from './ledger'
-import { mintedRoles, readLedger, SEMANTIC_PATH } from './emit'
+import { generateTheme, OBSIDIAN } from './generateTheme'
+import { fallbacksFor, themeTokens } from './ledger'
+import { grounds, mintedRoles, readLedger, themePaths } from './emit'
 import { COLOR_LITERAL } from './handlers'
 
-export const SCAN_DIRS = ['src/components', 'src/site', 'src/personalize', 'src/identity', 'src/sky']
 const EXTS = ['.css', '.tsx', '.ts']
-const TOKEN_DIRS = ['src/tokens']
+
+/** The directories the evaluators read: the product's source, from its frame file. */
+export const scanDirs = (root: string): string[] => loadConfig(root).source
+
+/** Where the token projections live, or nothing for a product that keeps its own tokens. */
+const tokensDir = (root: string): string | null => loadConfig(root).tokens
 
 function walk(dir: string, out: string[]) {
   if (!existsSync(dir)) return
@@ -32,15 +43,32 @@ function walk(dir: string, out: string[]) {
   }
 }
 
-export const scanFiles = (root: string, dirs = SCAN_DIRS): string[] => {
+/**
+ * The product's source files. The token projections are never among them: a
+ * projection is what the record says, written out, and every value in it is
+ * the engine's. The ordinary adopter layout puts the tokens directory inside
+ * the source directory, and without this the first `check` a new product ever
+ * ran reported its own generated stylesheet back to it as forty-eight raw
+ * colours — the policy pointed at the one file that cannot bend it.
+ *
+ * Asking for the tokens directory by name still reads it: `definedVars` needs
+ * to know what the primitives define.
+ */
+export const scanFiles = (root: string, dirs: readonly string[] = scanDirs(root)): string[] => {
   const out: string[] = []
   for (const d of dirs) walk(join(root, d), out)
-  return out.map((f) => relative(root, f)).sort()
+  const tokens = tokensDir(root)
+  const asked = tokens !== null && dirs.some((d) => join(root, d) === join(root, tokens))
+  const projections = tokens !== null && !asked ? join(root, tokens) + sep : null
+  return out
+    .filter((f) => !projections || !f.startsWith(projections))
+    .map((f) => relative(root, f))
+    .sort()
 }
 
 const read = (root: string, rel: string) => readFileSync(join(root, rel), 'utf8')
 
-/* ---- literals: the deviation rule, as the old validator read it ---- */
+/* ---- literals: the deviation rule ---- */
 
 export interface Literal {
   file: string
@@ -86,19 +114,20 @@ export function consumers(root: string): Map<string, string[]> {
       }
     })
   for (const file of scanFiles(root)) count(read(root, file), file)
-  if (existsSync(join(root, SEMANTIC_PATH))) {
+  const semantic = tokensDir(root) ? themePaths(root).semantic : null
+  if (semantic && existsSync(join(root, semantic))) {
     // The static roles are the one place the generated file itself spends a token (--shadow-color, in the elevation shadows).
-    const semantic = read(root, SEMANTIC_PATH)
-    const at = semantic.indexOf('Static roles')
+    const text = read(root, semantic)
+    const at = text.indexOf('Static roles')
     if (at !== -1) {
-      const before = semantic.slice(0, at).split('\n').length - 1
-      semantic
+      const before = text.slice(0, at).split('\n').length - 1
+      text
         .slice(at)
         .split('\n')
         .forEach((line, i) => {
           for (const m of line.matchAll(/var\((--[\w-]+)/g)) {
             const sites = usage.get(m[1]) ?? []
-            sites.push(`${SEMANTIC_PATH}:${before + i + 1}`)
+            sites.push(`${semantic}:${before + i + 1}`)
             usage.set(m[1], sites)
           }
         })
@@ -115,7 +144,8 @@ export function consumers(root: string): Map<string, string[]> {
  */
 export function definedVars(root: string): Set<string> {
   const defined = new Set(Object.keys(generateTheme(OBSIDIAN)))
-  for (const file of [...scanFiles(root, TOKEN_DIRS), ...scanFiles(root)]) {
+  const tokens = tokensDir(root)
+  for (const file of [...(tokens ? scanFiles(root, [tokens]) : []), ...scanFiles(root)]) {
     const text = read(root, file)
     for (const m of text.matchAll(/(--[\w-]+)\s*:/g)) defined.add(m[1])
     // A quoted custom property in code is set by intent — a style object key, a setProperty call.
@@ -157,6 +187,9 @@ export const CONTRAST_PAIRS: ReadonlyArray<{ token: string; on: readonly string[
 
 const concentration = (n: number) => (n === 0 ? 'none' : n <= 3 ? 'low' : n <= 10 ? 'medium' : 'high')
 
+/** The two grounds of the theme the record has in force. */
+const groundsOf = (log: readonly Decision[]) => grounds(seedsInForce(log, OBSIDIAN))
+
 export function registerThemeEvaluators(home: { root: string }): void {
   const root = home.root
 
@@ -192,7 +225,8 @@ export function registerThemeEvaluators(home: { root: string }): void {
     findings: () => {
       const defined = definedVars(root)
       const out: Finding[] = []
-      const files = [...scanFiles(root), ...(existsSync(join(root, SEMANTIC_PATH)) ? [SEMANTIC_PATH] : [])]
+      const semantic = tokensDir(root) ? themePaths(root).semantic : null
+      const files = [...scanFiles(root), ...(semantic && existsSync(join(root, semantic)) ? [semantic] : [])]
       for (const file of files)
         read(root, file)
           .split('\n')
@@ -209,6 +243,7 @@ export function registerThemeEvaluators(home: { root: string }): void {
 
   registerEvaluator({
     id: 'layer0.semantic-names-only',
+    rule: 'layer0.semantic-names-only',
     findings: () => {
       const { undeclared, declared } = literals(root)
       const out: Finding[] = undeclared.map((l) => ({
@@ -224,18 +259,26 @@ export function registerThemeEvaluators(home: { root: string }): void {
 
   registerEvaluator({
     id: 'token.unused',
-    findings: (ctx) => {
+    findings: () => {
       const usage = consumers(root)
       const ledger = readLedger(root)
       const out: Finding[] = []
-      for (const name of Object.keys(generateTheme(OBSIDIAN))) {
-        const d = ledger.tokens[name]
-        if (d?.status === 'cut') continue
-        if (!(usage.get(name) ?? []).length) out.push({ rule: 'token.unused', authority: 'knowledge', where: name, message: 'never used — a cut candidate, or headroom; only you know which' })
-      }
-      const proposed = Object.entries(ledger.tokens).filter(([, d]) => d.status === 'proposed')
-      if (proposed.length) out.push({ rule: 'token.unreviewed', authority: 'knowledge', message: `${proposed.length} token(s) still proposed — unreviewed; they ship as generated (strata list)`, facts: proposed.map(([n]) => ({ name: 'token', value: n })) })
-      void ctx
+      const live = Object.keys(generateTheme(OBSIDIAN)).filter((name) => ledger.tokens[name]?.status !== 'cut')
+      const unused = live.filter((name) => !(usage.get(name) ?? []).length)
+      // Nothing reads any token yet: one line, not one per role. A product
+      // before its first stylesheet has not neglected forty-seven names.
+      if (unused.length === live.length && ![...usage.values()].some((sites) => sites.length))
+        out.push({ rule: 'token.unused', authority: 'knowledge', message: `${live.length} roles, and nothing reads a token yet — expected before the first stylesheet speaks the semantic tier` })
+      else for (const name of unused) out.push({ rule: 'token.unused', authority: 'knowledge', where: name, message: 'never used — a cut candidate, or headroom; only you know which' })
+      const all = Object.entries(ledger.tokens)
+      const proposed = all.filter(([, d]) => d.status === 'proposed')
+      // Naming them is useful while a few are outstanding. Where nothing has
+      // been decided yet, every role is proposed by definition, and listing
+      // all forty-seven says only that the product is new.
+      if (proposed.length && proposed.length === all.length)
+        out.push({ rule: 'token.unreviewed', authority: 'knowledge', message: `every one of the ${proposed.length} roles is still a proposal — nothing has been kept or cut here yet; they ship as generated until a hand decides them (strata list)` })
+      else if (proposed.length)
+        out.push({ rule: 'token.unreviewed', authority: 'knowledge', message: `${proposed.length} token(s) still proposed — unreviewed; they ship as generated (strata list)`, facts: proposed.map(([n]) => ({ name: 'token', value: n })) })
       return out
     },
   })
@@ -272,17 +315,27 @@ export function registerThemeEvaluators(home: { root: string }): void {
    * text at a size — and a build that refused a design over it would be
    * policing, which `evaluation.report-not-police` rules out. But silence is
    * worse than either, and silence is what this replaces.
+   *
+   * A finding carries the standing decision beside it. A token a hand kept
+   * with a reason — faint ink as microtype, say — is not an unnoticed
+   * failure, and the reader should not have to go and look that up.
    */
   registerEvaluator({
     id: 'safety.contrast',
-    findings: () => {
+    rule: 'safety.contrast',
+    findings: (ctx) => {
       const ledger = readLedger(root)
       const live = (n: string) => ledger.tokens[n]?.status !== 'cut'
+      const standing = (n: string) => {
+        const d = ledger.tokens[n]
+        return d && d.status === 'kept' && d.reason ? ` Kept by ${d.decided ? handText(d.decided) : 'an unnamed hand'}: ${d.reason}` : ''
+      }
       const out: Finding[] = []
       const declared = new Set(CONTRAST_PAIRS.map((p) => p.token))
+      const g = groundsOf(ctx.log)
       for (const [ground, seeds] of [
-        ['dark', PRESETS.Obsidian],
-        ['light', PRESETS.Gallery],
+        ['dark', g.dark],
+        ['light', g.light],
       ] as const) {
         const values = themeTokens(generateTheme(seeds), ledger, 'value')
         for (const pair of CONTRAST_PAIRS) {
@@ -295,7 +348,7 @@ export function registerThemeEvaluators(home: { root: string }): void {
               rule: 'safety.contrast',
               authority: 'policy',
               where: `${pair.token} on ${on}`,
-              message: `${ratio.toFixed(2)}:1 on ${ground}, under the ${pair.need}:1 this measures ${pair.kind} against. Reported, not refused — move the seeds, or declare why it stands.`,
+              message: `${ratio.toFixed(2)}:1 on ${ground}, under the ${pair.need}:1 this measures ${pair.kind} against. Reported, not refused — move the seeds, or keep the token with the reason it stands (strata keep ${pair.token} --why "…") and the reason prints here.${standing(pair.token)}`,
             })
           }
         }
@@ -319,11 +372,12 @@ export function registerThemeEvaluators(home: { root: string }): void {
   registerEvaluator({
     id: 'token.contrast',
     kinds: ['token'],
-    evidence: (d) => {
+    evidence: (d, ctx) => {
       if (d.kind !== 'token') return []
       const ledger = readLedger(root)
       const facts: Fact[] = []
-      for (const [ground, seeds] of [['dark', PRESETS.Obsidian], ['light', PRESETS.Gallery]] as const) {
+      const g = groundsOf(ctx.log)
+      for (const [ground, seeds] of [['dark', g.dark], ['light', g.light]] as const) {
         const values = themeTokens(generateTheme(seeds), ledger, 'value')
         const mine = values[d.token]
         if (!mine) continue
@@ -339,10 +393,10 @@ export function registerThemeEvaluators(home: { root: string }): void {
   registerEvaluator({
     id: 'token.duplicate-role',
     kinds: ['token'],
-    evidence: (d) => {
+    evidence: (d, ctx) => {
       if (d.kind !== 'token') return []
       const ledger = readLedger(root)
-      const values = themeTokens(generateTheme(OBSIDIAN), ledger, 'value')
+      const values = themeTokens(generateTheme(groundsOf(ctx.log).house), ledger, 'value')
       const mine = values[d.token]
       const twins = Object.entries(values).filter(([n, v]) => n !== d.token && v === mine && ledger.tokens[n]?.status !== 'cut').map(([n]) => n)
       return [{ name: 'duplicate visual role', value: twins.length ? `yes — ${twins.join(', ')}` : 'no' }]

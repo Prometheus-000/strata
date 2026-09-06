@@ -4,7 +4,7 @@
   "plugins": [
     {
       "name": "strata-malleable",
-      "source": "./",
+      "source": "./strata-malleable/integrations/claude-code",
       "description": "Generate movable pages, review a designer's moves, and adapt the code to the design."
     }
   ]

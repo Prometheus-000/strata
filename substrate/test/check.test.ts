@@ -97,3 +97,22 @@ test('explain assembles the four blocks: the record supplies context, evaluators
   assert.match(text, /HISTORY\n──────────────\n· [^\n]*keep --a[^\n]*\n● [^\n]*cut --a[^\n]*\n· [^\n]*keep --a/)
   assert.equal(explain(dir, 'token:--zzz'), null)
 })
+
+test("an evaluator that speaks for a rule is silent where the product's grammar does not have it", () => {
+  // A product inherits the system's rules and writes its own voice. An
+  // evaluator for a rule it never adopted — another product's two radii —
+  // would report a taste it never chose, in a report whose whole authority
+  // rests on saying which rule is speaking.
+  const { dir, ctx } = world()
+  registerEvaluator({ id: 'floors.exist', findings: () => [] })
+  registerEvaluator({ id: 'voice.two-radii', rule: 'voice.two-radii', findings: () => [{ rule: 'voice.two-radii', authority: 'policy', message: '3 radius scales are live' }] })
+  registerEvaluator({ id: 'names.semantic', rule: 'names.semantic', findings: () => [{ rule: 'names.semantic', authority: 'policy', where: 'a.css:3', message: '#fff — undeclared' }] })
+  registerEvaluator({ id: 'drift', findings: () => [{ rule: 'drift.convergence', authority: 'precedent', message: '3 instances converged on padding = 12px' }] })
+  decide({ kind: 'token', token: '--a', action: 'cut' }, ctx())
+  fs.writeFileSync(path.join(dir, 'tokens.txt'), '--a=cut\n')
+
+  const r = runCheck(dir)
+  assert.deepEqual(r.findings.filter((f) => f.rule === 'voice.two-radii'), [], 'the grammar here has no such rule, so nothing speaks for it')
+  assert.equal(r.findings.filter((f) => f.rule === 'names.semantic').length, 1, 'a rule the grammar does have is evaluated as before')
+  assert.equal(r.findings.filter((f) => f.rule === 'drift.convergence').length, 1, 'and an evaluator that names no rule is computed knowledge, always')
+})

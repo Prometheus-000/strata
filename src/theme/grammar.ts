@@ -11,28 +11,54 @@
  * half of these by definition — the point of evaluating is that a person
  * reads a sentence about it later, not that a build refuses it now.
  *
- * Where a rule is this product's taste rather than the system's, the rule
- * carries `"scope": "product"` and the report says so. An adopter replaces
- * both the rule and its evaluator.
+ * Each evaluator names the rule it speaks for, and runs only where the
+ * product's grammar declares that rule: a product that has expressed no
+ * taste is not measured against another product's two radii. Which files
+ * are read comes from the product's frame file, never from a path written
+ * here — the paths that are Strata's own (the engine, its two consumers) are
+ * resolved beside this module, wherever it is installed.
  */
 import { existsSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { createRequire } from 'node:module'
+import { dirname, join, relative } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { registerEvaluator, type Finding } from '@strata/substrate/evidence'
+import { loadConfig } from '@strata/substrate/config'
 import { ROLES_AGAINST_PRIMITIVES } from './generateTheme'
-import { readLedger, SEMANTIC_PATH } from './emit'
+import { readLedger, themePaths } from './emit'
 import { scanFiles } from './evaluators'
 
-const ENGINE_MODULE = 'engine/src/generateTheme.ts'
+/** Where Strata itself is: this file is `src/theme/grammar.ts` in the package. */
+const PACKAGE = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 
-/** Files that are allowed to say `function generateTheme` — exactly one. */
+/** The engine module, wherever it is installed — a workspace beside this package, or bundled under it. */
+function engineModule(): string | null {
+  try {
+    return createRequire(import.meta.url).resolve('@strata/engine/generateTheme')
+  } catch {
+    return null
+  }
+}
+
+/** The two files allowed to reach the engine on the package's behalf — and neither may define it. */
 const CONSUMERS = ['src/theme/generateTheme.ts', 'strata-malleable/src/engine/generateTheme.ts']
 
-const read = (root: string, rel: string) => (existsSync(join(root, rel)) ? readFileSync(join(root, rel), 'utf8') : '')
+/** Directories that are the library, by their names: where a behaviour is consumed rather than written. */
+const LIBRARY = /(^|\/)(components|recipes|ui|primitives)(\/|$)/
+
+const readAt = (abs: string) => (existsSync(abs) ? readFileSync(abs, 'utf8') : '')
+const read = (root: string, rel: string) => readAt(join(root, rel))
 
 const policy = (rule: string, message: string, where?: string): Finding => ({ rule, authority: 'policy', message, ...(where ? { where } : {}) })
 
 /** Every line of a file, numbered, with a matcher — the shape most of these want. */
 const lines = (text: string) => text.split('\n').map((line, i) => ({ line, n: i + 1 }))
+
+/** The product's source, and the malleable app tree when one is mounted. */
+function appDirs(root: string): string[] {
+  const c = loadConfig(root)
+  return [...c.source, ...(c.malleable ? [join(c.malleable.root ?? '.', c.malleable.source)] : [])]
+}
 
 export function registerGrammarEvaluators(home: { root: string }): void {
   const root = home.root
@@ -42,26 +68,29 @@ export function registerGrammarEvaluators(home: { root: string }): void {
    * was true of the *values* and false of the *module*: a vendored copy sat in
    * the malleable layer, 134 diff lines from the original, with comments
    * explaining why the drift was fine. Two compilers are two authors. This
-   * says so mechanically: one definition, and every consumer importing it.
+   * says so mechanically: one definition, in the engine; every consumer in the
+   * package importing it; and nothing in the product's own source defining
+   * another.
    */
   registerEvaluator({
     id: 'layer0.engine-only-author',
+    rule: 'layer0.engine-only-author',
     findings: () => {
       const out: Finding[] = []
-      const engine = read(root, ENGINE_MODULE)
-      if (!engine.includes('export function generateTheme'))
-        out.push(policy('layer0.engine-only-author', `${ENGINE_MODULE} does not define generateTheme — the engine has moved and nothing here knows where`, ENGINE_MODULE))
+      const engine = engineModule()
+      if (!engine || !readAt(engine).includes('export function generateTheme'))
+        out.push(policy('layer0.engine-only-author', '@strata/engine does not define generateTheme, or cannot be resolved — the engine has moved and nothing here knows where', '@strata/engine'))
       for (const consumer of CONSUMERS) {
-        const text = read(root, consumer)
-        if (!text) {
-          out.push(policy('layer0.engine-only-author', `${consumer} is missing`, consumer))
-          continue
-        }
+        const text = readAt(join(PACKAGE, consumer))
+        if (!text) continue // a consumer the package does not ship is not a second author
         if (/export function generateTheme/.test(text))
-          out.push(policy('layer0.engine-only-author', `${consumer} defines generateTheme itself — a second compiler is a second author of the semantic tier`, consumer))
+          out.push(policy('layer0.engine-only-author', `${consumer} (in the strata-design package) defines generateTheme itself — a second compiler is a second author of the semantic tier`, consumer))
         else if (!text.includes('@strata/engine'))
-          out.push(policy('layer0.engine-only-author', `${consumer} neither defines the engine nor imports @strata/engine`, consumer))
+          out.push(policy('layer0.engine-only-author', `${consumer} (in the strata-design package) neither defines the engine nor imports @strata/engine`, consumer))
       }
+      for (const file of scanFiles(root))
+        if (/export function generateTheme\b/.test(read(root, file)))
+          out.push(policy('layer0.engine-only-author', `${file} defines generateTheme — a second compiler is a second author of the semantic tier; import @strata/engine instead`, file))
       return out
     },
   })
@@ -72,6 +101,7 @@ export function registerGrammarEvaluators(home: { root: string }): void {
    */
   registerEvaluator({
     id: 'voice.two-radii',
+    rule: 'voice.two-radii',
     findings: () => {
       const ledger = readLedger(root)
       const scales = ['--radius-interactive', '--radius-surface', '--radius-overlay']
@@ -98,6 +128,7 @@ export function registerGrammarEvaluators(home: { root: string }): void {
    */
   registerEvaluator({
     id: 'voice.lines-not-shadows',
+    rule: 'voice.lines-not-shadows',
     findings: () => {
       const out: Finding[] = []
       for (const file of scanFiles(root)) {
@@ -120,9 +151,10 @@ export function registerGrammarEvaluators(home: { root: string }): void {
    */
   registerEvaluator({
     id: 'layer2.one-filled-action',
+    rule: 'layer2.one-filled-action',
     findings: () => {
       const out: Finding[] = []
-      for (const file of scanFiles(root, ['src/site', 'strata-malleable/fixtures/app'])) {
+      for (const file of scanFiles(root, appDirs(root))) {
         if (!file.endsWith('.tsx')) continue
         const text = read(root, file)
         // `variant` defaults to primary, so a <Button> that names no variant is filled.
@@ -143,6 +175,7 @@ export function registerGrammarEvaluators(home: { root: string }): void {
    */
   registerEvaluator({
     id: 'layer2.disabled-is-opacity',
+    rule: 'layer2.disabled-is-opacity',
     findings: () => {
       const out: Finding[] = []
       for (const file of scanFiles(root).filter((f) => f.endsWith('.css'))) {
@@ -170,6 +203,7 @@ export function registerGrammarEvaluators(home: { root: string }): void {
    */
   registerEvaluator({
     id: 'layer2.status-ink-and-wash',
+    rule: 'layer2.status-ink-and-wash',
     findings: () => {
       const ledger = readLedger(root)
       const out: Finding[] = []
@@ -190,9 +224,10 @@ export function registerGrammarEvaluators(home: { root: string }): void {
    */
   registerEvaluator({
     id: 'layer1.backdrop-click',
+    rule: 'layer1.backdrop-click',
     findings: () => {
       const out: Finding[] = []
-      const files = scanFiles(root, ['src/components', 'src/behavior', 'strata-malleable/fixtures/app']).filter((f) => f.endsWith('.tsx') || f.endsWith('.ts'))
+      const files = scanFiles(root, appDirs(root)).filter((f) => f.endsWith('.tsx') || f.endsWith('.ts'))
       for (const file of files) {
         const own = read(root, file)
         if (!/role=['"]dialog['"]|useDialog\s*\(/.test(own)) continue
@@ -223,42 +258,48 @@ export function registerGrammarEvaluators(home: { root: string }): void {
    * Reduced motion is honoured in both layers: in the generated stylesheet,
    * for anyone who never runs the theme engine, and again at runtime, because
    * `applyTheme` sets the durations as inline properties and an inline
-   * property beats a media query.
+   * property beats a media query. The stylesheet is the product's; the
+   * runtime and the engine are the package's, read where they are installed.
    */
   registerEvaluator({
     id: 'layer1.reduced-motion-both-layers',
+    rule: 'layer1.reduced-motion-both-layers',
     findings: () => {
       const out: Finding[] = []
-      if (!/@media \(prefers-reduced-motion: reduce\)/.test(read(root, SEMANTIC_PATH)))
-        out.push(policy('layer1.reduced-motion-both-layers', 'the generated stylesheet has no reduced-motion block — the layer that serves anyone who never runs the engine', SEMANTIC_PATH))
-      if (!/prefers-reduced-motion/.test(read(root, 'src/theme/generateTheme.ts')))
-        out.push(policy('layer1.reduced-motion-both-layers', 'applyTheme does not re-check reduced motion — it writes inline properties, and an inline property beats the media query above', 'src/theme/generateTheme.ts'))
-      if (!/reducedMotion/.test(read(root, ENGINE_MODULE)))
-        out.push(policy('layer1.reduced-motion-both-layers', 'the engine has no way to honour reduced motion, so no consumer can', ENGINE_MODULE))
+      const semantic = themePaths(root).semantic
+      if (existsSync(join(root, semantic)) && !/@media \(prefers-reduced-motion: reduce\)/.test(read(root, semantic)))
+        out.push(policy('layer1.reduced-motion-both-layers', 'the generated stylesheet has no reduced-motion block — the layer that serves anyone who never runs the engine', semantic))
+      if (!/prefers-reduced-motion/.test(readAt(join(PACKAGE, 'src/theme/generateTheme.ts'))))
+        out.push(policy('layer1.reduced-motion-both-layers', 'applyTheme does not re-check reduced motion — it writes inline properties, and an inline property beats the media query above', 'src/theme/generateTheme.ts (in the strata-design package)'))
+      const engine = engineModule()
+      if (engine && !/reducedMotion/.test(readAt(engine)))
+        out.push(policy('layer1.reduced-motion-both-layers', 'the engine has no way to honour reduced motion, so no consumer can', relative(root, engine)))
       return out
     },
   })
 
   /**
    * Behavior is consumed, never copied. Roving tabindex, arrow-key order,
-   * Escape and backdrop dismissal live in `src/behavior`; a component that
-   * wires its own key listener has rebuilt the part everyone rebuilds badly.
+   * Escape and backdrop dismissal live in a behavior module; a component
+   * that wires its own key listener has rebuilt the part everyone rebuilds
+   * badly.
    *
-   * Layer 3 is exempt by definition — the fixture dialog owns its own Escape
-   * on purpose, and says so in its first line — so this reads the library,
-   * not the app.
+   * Layer 3 is exempt by definition — a page's Enter-to-submit is its own,
+   * and the fixture dialog owns its Escape on purpose — so this reads the
+   * library, by the directories' names, and not the app.
    */
   registerEvaluator({
     id: 'layer1.imported-not-copied',
+    rule: 'layer1.imported-not-copied',
     findings: () => {
       const out: Finding[] = []
-      for (const file of scanFiles(root, ['src/components']).filter((f) => f.endsWith('.tsx') || f.endsWith('.ts'))) {
+      for (const file of scanFiles(root).filter((f) => LIBRARY.test(f) && (f.endsWith('.tsx') || f.endsWith('.ts')))) {
         for (const { line, n } of lines(read(root, file))) {
           if (!/addEventListener\(\s*['"]key(down|up)['"]/.test(line) && !/onKeyDown=\{?\(?\s*\(?e\)?\s*=>/.test(line)) continue
           out.push(
             policy(
               'layer1.imported-not-copied',
-              `a key listener written here rather than imported from src/behavior: ${line.trim()}. This is the part everyone rebuilds badly when they eject, so it is the part that must be consumed.`,
+              `a key listener written here rather than imported from the behavior layer: ${line.trim()}. This is the part everyone rebuilds badly when they eject, so it is the part that must be consumed.`,
               `${file}:${n}`,
             ),
           )

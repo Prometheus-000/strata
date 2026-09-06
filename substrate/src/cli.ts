@@ -6,15 +6,18 @@
 import { decide, type DecideContext } from './decide.ts'
 import { targetKey } from './decision.ts'
 import { authorFrom } from './author.ts'
-import { describe, formatDecision } from './format.ts'
-import { byId, history, readAll } from './log.ts'
+import { describe, formatDecision, formatHandoff } from './format.ts'
+import { byId, collapseReversals, current, history, pending, readAll, since } from './log.ts'
 import { importAll, rebuild, registeredProjections } from './projection.ts'
 import { buildIndex, search, PROMOTION_CANDIDATE_AT } from './precedent.ts'
 import { enforced, explain, formatCheck, formatExplanation, runCheck } from './check.ts'
 import { assemblePacket, formatPacket, loadSkills } from './skills.ts'
 import type { Author, Kind } from './decision.ts'
 
-export const SUBSTRATE_COMMANDS = ['log', 'history', 'show', 'ready', 'import', 'rebuild', 'precedent', 'check', 'explain', 'skill'] as const
+export const SUBSTRATE_COMMANDS = ['log', 'history', 'show', 'ready', 'handoff', 'import', 'rebuild', 'precedent', 'check', 'explain', 'skill'] as const
+
+/** What an empty record says when asked about a target: not "no such thing", which is what a typo says. */
+export const EMPTY_RECORD = 'the record is empty — nothing has been decided here yet. The first decision is usually the theme: strata retheme --hue … --why "…"'
 
 export interface CliIo {
   out: (s: string) => void
@@ -49,6 +52,7 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
       const [key] = positional
       if (!key) return fail('usage: history <targetKey>   e.g. token:--accent-strong, move:Filters')
       const all = readAll(home.root)
+      if (!all.length) return fail(EMPTY_RECORD)
       const ds = history(all, key)
       if (!ds.length) return fail(`nothing on the record about ${key}`)
       for (const d of ds) io.out(formatDecision(d))
@@ -58,6 +62,7 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
     case 'show': {
       const [id] = positional
       const all = readAll(home.root)
+      if (id && !all.length) return fail(EMPTY_RECORD)
       const d = id ? byId(all, id) : undefined
       if (!d) return fail(id ? `no decision ${id}` : 'usage: show <decision id>')
       io.out(formatDecision(d))
@@ -74,6 +79,15 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
       const result = decide({ kind: 'ready', reason: flag('why') }, ctx)
       if (!result.ok) return fail(result.error)
       io.out(`\n  ${describe(result.decision)} · ${result.decision.consequence.affected ?? 0} change(s) handed off\n  ${who.because}\n`)
+      return 0
+    }
+
+    case 'handoff': {
+      // Handed off means nothing has happened since the last ready; otherwise
+      // the ready is stale and the list is what is pending.
+      const all = readAll(home.root)
+      const ready = since(all, 'ready').length === 0 ? (current(all).get('ready') ?? null) : null
+      io.out(formatHandoff(collapseReversals(pending(all)), ready))
       return 0
     }
 
@@ -144,6 +158,7 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
     case 'explain': {
       const [what] = positional
       if (!what) return fail('usage: explain <decision id | targetKey>   e.g. explain token:--accent-strong')
+      if (!readAll(home.root).length) return fail(EMPTY_RECORD)
       const e = explain(home.root, what)
       if (!e) return fail(`nothing on the record about ${what}`)
       if (has('json')) io.out(JSON.stringify(e, null, 2))
@@ -155,7 +170,7 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
       const skills = loadSkills(home.root)
       const [name] = positional
       if (!name) {
-        if (!skills.length) return fail('no skills here — a skill is skills/<name>/SKILL.md')
+        if (!skills.length) return fail('no skills here — a skill is skills/<name>/SKILL.md or .claude/skills/<name>/SKILL.md, and `strata init` installs Strata’s')
         io.out('')
         for (const s of skills) io.out(`  ${s.name.padEnd(16)} ${s.purpose}`)
         io.out('\n  strata skill <name> [--<input> value …] assembles the packet the harness performs\n')

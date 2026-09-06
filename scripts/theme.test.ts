@@ -11,17 +11,29 @@ import { readAll } from '@strata/substrate/log'
 import { registerProse } from '@strata/substrate/prose'
 import { registerTheme } from '../src/theme/handlers'
 import { PROSE } from './prose'
-import { readLedger, LEDGER_PATH, SEMANTIC_PATH, TOKENS_PATH } from '../src/theme/emit'
+import { readLedger, themePaths } from '../src/theme/emit'
 import { runTheme } from '../src/theme/cli'
+import { CONFIG_PATH } from '@strata/substrate/config'
+import { seedsInForce } from '@strata/substrate/log'
+import { OBSIDIAN } from '../src/theme/generateTheme'
 
 const REPO = path.join(path.dirname(new URL(import.meta.url).pathname), '..')
+const { ledger: LEDGER_PATH, semantic: SEMANTIC_PATH, tokens: TOKENS_PATH } = themePaths(REPO)
 
-/** A product root with the real ledger and empty projections. */
+/**
+ * A product root with the real ledger and empty projections. It carries this
+ * repository's frame file, because it is this repository's ledger it is
+ * projecting: where the files go is the product's to say, and a fixture that
+ * said otherwise would be projecting one product's record into another's
+ * layout.
+ */
 function world() {
   resetHandlers()
   resetProjections()
   resetEvaluators()
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'strata-theme-'))
+  fs.mkdirSync(path.join(dir, '.strata'), { recursive: true })
+  fs.copyFileSync(path.join(REPO, CONFIG_PATH), path.join(dir, CONFIG_PATH))
   fs.mkdirSync(path.join(dir, 'src/theme'), { recursive: true })
   fs.mkdirSync(path.join(dir, 'src/tokens'), { recursive: true })
   fs.copyFileSync(path.join(REPO, LEDGER_PATH), path.join(dir, LEDGER_PATH))
@@ -226,4 +238,55 @@ test('contrast is swept and reported, never enforced, and every read token is me
   // And it is not vacuous: the pairings resolve to real numbers on this palette.
   assert.ok(contrast.length > 0, 'the sweep found nothing at all, which on this palette means it did not run')
   assert.ok(contrast.every((f) => /^\d+\.\d{2}:1 on (dark|light)/.test(f.message)))
+})
+
+test('retheme moves the seeds from a terminal: on the record, clamped where the engine clamps, and every projection recompiled', () => {
+  // The `seed` kind had a handler, a projection and a slider, and for a while
+  // no CLI verb: the only way to move a theme was to drag it in a browser.
+  // That made the agent's reach *smaller* than a person's, which is the one
+  // asymmetry this system says it does not have. It lived in the malleable
+  // layer after that, basing each move on the override store — so a product
+  // without that layer could not retheme at all, and a store that lagged the
+  // record moved the seeds from the wrong place. The seeds are the theme's,
+  // and the theme reads them from the record.
+  const { dir } = world()
+  // The ledger onto the record first, so `rebuild --check` below is speaking
+  // about the seeds rather than about token decisions this world copied in
+  // as a file and never decided.
+  importAll(dir, { decided: { kind: 'human', actor: 'prometheus-000' }, written: { kind: 'agent', actor: 'claude-code' } })
+  rebuild(dir)
+  const out: string[] = []
+  const io = { out: (s: string) => out.push(s), err: (s: string) => out.push(s) }
+  const run = (argv: string[]) => {
+    out.length = 0
+    return runTheme(argv, { root: dir }, { STRATA_DECIDED_BY: 'agent' }, io)
+  }
+
+  assert.equal(run(['retheme', '--hue', '20', '--why', 'a warmer accent']), 0, out.join('\n'))
+  assert.match(out.join('\n'), /hue 250 → 20/)
+  assert.doesNotMatch(out.join('\n'), /chroma|warmth|energy|density/, 'an unnamed seed stays where it is')
+  assert.equal(seedsInForce(readAll(dir), OBSIDIAN).hue, 20, 'the record holds the theme in force')
+  assert.match(fs.readFileSync(path.join(dir, SEMANTIC_PATH), 'utf8'), /oklch\([\d.]+ [\d.]+ 20\.0\)/, 'and every projection was compiled from it in the same call')
+  assert.deepEqual(rebuild(dir, { dryRun: true }).changed, [], 'nothing lags the record')
+
+  assert.equal(run(['retheme', '--appearance', 'dark', '--why', 'a console']), 0)
+  assert.match(out.join('\n'), /appearance light → dark/)
+  assert.match(fs.readFileSync(path.join(dir, SEMANTIC_PATH), 'utf8'), /:root,\n\[data-theme='dark'\]/, 'the ground the record decided is the one :root carries')
+
+  assert.equal(run(['retheme', '--why', 'nothing']), 0)
+  assert.match(out.join('\n'), /nothing moved/, 'saying nothing moves nothing')
+
+  // The engine clamps chroma to 0.25; a value it cannot hold is refused with
+  // the range rather than silently pinned.
+  assert.equal(run(['retheme', '--chroma', '5', '--why', 'electric']), 1)
+  assert.match(out.join('\n'), /clamps it to 0–0\.25/)
+  assert.equal(run(['retheme', '--appearance', 'sepia', '--why', 'x']), 1)
+  assert.match(out.join('\n'), /dark or light/)
+
+  // A Theme Lab address is a theme: pick the seeds by eye, paste the link.
+  assert.equal(run(['retheme', '--link', 'https://example.test/lab.html#s=300,0.2,-0.6,0.9,0.95,dark', '--why', 'the one from the lab']), 0, out.join('\n'))
+  assert.match(out.join('\n'), /hue 20 → 300/)
+  assert.equal(seedsInForce(readAll(dir), OBSIDIAN).chroma, 0.2)
+  assert.equal(run(['retheme', '--link', 'not-a-theme', '--why', 'x']), 1)
+  assert.match(out.join('\n'), /Theme Lab address/)
 })

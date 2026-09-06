@@ -6,22 +6,21 @@ import { test } from 'node:test'
 import { OBSIDIAN } from '../src/engine/generateTheme'
 import { buildManifest } from '../src/identity/manifest'
 import { emptyStore, put, setScope } from '../src/store/store'
-import { ship, rewriteSeedConstant, FROZEN_PATH, SEEDS_SOURCE } from '../src/ship/collapse'
+import { ship, FROZEN_PATH } from '../src/ship/collapse'
 import type { NodeAddress, Store } from '../src/schema'
 
 /**
  * A throwaway copy of the tree, so ship can write for real and be read back.
- * The engine sits *beside* the package, as it does in the workspace: one
- * module, imported by both consumers, and the only place the seeds are
- * declared.
+ * No engine in it: a system promotion moves the seeds, and the seeds are on
+ * the record. This used to copy the engine's source here because ship
+ * rewrote the seed constant in it — a file a product that installs the engine
+ * cannot write to, and a copy of what the record already held.
  */
 function sandbox(): string {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'malleable-'))
   const dir = path.join(tmp, 'lib')
   fs.mkdirSync(dir)
   fs.cpSync('fixtures', path.join(dir, 'fixtures'), { recursive: true })
-  fs.mkdirSync(path.join(tmp, 'engine/src'), { recursive: true })
-  fs.cpSync(path.join('..', 'engine/src/generateTheme.ts'), path.join(dir, SEEDS_SOURCE))
   return dir
 }
 
@@ -91,15 +90,16 @@ test('two nodes promoting different values through one class is refused, not gue
   assert.doesNotMatch(read(dir, 'fixtures/app/recipes/recipes.css'), /4px|9px/)
 })
 
-test('a system-scope override is written back as a seed, not as a token', () => {
+test('a system-scope override moves the seeds on the record, not a token and not a source file', () => {
   const dir = sandbox()
   const m = manifest()
-  let store = drag(emptyStore(OBSIDIAN), EMBER, { literal: '18px' })
+  const store = drag(emptyStore(OBSIDIAN), EMBER, { literal: '18px' })
   const change = setScope(store, m, EMBER, 'radius', 'system', 'human', 2)
   const result = ship(change.store, m, { root: dir })
-  const engine = read(dir, SEEDS_SOURCE)
-  assert.match(engine, /energy: 1,/)
-  assert.equal(result.store.seeds.energy, 1)
+  assert.equal(result.store.seeds.energy, 1, 'the seeds the ship carries')
+  assert.deepEqual(result.edits.filter((e) => /generateTheme/.test(e.file)), [], 'no source file is rewritten')
+  assert.match(result.moved.join(' '), /seed energy → 1/)
+  assert.match(result.log, /\(the record\)\s+seed energy → 1/)
   // Nothing was written into the token layer.
   assert.doesNotMatch(read(dir, 'fixtures/app/recipes/recipes.css'), /18px/)
 })
@@ -154,18 +154,4 @@ test('shipping twice is shipping once', () => {
   assert.equal(read(dir, 'fixtures/app/recipes/recipes.css'), cssAfterFirst)
   assert.equal(read(dir, FROZEN_PATH), frozenAfterFirst)
   assert.deepEqual(second.store, first.store)
-})
-
-test('the seed rewriter keeps the file’s formatting and comments', () => {
-  const src = `export const OBSIDIAN: ThemeSeeds = {
-  hue: 168,
-  // energy buys shape as well as speed
-  energy: 0.5,
-  appearance: 'dark',
-}`
-  const out = rewriteSeedConstant(src, 'OBSIDIAN', { energy: 0.82, appearance: 'light' })
-  assert.match(out, /energy: 0.82,/)
-  assert.match(out, /appearance: 'light',/)
-  assert.match(out, /\/\/ energy buys shape as well as speed/)
-  assert.match(out, /hue: 168,/)
 })

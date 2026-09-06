@@ -9,7 +9,6 @@
  */
 import { useMemo, useState } from 'react'
 import { Page } from '../../fixtures/app/views/Page'
-import { OBSIDIAN } from '../engine/generateTheme'
 import { Overlay } from '../manipulate/Overlay'
 import { decideFromOverlay, MalleableProvider, useMalleable } from '../runtime/MalleableProvider'
 import { driftReport } from '../ship/drift'
@@ -29,7 +28,7 @@ const STRUCTURE = structureJson as unknown as Structure
 export function Harness() {
   const [enabled, setEnabled] = useState(true)
   return (
-    <MalleableProvider manifest={MANIFEST} seeds={OBSIDIAN} initialStore={INITIAL} structure={STRUCTURE}>
+    <MalleableProvider manifest={MANIFEST} seeds={INITIAL.seeds} initialStore={INITIAL} structure={STRUCTURE}>
       <Chrome enabled={enabled} onToggle={setEnabled} />
       <Page />
       <Overlay enabled={enabled} />

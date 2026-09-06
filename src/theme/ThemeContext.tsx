@@ -1,7 +1,11 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { applyTheme, OBSIDIAN, type ThemeSeeds } from './generateTheme'
+import { applyTheme, type ThemeSeeds } from './generateTheme'
+import { hashFromSeeds, parseSeedHash } from './seedHash'
+import { HOUSE } from '../site/record'
 import LEDGER from './ledger.json'
 import type { Ledger } from './ledger'
+
+export { hashFromSeeds, parseSeedHash } from './seedHash'
 
 interface ThemeContextValue {
   seeds: ThemeSeeds
@@ -9,37 +13,18 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  seeds: OBSIDIAN,
+  seeds: HOUSE,
   setSeeds: () => {},
 })
 
-/**
- * A theme is seven numbers, so a theme fits in a URL:
- * #s=hue,chroma,warmth,energy,density,appearance[,lightness]. The seventh is
- * written only when it is not the house's zero, so every link made before
- * it existed still reads, and still means what it meant.
- */
-export function parseSeedHash(hash: string): ThemeSeeds | null {
-  const m = hash.match(/^#s=([^&]+)/)
-  if (!m) return null
-  const parts = m[1].split(',')
-  if (parts.length !== 6 && parts.length !== 7) return null
-  const [hue, chroma, warmth, energy, density] = parts.slice(0, 5).map(Number)
-  if ([hue, chroma, warmth, energy, density].some(Number.isNaN)) return null
-  const appearance = parts[5] === 'light' ? 'light' : 'dark'
-  const lightness = parts.length === 7 ? Number(parts[6]) : 0
-  if (Number.isNaN(lightness)) return null
-  return { hue, chroma, warmth, energy, density, appearance, lightness }
-}
 const seedsFromHash = () => parseSeedHash(window.location.hash)
 
-export function hashFromSeeds(s: ThemeSeeds): string {
-  const base = `#s=${s.hue},${s.chroma},${s.warmth},${s.energy},${s.density},${s.appearance}`
-  return s.lightness ? `${base},${s.lightness}` : base
-}
-
+/**
+ * The seeds a page opens on are the record's — the theme in force — unless
+ * the address carries its own, because a link is a theme too.
+ */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [seeds, setSeeds] = useState<ThemeSeeds>(() => seedsFromHash() ?? OBSIDIAN)
+  const [seeds, setSeeds] = useState<ThemeSeeds>(() => seedsFromHash() ?? HOUSE)
 
   useEffect(() => {
     applyTheme(seeds, document.documentElement, LEDGER as Ledger)

@@ -102,9 +102,9 @@ function hazeTexture(): THREE.Texture {
   c.width = c.height = 128
   const ctx = c.getContext('2d')!
   const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64)
-  g.addColorStop(0, 'rgba(255,255,255,1)')
-  g.addColorStop(0.35, 'rgba(255,255,255,0.45)')
-  g.addColorStop(1, 'rgba(255,255,255,0)')
+  g.addColorStop(0, 'rgba(255,255,255,1)') // deviation: the haze texture is the picture, not the frame: a radial falloff painted into a canvas, whose value is the white it fades from
+  g.addColorStop(0.35, 'rgba(255,255,255,0.45)') // deviation: the haze texture is the picture, not the frame: a radial falloff painted into a canvas, whose value is the white it fades from
+  g.addColorStop(1, 'rgba(255,255,255,0)') // deviation: the haze texture is the picture, not the frame: a radial falloff painted into a canvas, whose value is the white it fades from
   ctx.fillStyle = g
   ctx.fillRect(0, 0, 128, 128)
   const t = new THREE.CanvasTexture(c)
@@ -122,9 +122,9 @@ function spikeTexture(): THREE.Texture {
     [0, 64, 128, 64],
   ]) {
     const g = ctx.createLinearGradient(x0, y0, x1, y1)
-    g.addColorStop(0, 'rgba(255,255,255,0)')
-    g.addColorStop(0.5, 'rgba(255,255,255,0.9)')
-    g.addColorStop(1, 'rgba(255,255,255,0)')
+    g.addColorStop(0, 'rgba(255,255,255,0)') // deviation: the spike texture is the picture, not the frame: a four-point flare painted into a canvas, whose value is the white it fades through
+    g.addColorStop(0.5, 'rgba(255,255,255,0.9)') // deviation: the spike texture is the picture, not the frame: a four-point flare painted into a canvas, whose value is the white it fades through
+    g.addColorStop(1, 'rgba(255,255,255,0)') // deviation: the spike texture is the picture, not the frame: a four-point flare painted into a canvas, whose value is the white it fades through
     ctx.strokeStyle = g
     ctx.lineWidth = 1.5
     ctx.beginPath()

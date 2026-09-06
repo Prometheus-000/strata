@@ -2,6 +2,7 @@ import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { malleableDevPlugin } from './strata-malleable/src/store/server'
+import { registerTheme } from './src/theme/handlers'
 import { registerIdentity } from './src/identity/handler'
 
 /**
@@ -27,6 +28,10 @@ export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
   plugins: [
     react(),
+    // The theme projection first: a retheme from the overlay is a seed
+    // decision, and the malleable layer chains its store onto the theme's
+    // handler — so the stylesheet and the store move together.
+    { name: 'strata-theme', configureServer: () => registerTheme({ root: __dirname }) },
     malleableDevPlugin(resolve(__dirname, 'strata-malleable'), 'fixtures/app', __dirname),
     // The identity answers for deviations on its own surface — a click on the
     // field — through the same write endpoint the malleable layer mounts.

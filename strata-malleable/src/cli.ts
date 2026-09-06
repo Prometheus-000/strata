@@ -10,17 +10,15 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { authorFrom } from '@strata/substrate/author'
 import { decide, type DecideContext, type Request } from '@strata/substrate/decide'
 import { SCOPES, type Scope } from '@strata/substrate/decision'
 import { describe as describeDecision, formatHandoff } from '@strata/substrate/format'
 import { collapseReversals, current, pending, readAll, since } from '@strata/substrate/log'
+import { rebuild } from '@strata/substrate/projection'
 import { assignIdentity, buildManifest, buildStructure } from './identity/manifest'
 import { readManifest, readStore, writeManifest, writeStructure } from './store/persist'
-import { SEED_RANGE, type ThemeSeeds } from './engine/generateTheme'
 import { formatStructure } from './structure/read'
-import { init } from './init'
 import { parseTsx } from './controls/apply'
 import { callSitesOf } from './controls/read'
 import { resolve as resolveValue } from './resolve/resolve'
@@ -42,7 +40,7 @@ export interface CliIo {
   err: (s: string) => void
 }
 
-export const MALLEABLE_COMMANDS = ['id', 'regions', 'move', 'prop', 'ready', 'handoff', 'init', 'manifest', 'resolve', 'drift', 'ship', 'reconcile', 'retheme', 'set', 'remove'] as const
+export const MALLEABLE_COMMANDS = ['id', 'regions', 'move', 'prop', 'ready', 'handoff', 'manifest', 'resolve', 'drift', 'ship', 'reconcile', 'set', 'remove'] as const
 
 /** Runs one command; returns the exit code. */
 export function runMalleable(argv: string[], home: CliHome, env: Record<string, string | undefined> = process.env, io: CliIo = { out: console.log, err: console.error }): number {
@@ -58,7 +56,9 @@ export function runMalleable(argv: string[], home: CliHome, env: Record<string, 
     return 1
   }
 
-  registerMalleable({ root: home.root, source: home.source })
+  registerMalleable({ root: home.root, source: home.source, logRoot: home.logRoot })
+  // Captured before the chdir below: `init` writes into the directory the
+  // command was typed in, and for a while it wrote into the library instead.
   const cwd = process.cwd()
   process.chdir(home.root)
   try {
@@ -226,16 +226,6 @@ export function runMalleable(argv: string[], home: CliHome, env: Record<string, 
         io.out(handoff())
         return 0
 
-      case 'init': {
-        const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-        const result = init(process.cwd(), packageRoot)
-        for (const f of result.wrote) io.out(`  + ${f}`)
-        for (const f of result.skipped) io.out(`  · ${f} (unchanged)`)
-        for (const n of result.notes) io.out(`  note: ${n}`)
-        io.out('\n  next: malleable id && npm run dev\n')
-        return 0
-      }
-
       case 'manifest': {
         for (const n of readManifest().nodes) {
           const props = Object.entries(n.base)
@@ -278,7 +268,10 @@ export function runMalleable(argv: string[], home: CliHome, env: Record<string, 
         io.out(formatDrift(driftReport(readStore(), readManifest())))
         io.out(`  ${describeDecision(result.decision)}`)
         if (result.decision.consequence.note) for (const n of result.decision.consequence.note.split(' · ')) io.out(`    ${n}`)
-        io.out(footer(ctx, result.written))
+        // A ship that moved the seeds moved every token; the projections are
+        // rewritten from the record so nothing lags it.
+        const followed = ctx.dryRun ? [] : rebuild(home.logRoot).written
+        io.out(footer(ctx, [...result.written, ...followed]))
         return 0
       }
 
@@ -291,54 +284,6 @@ export function runMalleable(argv: string[], home: CliHome, env: Record<string, 
       }
 
       /* ---------------- writes — the terminal's half of the drag ---------------- */
-
-      /**
-       * RETHEME — move the seeds, from a terminal.
-       *
-       * The `seed` kind had a handler, a projection and an overlay control, and
-       * no CLI verb at all: the only way to move a theme was to drag a slider
-       * in a browser. That made the one claim this system rests on false in the
-       * other direction — not an agent with a private door, but an agent with
-       * *less* than a person, unable to do from a shell the thing the skill
-       * whose whole subject is retheming told it to do. The `retheme` skill
-       * even named a command (`strata decide seed …`) that has never existed.
-       *
-       * Every seed is optional and defaults to where the theme is now, so
-       * `retheme --hue 20` is a one-dial move and reads like one.
-       */
-      case 'retheme': {
-        const store = readStore()
-        const num = (name: keyof ThemeSeeds) => {
-          const v = flag(name)
-          return v === undefined ? undefined : Number(v)
-        }
-        const appearance = flag('appearance')
-        if (appearance !== undefined && appearance !== 'dark' && appearance !== 'light')
-          return fail(`appearance is dark or light, not "${appearance}"`)
-        const seeds: ThemeSeeds = {
-          ...store.seeds,
-          ...Object.fromEntries(
-            (['hue', 'chroma', 'warmth', 'energy', 'density', 'lightness'] as const)
-              .map((k) => [k, num(k)])
-              .filter(([, v]) => v !== undefined && Number.isFinite(v)),
-          ),
-          ...(appearance ? { appearance } : {}),
-        }
-        for (const [k, [lo, hi]] of Object.entries(SEED_RANGE))
-          if (seeds[k as keyof ThemeSeeds] !== undefined && ((seeds[k as keyof ThemeSeeds] as number) < lo || (seeds[k as keyof ThemeSeeds] as number) > hi))
-            return fail(`${k} is ${String(seeds[k as keyof ThemeSeeds])}; the engine clamps it to ${lo}–${hi}, so say a value it can hold`)
-
-        const ctx = context()
-        if ('error' in ctx) return fail(ctx.error)
-        const result = write({ kind: 'seed', seeds, reason: flag('why') }, ctx)
-        if (!result) return 1
-        const moved = (['hue', 'chroma', 'warmth', 'energy', 'density', 'lightness', 'appearance'] as const)
-          .filter((k) => store.seeds[k] !== seeds[k])
-          .map((k) => `${k} ${String(store.seeds[k])} → ${String(seeds[k])}`)
-        io.out(`\n  ${moved.length ? moved.join(' · ') : 'nothing moved — these are the seeds already'}`)
-        io.out(footer(ctx, result.written))
-        return 0
-      }
 
       case 'set': {
         const [nodeId, property] = positional
@@ -382,7 +327,6 @@ export function runMalleable(argv: string[], home: CliHome, env: Record<string, 
   manifest    list every styled node and its malleable base values
   regions     every container with its file:line, and the regions it holds, in order
   resolve     <nodeId> <property> [--view v] [--instance i] — value, and why
-  retheme     [--hue n] [--chroma n] [--warmth n] [--energy n] [--density n] [--appearance dark|light] — move the seeds
   reconcile   overrides the system has caught up with
   drift       unresolved drift, with counts
   handoff     what changed since the last ready, from the record
@@ -397,7 +341,7 @@ export function runMalleable(argv: string[], home: CliHome, env: Record<string, 
   prop        <Component> <prop> <value | true | false | --default> --in <file> [--parent <Component>] [--index n] [--dry]
   ship        collapse promoted overrides into source, freeze the rest
   ready       hand the moves and picks to review; commits nothing
-  init        install the Claude Code skill and commands into this project
+  (the seeds move with strata retheme, one of the theme's verbs)
 
   --root <dir> or MALLEABLE_ROOT picks the app tree (default: fixtures/app)`)
         return cmd ? 1 : 0

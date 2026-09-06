@@ -7,3 +7,5 @@ strata.md
 bench/runs/
 # A local lab for explorations of the identity in three dimensions; not a projection, not shipped.
 explorations/
+# Reference photographs for the sky, downloaded from the web; not a projection, not shipped.
+universe/

@@ -1,30 +1,37 @@
 /**
- * The token commands: what `npm run ledger` did, through `decide()`.
+ * The theme commands, through `decide()`.
  *
  *   list                        every generated token and what was decided about it
  *   cut  --<token> --why "…"    collapse it to its fallback in every projection
  *   keep --<token> --why "…"    mark it reviewed and wanted
  *   propose --<token>           return it to unreviewed
+ *   mint --<token> --value v    coin a name for a value usage kept reaching
  *   deviate <file:line> --why   legalise a raw literal, on the record and beside the literal
+ *   retheme [--hue n …]         move the seven seeds, on the record; every projection follows
+ *   survey                      what the stylesheets already decided
  */
 import { authorFrom } from '@strata/substrate/author'
 import { decide, type DecideContext } from '@strata/substrate/decide'
 import { describe } from '@strata/substrate/format'
-import { handText } from '@strata/substrate/decision'
-import { generateTheme, OBSIDIAN } from './generateTheme'
+import { handText, type ThemeSeeds } from '@strata/substrate/decision'
+import { readAll, seedsInForce } from '@strata/substrate/log'
+import { generateTheme, OBSIDIAN, SEED_RANGE } from './generateTheme'
 import { FALLBACKS, summarise } from './ledger'
 import { mintedRoles, readLedger } from './emit'
-import { readAll } from '@strata/substrate/log'
-import { registerTheme } from './handlers'
+import { registerTheme, seedsMoved } from './handlers'
+import { parseSeedHash } from './seedHash'
+import { formatSurvey, survey } from './survey'
 
-export const THEME_COMMANDS = ['list', 'cut', 'keep', 'propose', 'mint', 'deviate'] as const
+export const THEME_COMMANDS = ['list', 'cut', 'keep', 'propose', 'mint', 'deviate', 'retheme', 'survey'] as const
 
 export interface CliIo {
   out: (s: string) => void
   err: (s: string) => void
 }
 
-const FLAGS = new Set(['by', 'decided-by', 'written-by', 'actor', 'written-actor', 'why', 'value', 'from', 'dry'])
+const DIALS = ['hue', 'chroma', 'warmth', 'energy', 'density', 'lightness'] as const
+
+const FLAGS = new Set(['by', 'decided-by', 'written-by', 'actor', 'written-actor', 'why', 'value', 'from', 'dry', 'appearance', 'link', ...DIALS])
 
 export function runTheme(argv: string[], home: { root: string }, env: Record<string, string | undefined> = process.env, io: CliIo = { out: console.log, err: console.error }): number {
   const [cmd, ...rest] = argv
@@ -47,6 +54,8 @@ export function runTheme(argv: string[], home: { root: string }, env: Record<str
     if ('error' in who) return who
     return { root: home.root, decided: who.decided, written: who.written, via: 'cli', because: who.because, dryRun: has('dry') }
   }
+
+  const footer = (ctx: DecideContext, written: string[]) => (ctx.dryRun ? `  ${ctx.because}\n  (dry run — nothing written)\n` : `  ${ctx.because}\n  ~ ${[...written, '.strata/decisions.jsonl'].join(', ')}\n`)
 
   switch (cmd) {
     case 'list': {
@@ -83,8 +92,7 @@ export function runTheme(argv: string[], home: { root: string }, env: Record<str
       const d = result.decision
       io.out(`\n  ${token}: ${prior} → ${cmd === 'cut' ? 'cut' : cmd === 'keep' ? 'kept' : 'proposed'}${result.unchanged ? ' (already so)' : ''}`)
       if (cmd === 'cut') io.out(`  collapses to ${d.consequence.collapsesTo} — ${FALLBACKS[token]?.why}`)
-      io.out(`  ${ctx.because}`)
-      io.out(ctx.dryRun ? '  (dry run — nothing written)\n' : `  ~ ${[...result.written, '.strata/decisions.jsonl'].join(', ')}\n`)
+      io.out(footer(ctx, result.written))
       return 0
     }
 
@@ -101,8 +109,7 @@ export function runTheme(argv: string[], home: { root: string }, env: Record<str
       if (!result.ok) return fail(result.error)
       io.out(`\n  minted ${token} = ${raw}`)
       io.out(`  ${result.decision.consequence.note ?? ''}`)
-      io.out(`  ${ctx.because}`)
-      io.out(ctx.dryRun ? '  (dry run — nothing written)\n' : `  ~ ${[...result.written, '.strata/decisions.jsonl'].join(', ')}\n`)
+      io.out(footer(ctx, result.written))
       return 0
     }
 
@@ -115,13 +122,56 @@ export function runTheme(argv: string[], home: { root: string }, env: Record<str
       const result = decide({ kind: 'deviation', file: m[1], line: Number(m[2]), reason: flag('why') }, ctx)
       if (!result.ok) return fail(result.error)
       io.out(`\n  ${describe(result.decision)}${result.unchanged ? ' (already declared in source)' : ''}`)
-      io.out(`  ${ctx.because}`)
-      io.out(ctx.dryRun ? '  (dry run — nothing written)\n' : `  ~ ${[...result.written, '.strata/decisions.jsonl'].join(', ')}\n`)
+      io.out(footer(ctx, result.written))
+      return 0
+    }
+
+    /**
+     * RETHEME — move the seeds, from a terminal.
+     *
+     * Every seed is optional and defaults to where the theme is now — the
+     * record's fold, never a store that might lag it — so `retheme --hue 20`
+     * is a one-dial move and reads like one. `--link` takes a Theme Lab
+     * address: pick the seeds by eye there, paste the link here.
+     */
+    case 'retheme': {
+      const base = seedsInForce(readAll(home.root), OBSIDIAN)
+      const link = flag('link')
+      const linked = link ? parseSeedHash(link.slice(Math.max(0, link.indexOf('#')))) : null
+      if (link && !linked) return fail('--link takes a Theme Lab address ending in #s=hue,chroma,warmth,energy,density,appearance[,lightness]')
+      const num = (name: (typeof DIALS)[number]) => {
+        const v = flag(name)
+        return v === undefined ? undefined : Number(v)
+      }
+      const appearance = flag('appearance')
+      if (appearance !== undefined && appearance !== 'dark' && appearance !== 'light') return fail(`appearance is dark or light, not "${appearance}"`)
+      const seeds: ThemeSeeds = {
+        ...base,
+        ...(linked ?? {}),
+        ...Object.fromEntries(DIALS.map((k) => [k, num(k)]).filter(([, v]) => v !== undefined && Number.isFinite(v as number))),
+        ...(appearance ? { appearance } : {}),
+      }
+      for (const [k, [lo, hi]] of Object.entries(SEED_RANGE)) {
+        const v = seeds[k as keyof ThemeSeeds]
+        if (typeof v === 'number' && (v < lo || v > hi)) return fail(`${k} is ${v}; the engine clamps it to ${lo}–${hi}, so say a value it can hold`)
+      }
+      const ctx = context()
+      if ('error' in ctx) return fail(ctx.error)
+      const result = decide({ kind: 'seed', seeds, reason: flag('why') }, ctx)
+      if (!result.ok) return fail(result.error)
+      const moved = seedsMoved(base, seeds)
+      io.out(`\n  ${moved.length ? moved.join(' · ') : 'nothing moved — these are the seeds already'}`)
+      io.out(footer(ctx, result.written))
+      return 0
+    }
+
+    case 'survey': {
+      io.out(`\n${formatSurvey(survey(home.root))}\n`)
       return 0
     }
 
     default:
-      io.out(`tokens — every generated token is a proposal; decide each one:
+      io.out(`the theme — every generated token is a proposal; decide each one, and move the seeds on the record:
   list                          every token and its status
   cut  --<token> [--why …]      collapse it to its fallback in every projection
   keep --<token> [--why …]      mark it reviewed and wanted
@@ -131,6 +181,9 @@ export function runTheme(argv: string[], home: { root: string }, env: Record<str
                                 path that adds to the language rather than choosing
                                 within it. --from <ids> cites the convergence that earned it.
   deviate <file>:<line> --why … legalise a raw literal where it sits
+  retheme [--hue n] [--chroma n] [--warmth n] [--energy n] [--density n] [--lightness n] [--appearance dark|light] [--link <url>]
+                                move the seeds; every projection is compiled from the record in the same call
+  survey                        what the stylesheets already decided: fonts, radii, shadows, raw colours
   (--decided-by human|agent says who chose; --actor names the hand. CLAUDECODE says who wrote, never who chose.)`)
       return cmd ? 1 : 0
   }

@@ -21,17 +21,6 @@
         "4173"
       ],
       "port": 4173
-    },
-    {
-      "name": "strata-explorations",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev",
-        "--prefix",
-        "explorations"
-      ],
-      "port": 5174
     }
   ]
 }

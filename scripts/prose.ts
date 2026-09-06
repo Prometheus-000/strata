@@ -14,13 +14,21 @@ import type { ProseOptions } from '@strata/substrate/prose'
 import { SUBSTRATE_COMMANDS } from '@strata/substrate/cli'
 import { THEME_COMMANDS } from '../src/theme/cli'
 import { MALLEABLE_COMMANDS } from '../strata-malleable/src/cli'
+import { INIT_COMMANDS } from '../src/init'
 
 export const PROSE: ProseOptions = {
   // `runs` is the bench's gitignored arms — copies of this repo, whose prose
   // is a snapshot of an older one by design. `fixtures` is a sample app.
   skip: ['node_modules', 'dist', 'runs', 'fixtures'],
   packages: ['.', 'substrate', 'strata-malleable', 'engine'],
-  commands: [...SUBSTRATE_COMMANDS, ...THEME_COMMANDS, ...MALLEABLE_COMMANDS, 'help'],
+  /**
+   * Four deep, not three: the Claude Code plugin's commands and skill sit at
+   * `strata-malleable/integrations/claude-code/commands`, one level past the
+   * default, and four `npx strata …` lines that could not run lived there
+   * unnoticed for exactly that reason.
+   */
+  depth: 4,
+  commands: [...INIT_COMMANDS, ...SUBSTRATE_COMMANDS, ...THEME_COMMANDS, ...MALLEABLE_COMMANDS, 'help'],
   /**
    * Three phrases this repository retired, each of which survived in prose for
    * months after the thing it described was gone. They are allowed exactly

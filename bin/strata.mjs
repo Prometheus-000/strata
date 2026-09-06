@@ -2,84 +2,16 @@
 /**
  * `strata` — the one interface to the substrate.
  *
- * Every write here is a decision on `.strata/decisions.jsonl`, and every
- * hand goes through the same call: a person at this terminal, an agent in
- * its shell (`--by agent`, or `CLAUDECODE` in the environment), the overlay
- * in the browser through the dev server. The verbs are grouped by which
- * projection applies them; the record does not care.
+ * A launcher, because the CLI is TypeScript and a bin has to run from
+ * `npx strata` in any directory, with nothing on the command line but the
+ * verb. tsx's loader is registered here, at runtime, and the CLI itself is
+ * `bin/main.mjs`. `tsconfig: false` keeps an adopter's own `paths` from
+ * deciding how Strata resolves its modules. Registering twice in one process
+ * — a harness that already runs under the loader — is guarded, not assumed
+ * away.
  */
-import process from 'node:process'
-import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
-import { runSubstrate, SUBSTRATE_COMMANDS } from '../substrate/src/cli.ts'
-import { runTheme, THEME_COMMANDS } from '../src/theme/cli.ts'
-import { registerTheme } from '../src/theme/handlers.ts'
-import { registerIdentity } from '../src/identity/handler.ts'
-import { runMalleable, MALLEABLE_COMMANDS } from '../strata-malleable/src/cli.ts'
-import { registerMalleable } from '../strata-malleable/src/decide/index.ts'
-import { registerProse } from '../substrate/src/prose.ts'
-import { PROSE } from '../scripts/prose.ts'
+import { register } from 'tsx/esm/api'
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const argv = process.argv.slice(2)
-const [cmd] = argv
-const flag = (name) => {
-  const i = argv.indexOf(`--${name}`)
-  return i === -1 ? undefined : argv[i + 1]
-}
-
-const MALLEABLE_HOME = {
-  logRoot: ROOT,
-  root: flag('malleable') ?? process.env.STRATA_MALLEABLE ?? join(ROOT, 'strata-malleable'),
-  source: flag('root') ?? process.env.MALLEABLE_ROOT ?? 'fixtures/app',
-}
-
-// Every projection this product has, registered before any command runs, so
-// `import`, `rebuild` and the checks see all of them.
-registerTheme({ root: ROOT })
-registerIdentity()
-registerMalleable({ root: MALLEABLE_HOME.root, source: MALLEABLE_HOME.source })
-// Prose last: the verbs it checks against are the ones the two above just registered.
-registerProse(ROOT, PROSE)
-
-const help = () => {
-  console.log(`strata — the record of what this product decided, and the one way to change it
-
-  the record
-    check [--enforce] [--json]  here is what happened: invariants, then policy, preference, knowledge, precedent, handoff
-    explain <id | targetKey>    one decision as a glass box: DECISION · CONTEXT · EVIDENCE · CONSEQUENCE
-    log [--kind k]              every decision, one line each
-    history <targetKey>         every decision on one target, as glass boxes
-    show <id>                   one decision
-    ready [--why …]             hand off what changed since the last ready
-    import                      bring the old ledger and store onto the record, once
-    rebuild [--check]           write every projection from the record; --check only says which differ
-    skill [name] [--<input> v]  list the skills, or assemble one's packet: rules, precedent, state, procedure
-    precedent [words] [--property p] [--value v] [--component C] [--token --x] [--author a] [--kind k] [--since iso] [--unpromoted] [--at n]
-                                what has been decided before, with convergence counted
-
-  tokens (Layer 0)
-    list · cut · keep · propose --<token> [--why …]
-    deviate <file>:<line> --why …
-
-  the malleable layer (--malleable <dir> picks the library root; --root <dir> the app tree)
-    ${MALLEABLE_COMMANDS.join(' · ')}
-
-  every write names two hands and --dry:
-    --decided-by human|agent   who could have chosen otherwise (--by is the same flag)
-    --actor <handle>           which hand that was; a missing name is noted on the record
-    --written-by human|agent   whose hand ran the command
-  CLAUDECODE in the environment says who *wrote* and never who decided, so an
-  agent's shell that states neither is refused rather than guessed at.`)
-}
-
-if (!cmd || cmd === 'help' || cmd === '--help') {
-  help()
-  process.exit(0)
-}
-if (SUBSTRATE_COMMANDS.includes(cmd)) process.exit(runSubstrate(argv, { root: ROOT }))
-if (THEME_COMMANDS.includes(cmd)) process.exit(runTheme(argv, { root: ROOT }))
-if (MALLEABLE_COMMANDS.includes(cmd)) process.exit(runMalleable(argv, MALLEABLE_HOME))
-console.error(`\n  unknown command "${cmd}"\n`)
-help()
-process.exit(1)
+const KEY = Symbol.for('strata.tsx')
+if (!globalThis[KEY]) globalThis[KEY] = register({ tsconfig: false })
+await import('./main.mjs')

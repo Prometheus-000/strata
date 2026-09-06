@@ -1,30 +1,37 @@
 /**
- * THE THEME PROJECTION'S HANDLERS — how a token decision and a declared
- * deviation are applied when someone decides them.
+ * THE THEME PROJECTION'S HANDLERS — how a token decision, a retheme and a
+ * declared deviation are applied when someone decides them.
  *
- * A token decision lands in `src/theme/ledger.json` (a projection of the
- * record, kept on disk because the runtime imports it) and re-emits
- * `semantic.css` and `tokens.json`, because a decision that is not in the
- * stylesheet has not been made yet. A deviation writes its comment beside the
- * literal it legalises — the decision and the thing decided are one diff —
- * and the record carries who declared it and why.
+ * A token decision lands in the ledger (a projection of the record, kept on
+ * disk because the runtime imports it) and re-emits the stylesheet and the
+ * contract, because a decision that is not in the stylesheet has not been
+ * made yet. A retheme is the same: seven numbers on the record, and every
+ * projection compiled from them in the same call. A deviation writes its
+ * comment beside the literal it legalises — the decision and the thing
+ * decided are one diff — and the record carries who declared it and why.
+ *
+ * Where the files live is the product's frame file's to say
+ * (`.strata/config.json`); nothing here holds a path.
  */
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { registerHandler, type Applied, type Refused, type Request, type ResolvedContext } from '@strata/substrate/decide'
-import type { Decision, DecisionBody, Value } from '@strata/substrate/decision'
-import { current } from '@strata/substrate/log'
+import type { Decision, DecisionBody, ThemeSeeds, Value } from '@strata/substrate/decision'
+import { current, seedsInForce } from '@strata/substrate/log'
 import { registerProjection, type Imported } from '@strata/substrate/projection'
-import { generateTheme, OBSIDIAN } from './generateTheme'
+import { generateTheme, OBSIDIAN, SEED_RANGE } from './generateTheme'
 import { fallbacksFor, FALLBACKS, type Ledger, type TokenDecision, type TokenStatus } from './ledger'
-import { emitTokens, mintedRoles, readLedger, writeLedger, LEDGER_PATH } from './emit'
+import { emitTokens, mintedRoles, readLedger, themePaths, writeLedger } from './emit'
 import { registerState } from '@strata/substrate/skills'
 import { consumers, registerThemeEvaluators } from './evaluators'
 import { registerGrammarEvaluators } from './grammar'
+import { formatSurvey, survey } from './survey'
+import { loadConfig, tokenPaths } from '@strata/substrate/config'
 
 export type TokenRequest = Request & { kind: 'token'; token: string; action: 'propose' | 'keep' | 'cut' | 'mint'; value?: Value; from?: string[] }
 export type DeviationRequest = Request & { kind: 'deviation'; file: string; line: number; value?: string }
+export type SeedRequest = Request & { kind: 'seed'; seeds: ThemeSeeds }
 
 /**
  * A minted name arrives `kept`: the engine did not propose it and nobody has
@@ -37,9 +44,13 @@ const STATUS: Record<TokenRequest['action'], TokenStatus> = { propose: 'proposed
 export const COLOR_LITERAL = /#[0-9a-fA-F]{3,8}\b|\boklch\([^)]*\)|\brgba?\([^)]*\)|\bhsla?\([^)]*\)/
 
 export function registerTheme(home: { root: string }): void {
+  // A product that keeps its own tokens mounts no theme projection: the
+  // record and the grammar are Strata's, the stylesheet stays theirs.
+  if (!tokenPaths(loadConfig(home.root))) return
   registerHandler<TokenRequest>('token', (req, ctx, log) => tokenHandler(req, ctx, home.root, log))
+  registerHandler<SeedRequest>('seed', (req, ctx, log) => seedHandler(req, ctx, home.root, log))
   registerHandler<DeviationRequest>('deviation', (req, ctx) => deviationHandler(req, ctx, home.root))
-  registerProjection({ name: LEDGER_PATH, import: importLedger, project: projectTheme })
+  registerProjection({ name: themePaths(home.root).ledger, import: importLedger, project: projectTheme })
   registerThemeEvaluators(home)
   registerGrammarEvaluators(home)
   registerState('tokens', () => {
@@ -57,19 +68,33 @@ export function registerTheme(home: { root: string }): void {
       .map(([name, sites]) => `${name.padEnd(24)} ${String(sites.length).padStart(3)} consumer(s)`)
       .join('\n'),
   )
+  // What the stylesheets already decided, for a skill that writes rules.
+  registerState('survey', () => formatSurvey(survey(home.root)))
+  // What this projection writes, by path, so a skill can name them without a
+  // constraint that carries another product's layout.
+  registerState('projections', () => {
+    const p = themePaths(home.root)
+    return [
+      `${p.ledger.padEnd(28)} the ledger — what the record says about each token`,
+      `${p.semantic.padEnd(28)} the stylesheet — the semantic tier, compiled from the seeds in force`,
+      `${p.tokens.padEnd(28)} the contract — the same, machine-readable`,
+      'written by `strata rebuild` and by every token or seed decision; never edited by hand',
+    ].join('\n')
+  })
 }
 
 const ACTION: Record<TokenStatus, TokenRequest['action']> = { proposed: 'propose', kept: 'keep', cut: 'cut' }
 
 /** When the ledger was last committed — the honest time for a decision nobody stamped. */
 function ledgerTime(root: string): string {
+  const ledger = themePaths(root).ledger
   try {
-    const out = execFileSync('git', ['log', '-1', '--format=%cI', '--', LEDGER_PATH], { cwd: root, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+    const out = execFileSync('git', ['log', '-1', '--format=%cI', '--', ledger], { cwd: root, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
     if (out) return new Date(out).toISOString()
   } catch {
     /* not a repo, or the file is untracked */
   }
-  return statSync(join(root, LEDGER_PATH)).mtime.toISOString()
+  return statSync(join(root, ledger)).mtime.toISOString()
 }
 
 /**
@@ -77,14 +102,14 @@ function ledgerTime(root: string): string {
  * written it. Proposed lines are the engine's, not anyone's.
  *
  * The old ledger recorded one `by`, and what it recorded there was the
- * channel that ran the command — so a token Kenan cut through an agent's
+ * channel that ran the command — so a token a person cut through an agent's
  * shell came back reading as the agent's judgement. That field is not
  * evidence of who chose, so it is not read as one: these rows leave both
  * hands unset and take the ones the import was run with, which is a claim
  * made once, out loud, by whoever runs it.
  */
 function importLedger(root: string): Imported[] {
-  if (!existsSync(join(root, LEDGER_PATH))) return []
+  if (!existsSync(join(root, themePaths(root).ledger))) return []
   const at = ledgerTime(root)
   return Object.entries(readLedger(root).tokens)
     .filter(([, d]) => d.status !== 'proposed')
@@ -167,6 +192,41 @@ function tokenHandler(req: TokenRequest, ctx: ResolvedContext, root: string, log
           : {},
     written: emitted.written,
   }
+}
+
+const DIALS = ['hue', 'chroma', 'warmth', 'energy', 'density'] as const
+
+/** Two seed sets that compile to the same theme: the seven values, with an absent lightness read as the zero it means. */
+export const sameSeeds = (a: ThemeSeeds, b: ThemeSeeds): boolean =>
+  DIALS.every((k) => a[k] === b[k]) && a.appearance === b.appearance && (a.lightness ?? 0) === (b.lightness ?? 0)
+
+/** The dials a retheme moved, as one line. */
+export const seedsMoved = (from: ThemeSeeds, to: ThemeSeeds): string[] =>
+  ([...DIALS, 'lightness', 'appearance'] as const)
+    .filter((k) => (k === 'lightness' ? (from.lightness ?? 0) !== (to.lightness ?? 0) : from[k] !== to[k]))
+    .map((k) => `${k} ${String(from[k] ?? 0)} → ${String(to[k] ?? 0)}`)
+
+/**
+ * RETHEME — seven numbers on the record, and every projection compiled from
+ * them in the same call. `from` is the theme that was in force, folded from
+ * the record, so a reversal is two lines that read as one.
+ */
+function seedHandler(req: SeedRequest, ctx: ResolvedContext, root: string, log: readonly Decision[]): Applied | Refused {
+  const seeds = req.seeds
+  if (!seeds || typeof seeds !== 'object') return { refused: 'a retheme needs the seeds: hue, chroma, warmth, energy, density, appearance — and lightness, when it moves' }
+  for (const k of DIALS) if (typeof seeds[k] !== 'number' || !Number.isFinite(seeds[k])) return { refused: `a retheme needs ${k}, as a number` }
+  if (seeds.appearance !== 'dark' && seeds.appearance !== 'light') return { refused: `appearance is dark or light, not "${String(seeds.appearance)}"` }
+  if (seeds.lightness !== undefined && (typeof seeds.lightness !== 'number' || !Number.isFinite(seeds.lightness))) return { refused: 'lightness is a number from −1 to 1' }
+  for (const [k, [lo, hi]] of Object.entries(SEED_RANGE)) {
+    const v = seeds[k as keyof ThemeSeeds]
+    if (typeof v === 'number' && (v < lo || v > hi)) return { refused: `${k} is ${v}; the engine holds ${lo}–${hi}, so say a value it can` }
+  }
+  const from = seedsInForce(log, OBSIDIAN)
+  const body: DecisionBody = { kind: 'seed', seeds, from }
+  if (sameSeeds(from, seeds)) return { body, unchanged: true }
+  const decision = { ...body, id: ctx.id, at: ctx.at, decided: ctx.decided, written: ctx.written, via: ctx.via, consequence: {} } as Decision
+  const emitted = emitTokens(root, { dryRun: ctx.dryRun, log: [...log, decision] })
+  return { body, consequence: { note: seedsMoved(from, seeds).join(' · ') }, written: emitted.written }
 }
 
 function deviationHandler(req: DeviationRequest, ctx: ResolvedContext, root: string): Applied | Refused {

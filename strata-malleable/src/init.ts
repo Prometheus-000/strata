@@ -1,9 +1,17 @@
 /**
- * `malleable init` — put the Claude Code half of the loop into a project.
+ * The malleable layer's half of `strata init` — the Claude Code pieces that
+ * are this layer's own: the skill that teaches the loop, and the two
+ * commands that run it. Nothing else: no hook, no settings, nothing that
+ * speaks while someone is mid-design.
  *
- * Copies the skills and the commands into `.claude/`. Nothing else: no hook,
- * no settings, nothing that runs while someone is mid-design. Everything it
- * writes is additive and shown; it merges rather than overwrites.
+ * It does not install Strata's skill catalogue. It used to, for the case
+ * where the library sat inside the product — and once `strata init` began
+ * installing the skills itself, that copy landed *after* and overwrote them
+ * with the shipped versions, examples and all, so a new product's first
+ * check reported three decision ids it had never heard of. One installer per
+ * thing.
+ *
+ * Nothing here overwrites a file that exists.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -14,36 +22,35 @@ export interface InitResult {
   notes: string[]
 }
 
-function copyTree(from: string, to: string, wrote: string[], skipped: string[], root: string) {
-  fs.mkdirSync(to, { recursive: true })
+function copyTree(from: string, to: string, wrote: string[], skipped: string[], root: string, dry = false) {
+  if (!fs.existsSync(from)) return
+  if (!dry) fs.mkdirSync(to, { recursive: true })
   for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
     const src = path.join(from, entry.name)
     const dst = path.join(to, entry.name)
-    if (entry.isDirectory()) copyTree(src, dst, wrote, skipped, root)
-    else if (fs.existsSync(dst) && fs.readFileSync(dst, 'utf8') === fs.readFileSync(src, 'utf8'))
-      skipped.push(path.relative(root, dst))
+    if (entry.isDirectory()) copyTree(src, dst, wrote, skipped, root, dry)
+    else if (fs.existsSync(dst)) skipped.push(path.relative(root, dst))
     else {
-      fs.copyFileSync(src, dst)
+      if (!dry) {
+        fs.mkdirSync(path.dirname(dst), { recursive: true })
+        fs.copyFileSync(src, dst)
+      }
       wrote.push(path.relative(root, dst))
     }
   }
 }
 
-export function init(root: string, packageRoot: string): InitResult {
+export function init(root: string, packageRoot: string, opts: { dry?: boolean } = {}): InitResult {
   const wrote: string[] = []
   const skipped: string[] = []
-  const notes: string[] = []
   const integration = path.join(packageRoot, 'integrations/claude-code')
 
-  copyTree(path.join(integration, 'skills'), path.join(root, '.claude/skills'), wrote, skipped, root)
-  copyTree(path.join(integration, 'commands'), path.join(root, '.claude/commands'), wrote, skipped, root)
-  // The product's own skills catalogue, when the library sits inside it.
-  const catalogue = path.join(packageRoot, '..', 'skills')
-  if (fs.existsSync(catalogue) && path.resolve(catalogue) !== path.resolve(root, 'skills')) copyTree(catalogue, path.join(root, '.claude/skills'), wrote, skipped, root)
+  copyTree(path.join(integration, 'skills'), path.join(root, '.claude/skills'), wrote, skipped, root, opts.dry)
+  copyTree(path.join(integration, 'commands'), path.join(root, '.claude/commands'), wrote, skipped, root, opts.dry)
 
-  notes.push(
-    'commit .malleable/manifest.json, .malleable/structure.json and .malleable/overrides.json — build output, but the overrides are design decisions',
-    'commit .strata/decisions.jsonl — it is the record; everything else is a projection of it',
-  )
-  return { wrote, skipped, notes }
+  return {
+    wrote,
+    skipped,
+    notes: ['commit .malleable/manifest.json, .malleable/structure.json and .malleable/overrides.json — build output, but the overrides are design decisions'],
+  }
 }
