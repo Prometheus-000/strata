@@ -63,7 +63,7 @@ export function Sky() {
 
   useEffect(() => {
     if (!canvas.current || !labels.current) return
-    const s = mountSky(canvas.current, labels.current, { skies: all, palette: night, paletteFor, onReadout: setReadout, reduced })
+    const s = mountSky(canvas.current, labels.current, { skies: all, palette: night, paletteFor, seeds, onReadout: setReadout, reduced })
     scene.current = s
     // On the dev server, a harness can drive the sky: the record's skies and the scene, and nothing else.
     if (import.meta.env.DEV) Object.assign(window, { __sky: { scene: s, skies: all } })
@@ -71,7 +71,7 @@ export function Sky() {
       s.dispose()
       scene.current = null
     }
-  }, [all, night, paletteFor, reduced])
+  }, [all, night, paletteFor, seeds, reduced])
 
   const fly = (node: SkyNode) => scene.current?.flyTo(node)
 
@@ -79,7 +79,7 @@ export function Sky() {
     <div className="sky">
       <canvas ref={canvas} className="sky__stage" aria-label="The record as a sky: every record, one record, its systems, their targets, their histories" />
       {/* The labels sit on the night, so they take the night's ink, not the page's. */}
-      <div ref={labels} className="sky__labels" aria-hidden style={{ ['--sky-ink' as string]: night.ink } as React.CSSProperties} />
+      <div ref={labels} className="sky__labels" aria-hidden style={{ ['--sky-ink' as string]: night.ink, ['--sky-now' as string]: night.accent ?? night.ink } as React.CSSProperties} />
       <aside className="sky__panel">
         <div className="sky__brand">
           <a className="sky__mark" href={BASE}>
@@ -89,12 +89,26 @@ export function Sky() {
         </div>
         <span className="sky__kicker">The sky</span>
         <h1 className="sky__title">The record, with depth.</h1>
-        <p className="sky__lede">One zoom, from every record the engine can draw to the moons of one target. Scroll to go in or out. Click a body to fly to it.</p>
+        <p className="sky__lede">Every record the engine can draw, one record as a galaxy, its families as systems, each target a planet, each decision a moon. Scroll to go in or out, drag to turn, click a body to fly to it.</p>
+        <div className="sky__journey" role="group" aria-label="Journey">
+          <button type="button" onClick={() => scene.current?.journey('in')}>
+            Go in
+          </button>
+          <button type="button" onClick={() => scene.current?.journey('out')}>
+            Come out
+          </button>
+        </div>
         <dl className="sky__readout">
           <div>
             <dt>Level</dt>
             <dd className="sky__level">{readout.level}</dd>
           </div>
+          {readout.journey && (
+            <div>
+              <dt>Flying</dt>
+              <dd>{readout.journey}</dd>
+            </div>
+          )}
           <div>
             <dt>Which is</dt>
             <dd>{readout.what}</dd>

@@ -653,8 +653,12 @@ The sky is the field's counterpart. `sky.html` reads the same record with
 depth: every record the engine can draw at a distance, one record as a
 galaxy, its token families and selectors as systems, each target a planet
 massed by the decisions made on it, and each decision a moon in time order.
-One continuous zoom joins them, and the one rule that makes it possible is the
-address the field already uses — a place inside a place, the same hash rule
+One continuous zoom joins them — the camera travels rather than jumps, and two
+journeys, in and out, walk the ladder — and every record has a sun: the theme
+in force, which the engine derives every token from the way a sun lights and
+makes a system, so a body wears the light of the sun that shone when it was
+decided. The one rule that makes the zoom possible is the address the field
+already uses — a place inside a place, the same hash rule
 applied at each level — read with depth: the sky seen from above is the
 field, and the same target lands in the same spot in every record. The
 neighbours are synthetic records and say so; the only real one is this

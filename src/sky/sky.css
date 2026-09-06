@@ -29,6 +29,9 @@ body {
 .sky-label {
   pointer-events: auto;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-mono);
   font-size: var(--strata-text-xs);
   letter-spacing: var(--strata-tracking-wide);
@@ -42,10 +45,49 @@ body {
 .sky-label:hover {
   opacity: 1;
 }
+/* A leader line: the name points at its ring's edge. */
+.sky-label::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  border-top: var(--strata-border-hair) solid currentColor;
+  opacity: 0.7;
+}
+.sky-label--now {
+  opacity: 1;
+  text-transform: uppercase;
+  letter-spacing: var(--strata-tracking-caps);
+  color: var(--sky-now, var(--sky-ink));
+}
 .sky-label--record {
   text-transform: uppercase;
   letter-spacing: var(--strata-tracking-caps);
   opacity: 0.9;
+}
+
+/* ---------- the journey ---------- */
+.sky__journey {
+  display: flex;
+  gap: var(--strata-space-2);
+}
+.sky__journey button {
+  flex: 1;
+  font: inherit;
+  font-size: var(--strata-text-xs);
+  font-weight: 600;
+  letter-spacing: var(--strata-tracking-wide);
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--surface-sunken);
+  border: var(--strata-border-hair) solid var(--line);
+  border-radius: var(--radius-interactive);
+  padding: var(--strata-space-2) var(--strata-space-3);
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--motion-ease);
+}
+.sky__journey button:hover,
+.sky__journey button:focus-visible {
+  border-color: var(--line-strong);
 }
 
 /* ---------- the frame ---------- */
