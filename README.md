@@ -1,5 +1,10 @@
 # Strata
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/hero-dark.svg">
+  <img alt="Strata — a persistent structure. Changing expressions. Memory of what came before." src="public/hero-light.svg">
+</picture>
+
 **A persistent design decision system for humans and agents.**
 
 > **When artifacts become regenerable, decisions become infrastructure.**

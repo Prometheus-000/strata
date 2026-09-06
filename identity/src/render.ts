@@ -318,8 +318,13 @@ function pathData(line: Polyline, S: number): string {
 }
 
 /**
- * The same frame as an SVG, square, with the ink as a custom property so the
- * file follows the tab strip: the house ground first, the other one flipped bit.
+ * The same frame as an SVG, with the ink as a custom property so the file
+ * follows the tab strip: the house ground first, the other one flipped bit.
+ *
+ * `size` is the height; the width follows the frame's aspect, because the
+ * field already spreads its positions across it and only this wrapper ever
+ * assumed a square. A wide frame drew correctly into a square viewBox and
+ * was cropped by it.
  */
 export function svgFrom(frame: Frame, size: number, pal: Palette, opts: { dot: boolean; inks?: { dark: string; light: string; house?: 'dark' | 'light' } }): string {
   const S = size
@@ -360,5 +365,6 @@ export function svgFrom(frame: Frame, size: number, pal: Palette, opts: { dot: b
     house === 'light'
       ? `:root{--ink:${inks.light}}@media (prefers-color-scheme:dark){:root{--ink:${inks.dark}}}`
       : `:root{--ink:${inks.dark}}@media (prefers-color-scheme:light){:root{--ink:${inks.light}}}`
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S} ${S}" width="${S}" height="${S}"><style>${style}</style>${parts.join('')}</svg>\n`
+  const W = f2(S * frame.aspect)
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${S}" width="${W}" height="${S}"><style>${style}</style>${parts.join('')}</svg>\n`
 }

@@ -45,7 +45,8 @@
     "preview": "vite preview",
     "bundle": "node scripts/bundle.mjs",
     "strata": "node bin/strata.mjs",
-    "check": "node bin/strata.mjs check"
+    "check": "node bin/strata.mjs check",
+    "social-card": "node scripts/social-card.mjs public/hero-light.svg hero-card.png"
   },
   "dependencies": {
     "@strata/engine": "0.1.0",
