@@ -34,7 +34,12 @@
  *     the same target lands in the same place in every record;
  *   - the newest decision in the first record is marked: you are here;
  *   - labels sit at the edge of their ring with a leader line, and appear
- *     only while their neighbourhood is between a sliver and most of the view.
+ *     only while their neighbourhood is between a sliver and most of the view;
+ *   - going in and coming out are gestures. Scroll or pinch zooms toward the
+ *     point under the pointer, and a focus walks the ladder as the distance
+ *     crosses each level — into the nearest child on the way in, back to the
+ *     parent on the way out — so scrolling in descends and scrolling out
+ *     ascends without a click. The buttons remain as the keyboard's way in.
  */
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
@@ -48,6 +53,8 @@ export interface Readout {
   distance: number
   /** What a journey is doing, when one is. */
   journey?: string
+  /** What the gesture is going into, or coming out of. */
+  focus?: string
 }
 
 export interface SkyScene {
@@ -158,8 +165,12 @@ export function mountSky(canvas: HTMLCanvasElement, labelsEl: HTMLElement, opts:
   controls.dampingFactor = 0.1
   controls.minDistance = 0.004
   controls.maxDistance = 30
-  controls.zoomSpeed = 1.1
+  // Zoom is ours: it anchors on the pointer and walks the ladder. Turning stays OrbitControls'.
+  controls.enableZoom = false
+  controls.enablePan = false
   controls.target.set(0, 0, 0)
+  const MIN_D = 0.004
+  const MAX_D = 30
 
   /* ---------- light ---------- */
 
@@ -376,6 +387,8 @@ export function mountSky(canvas: HTMLCanvasElement, labelsEl: HTMLElement, opts:
     camTo: THREE.Vector3
     ms: number
     say?: string
+    /** What the leg lands on; undefined leaves the focus alone, null is the supercluster. */
+    focus?: SkyNode | null
   }
   const legs: Leg[] = []
   let flight: { from: THREE.Vector3; to: THREE.Vector3; camFrom: THREE.Vector3; camTo: THREE.Vector3; t0: number; ms: number; say?: string } | null = null
@@ -387,6 +400,7 @@ export function mountSky(canvas: HTMLCanvasElement, labelsEl: HTMLElement, opts:
     return Math.min(4200, 1300 + 900 * Math.abs(Math.log10(d1 / d0)))
   }
   const start = (leg: Leg) => {
+    if (leg.focus !== undefined) focus = leg.focus?.level === 'decision' ? (leg.focus.parent ?? leg.focus) : leg.focus
     if (reduced) {
       controls.target.copy(leg.to)
       camera.position.copy(leg.camTo)
@@ -419,11 +433,13 @@ export function mountSky(canvas: HTMLCanvasElement, labelsEl: HTMLElement, opts:
   const flyTo = (node: SkyNode) => {
     legs.length = 0
     flight = null
+    focus = node.level === 'decision' ? (node.parent ?? node) : node
     start(legFor(node))
   }
   const home = () => {
     legs.length = 0
     flight = null
+    focus = null
     const to = new THREE.Vector3(0, 0, 0)
     const camTo = v3(HOME_FROM)
     start({ to, camTo, ms: durationFor(camTo, to), say: 'out to the supercluster' })
@@ -443,8 +459,8 @@ export function mountSky(canvas: HTMLCanvasElement, labelsEl: HTMLElement, opts:
       [moon, 'to its history'],
     ]
     const steps = direction === 'in' ? ladder : [...ladder].reverse().slice(1)
-    for (const [node, say] of steps) if (node) queue(legFor(node, say))
-    if (direction === 'out') queue({ to: new THREE.Vector3(0, 0, 0), camTo: v3(HOME_FROM), ms: 2600, say: 'out to the supercluster' })
+    for (const [node, say] of steps) if (node) queue({ ...legFor(node, say), focus: node })
+    if (direction === 'out') queue({ to: new THREE.Vector3(0, 0, 0), camTo: v3(HOME_FROM), ms: 2600, say: 'out to the supercluster', focus: null })
   }
 
   const ray = new THREE.Raycaster()
@@ -457,10 +473,129 @@ export function mountSky(canvas: HTMLCanvasElement, labelsEl: HTMLElement, opts:
   }
   canvas.addEventListener('click', onClick)
 
+  /* ---------- gestures: in and out ---------- */
+
+  let lastKey = ''
+
+  /** What the camera is going into or coming out of. Starts at nothing: the supercluster. */
+  let focus: SkyNode | null = null
+  const pointer = new THREE.Vector2(0, 0)
+  const onPointerMove = (e: PointerEvent) => {
+    const r = canvas.getBoundingClientRect()
+    pointer.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1)
+  }
+  canvas.addEventListener('pointermove', onPointerMove)
+
+  /** The point under the pointer on the plane through the target that faces the camera: what a zoom keeps still. */
+  const anchorUnder = (ndc: THREE.Vector2): THREE.Vector3 => {
+    ray.setFromCamera(ndc, camera)
+    const normal = camera.position.clone().sub(controls.target).normalize()
+    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, controls.target)
+    const out = new THREE.Vector3()
+    return ray.ray.intersectPlane(plane, out) ? out : controls.target.clone()
+  }
+  const nearestChild = (node: SkyNode | null, to: THREE.Vector3): SkyNode | null => {
+    const pool = node ? node.children : skies.map((s) => s.root)
+    let best: SkyNode | null = null
+    let bestD = Infinity
+    for (const c of pool) {
+      const d = to.distanceTo(v3(c.pos))
+      if (d < bestD) {
+        bestD = d
+        best = c
+      }
+    }
+    return best
+  }
+  /** The distance at which a level begins, from the readout's own ladder, so the gesture and the readout agree. */
+  const enters = (level: SkyNode['level']) => (level === 'record' ? 3.2 : level === 'system' ? 1.1 : level === 'target' ? R_SYSTEM * 1.6 : R_TARGET * 1.8)
+  let drift: { to: THREE.Vector3; t0: number; ms: number } | null = null
+  const settleOn = (node: SkyNode | null) => {
+    if (node === focus) return
+    focus = node
+    lastKey = ''
+    if (node) drift = { to: v3(node.pos), t0: performance.now(), ms: reduced ? 0 : 520 }
+  }
+  /** Walk the ladder: after a zoom, the focus is whatever level the distance says, nearest to where we are looking. */
+  const refocus = () => {
+    const d = camera.position.distanceTo(controls.target)
+    const at = controls.target
+    // Out: while the distance is beyond the level we are focused on, climb.
+    while (focus && d >= enters(focus.level)) focus = focus.parent ?? null
+    // In: while a child's level has begun, descend to the nearest one.
+    for (;;) {
+      const childLevel: SkyNode['level'] | null = !focus ? 'record' : focus.level === 'record' ? 'system' : focus.level === 'system' ? 'target' : null
+      if (!childLevel || d >= enters(childLevel)) break
+      const next = nearestChild(focus, at)
+      if (!next) break
+      settleOn(next)
+    }
+    lastKey = ''
+  }
+  /** Zoom by a factor (< 1 goes in), keeping the point under `ndc` still on the way in and easing toward the parent on the way out. */
+  const zoomBy = (factor: number, ndc: THREE.Vector2) => {
+    legs.length = 0
+    flight = null
+    const d0 = camera.position.distanceTo(controls.target)
+    const d1 = Math.min(MAX_D, Math.max(MIN_D, d0 * factor))
+    const f = d1 / d0
+    const dir = camera.position.clone().sub(controls.target).normalize()
+    if (f < 1) {
+      const anchor = anchorUnder(ndc)
+      controls.target.copy(anchor.clone().add(controls.target.clone().sub(anchor).multiplyScalar(f)))
+    } else if (focus?.parent || (focus && skies.length)) {
+      const home = focus.parent ? v3(focus.parent.pos) : v3(focus.pos)
+      controls.target.lerp(home, Math.min(1, (1 - 1 / f) * 0.6))
+    }
+    camera.position.copy(controls.target).add(dir.multiplyScalar(d1))
+    refocus()
+    request()
+  }
+  const onWheel = (e: WheelEvent) => {
+    e.preventDefault()
+    // A trackpad pinch arrives as a wheel with ctrlKey; it deserves a gentler scale than a scroll.
+    const k = e.ctrlKey ? 0.012 : e.deltaMode === 1 ? 0.06 : 0.0022
+    zoomBy(Math.exp(e.deltaY * k), pointer)
+  }
+  canvas.addEventListener('wheel', onWheel, { passive: false })
+  // Two fingers: a pinch, anchored between them.
+  let pinch: { d: number; mid: THREE.Vector2 } | null = null
+  const touchInfo = (e: TouchEvent) => {
+    const r = canvas.getBoundingClientRect()
+    const [a, b] = [e.touches[0], e.touches[1]]
+    const mid = new THREE.Vector2((((a.clientX + b.clientX) / 2 - r.left) / r.width) * 2 - 1, -(((a.clientY + b.clientY) / 2 - r.top) / r.height) * 2 + 1)
+    return { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), mid }
+  }
+  const onTouchStart = (e: TouchEvent) => {
+    if (e.touches.length === 2) pinch = touchInfo(e)
+  }
+  const onTouchMove = (e: TouchEvent) => {
+    if (e.touches.length !== 2 || !pinch) return
+    e.preventDefault()
+    const now = touchInfo(e)
+    if (now.d > 0 && pinch.d > 0) zoomBy(pinch.d / now.d, now.mid)
+    pinch = now
+  }
+  const onTouchEnd = () => {
+    pinch = null
+  }
+  canvas.addEventListener('touchstart', onTouchStart, { passive: true })
+  canvas.addEventListener('touchmove', onTouchMove, { passive: false })
+  canvas.addEventListener('touchend', onTouchEnd)
+  canvas.addEventListener('touchcancel', onTouchEnd)
+  // Keys: the same gesture for a hand on a keyboard.
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowUp' || e.key === '=' || e.key === '+') zoomBy(0.8, new THREE.Vector2(0, 0))
+    else if (e.key === 'ArrowDown' || e.key === '-' || e.key === '_') zoomBy(1.25, new THREE.Vector2(0, 0))
+    else return
+    e.preventDefault()
+  }
+  canvas.addEventListener('keydown', onKey)
+  canvas.tabIndex = 0
+
   /* ---------- level of detail, and the readout ---------- */
 
   let journeyWord: string | undefined
-  let lastKey = ''
   const say = (word: string) => {
     journeyWord = word
     lastKey = ''
@@ -485,10 +620,10 @@ export function mountSky(canvas: HTMLCanvasElement, labelsEl: HTMLElement, opts:
       m.visible = fade > 0
     }
     const lv = levelFor(d)
-    const k = `${lv.name}:${d.toFixed(3)}:${journeyWord ?? ''}`
+    const k = `${lv.name}:${d.toFixed(3)}:${journeyWord ?? ''}:${focus?.key ?? ''}`
     if (k !== lastKey) {
       lastKey = k
-      onReadout({ level: lv.name, what: lv.what, distance: d, journey: journeyWord })
+      onReadout({ level: lv.name, what: lv.what, distance: d, journey: journeyWord, focus: focus?.name })
     }
   }
 
@@ -500,6 +635,17 @@ export function mountSky(canvas: HTMLCanvasElement, labelsEl: HTMLElement, opts:
     pending = false
     if (!alive) return
     let moving = controls.update()
+    if (drift) {
+      // The focus settles under the camera without changing the distance: the ladder is walked, not jumped.
+      const k = drift.ms === 0 ? 1 : Math.min(1, (now - drift.t0) / drift.ms)
+      const e = k * k * (3 - 2 * k)
+      const d = camera.position.distanceTo(controls.target)
+      const dir = camera.position.clone().sub(controls.target).normalize()
+      controls.target.lerp(drift.to, e * 0.35)
+      camera.position.copy(controls.target).add(dir.multiplyScalar(d))
+      if (k >= 1) drift = null
+      moving = true
+    }
     if (flight) {
       const k = Math.min(1, (now - flight.t0) / flight.ms)
       const e = k * k * (3 - 2 * k)
@@ -542,7 +688,6 @@ export function mountSky(canvas: HTMLCanvasElement, labelsEl: HTMLElement, opts:
   }
   controls.addEventListener('change', request)
   canvas.addEventListener('pointermove', request)
-  canvas.addEventListener('wheel', request, { passive: true })
   const ro = new ResizeObserver(resize)
   ro.observe(canvas)
   resize()
@@ -565,7 +710,13 @@ export function mountSky(canvas: HTMLCanvasElement, labelsEl: HTMLElement, opts:
       ro.disconnect()
       canvas.removeEventListener('click', onClick)
       canvas.removeEventListener('pointermove', request)
-      canvas.removeEventListener('wheel', request)
+      canvas.removeEventListener('wheel', onWheel)
+      canvas.removeEventListener('pointermove', onPointerMove)
+      canvas.removeEventListener('touchstart', onTouchStart)
+      canvas.removeEventListener('touchmove', onTouchMove)
+      canvas.removeEventListener('touchend', onTouchEnd)
+      canvas.removeEventListener('touchcancel', onTouchEnd)
+      canvas.removeEventListener('keydown', onKey)
       controls.dispose()
       for (const d of disposables) d.dispose()
       renderer.dispose()

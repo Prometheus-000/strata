@@ -89,7 +89,7 @@ export function Sky() {
         </div>
         <span className="sky__kicker">The sky</span>
         <h1 className="sky__title">The record, with depth.</h1>
-        <p className="sky__lede">Every record the engine can draw, one record as a galaxy, its families as systems, each target a planet, each decision a moon. Scroll to go in or out, drag to turn, click a body to fly to it.</p>
+        <p className="sky__lede">Every record the engine can draw, one record as a galaxy, its families as systems, each target a planet, each decision a moon. Scroll or pinch to go in and out — into whatever is under your pointer — drag to turn, click a body to fly to it.</p>
         <div className="sky__journey" role="group" aria-label="Journey">
           <button type="button" onClick={() => scene.current?.journey('in')}>
             Go in
@@ -107,6 +107,12 @@ export function Sky() {
             <div>
               <dt>Flying</dt>
               <dd>{readout.journey}</dd>
+            </div>
+          )}
+          {readout.focus && !readout.journey && (
+            <div>
+              <dt>Into</dt>
+              <dd>{readout.focus}</dd>
             </div>
           )}
           <div>
