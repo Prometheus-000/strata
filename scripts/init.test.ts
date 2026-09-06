@@ -104,7 +104,11 @@ test('the first check on a new product holds every invariant and reports nothing
   // What it does say is true and worth knowing on day one.
   assert.ok(r.findings.some((f) => f.rule === 'token.unused' && /nothing reads a token yet/.test(f.message)), 'the roles exist and nothing consumes them — said once, not once per role')
   assert.ok(r.findings.some((f) => f.rule === 'token.unreviewed' && /still a proposal/.test(f.message)))
-  assert.ok(r.findings.some((f) => f.rule === 'safety.contrast'), 'the default palette is measured, and what falls short is reported rather than refused')
+  // The palette a new product starts on holds AA on both grounds, at every
+  // lightness the seeds can reach. It did not: faint ink fell short on all
+  // eight grounds and amber on one, so the first report a product ever ran
+  // was nine lines about a palette nobody had chosen yet.
+  assert.deepEqual(r.findings.filter((f) => f.rule === 'safety.contrast'), [], 'the default palette hands a new product a contrast finding it did not choose')
   assert.ok(r.cited.length > 0, 'and the rules nothing evaluates are counted rather than passed over')
 })
 

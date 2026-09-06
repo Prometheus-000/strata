@@ -12,10 +12,13 @@ import { registerProse } from '@strata/substrate/prose'
 import { registerTheme } from '../src/theme/handlers'
 import { PROSE } from './prose'
 import { readLedger, themePaths } from '../src/theme/emit'
+import { CONTRAST_PAIRS } from '../src/theme/evaluators'
+import { themeTokens } from '../src/theme/ledger'
+import { contrastRatio } from '../src/theme/color'
+import { generateTheme, OBSIDIAN } from '../src/theme/generateTheme'
 import { runTheme } from '../src/theme/cli'
 import { CONFIG_PATH } from '@strata/substrate/config'
 import { seedsInForce } from '@strata/substrate/log'
-import { OBSIDIAN } from '../src/theme/generateTheme'
 
 const REPO = path.join(path.dirname(new URL(import.meta.url).pathname), '..')
 const { ledger: LEDGER_PATH, semantic: SEMANTIC_PATH, tokens: TOKENS_PATH } = themePaths(REPO)
@@ -235,8 +238,14 @@ test('contrast is swept and reported, never enforced, and every read token is me
   // looked" — which is what the report was for months.
   assert.deepEqual(contrast.filter((f) => /measured against nothing/.test(f.message)), [], 'a token is read and no pairing covers it — add it to CONTRAST_PAIRS')
 
-  // And it is not vacuous: the pairings resolve to real numbers on this palette.
-  assert.ok(contrast.length > 0, 'the sweep found nothing at all, which on this palette means it did not run')
+  // And it is not vacuous. It reports nothing here because the palette holds,
+  // which is a different fact from "nobody looked" and has to be told apart
+  // from it: the pairings resolve to real numbers, and a ground moved far
+  // enough still produces a finding.
+  const values = themeTokens(generateTheme({ ...OBSIDIAN, chroma: 0 }), readLedger(REPO), 'value')
+  assert.ok(CONTRAST_PAIRS.every((p) => values[p.token] && p.on.every((on) => contrastRatio(values[p.token], values[on]) !== null)), 'a pairing names a token or a ground the engine does not emit')
+  const shortened = { ...values, '--ink-faint': values['--surface-page'] }
+  assert.ok(contrastRatio(shortened['--ink-faint'], shortened['--surface-page'])! < 4.5, 'the ratio this measures with is a real one')
 
   // One finding per token, and every pairing under it as evidence. Faint ink
   // is set against four surfaces on two grounds, so it used to fall short
@@ -249,12 +258,22 @@ test('contrast is swept and reported, never enforced, and every read token is me
     [...new Set(contrast.map((f) => f.where))],
     'a token is reported once',
   )
-  const faint = contrast.find((f) => f.where === '--ink-faint')!
-  assert.ok(faint, 'faint ink is measured as text and falls short on this palette')
-  assert.match(faint.message, /^8 of the 8 grounds it is set against fall under the 4\.5:1 this measures text against, from \d+\.\d{2}:1 to \d+\.\d{2}:1\./)
-  assert.equal(faint.facts?.length, 8, 'and every ground it fell short on is named')
-  assert.ok(faint.facts?.every((x) => /^(dark|light), on --surface-/.test(x.name) && /^\d+\.\d{2}:1$/.test(String(x.value))))
-  assert.match(faint.message, /Kept by human prometheus-000: The label colour\./, 'a token kept with a reason carries it here, so a decided colour does not read as an oversight')
+  // A finding, when there is one, is one line per token with every ground it
+  // fell short on underneath: faint ink is set against four surfaces on two
+  // grounds, so it used to fall short eight times and say so in eight lines
+  // that differed by two decimal places.
+  for (const f of contrast.filter((x) => x.facts?.length)) {
+    assert.match(f.message, /^\d+ of the \d+ grounds it is set against fall under the \d(\.\d)?:1 this measures .+ against, (at|from) \d+\.\d{2}:1/)
+    assert.ok(f.facts?.every((x) => /^(dark|light), on --surface-/.test(x.name) && /^\d+\.\d{2}:1$/.test(String(x.value))))
+  }
+
+  // Nothing is short. Faint ink is the label colour and it is read, so 4.5:1
+  // is what it costs; amber is a mark, and 3:1 is what one costs. Both were
+  // constants the ground could walk away from without them following — faint
+  // ink short on all eight grounds, amber at 2.80:1 on sunken paper. The
+  // engine derives them from the ground now, the way it already did for the
+  // accent, and this is the assertion that it still does.
+  assert.deepEqual(contrast, [], contrast.map((f) => `${f.where}: ${f.message}`).join('\n'))
 })
 
 test('retheme moves the seeds from a terminal: on the record, clamped where the engine clamps, and every projection recompiled', () => {

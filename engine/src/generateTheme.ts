@@ -194,7 +194,19 @@ export function generateTheme(seeds: ThemeSeeds, opts: ThemeForm = {}): Record<s
     t['--surface-veil'] = oklch(Math.max(0.03, pageL - 0.07), neutralChroma, neutralHue, 0.62)
     t['--ink'] = oklch(0.94, 0.008, neutralHue)
     t['--ink-muted'] = oklch(0.72, 0.012, neutralHue)
-    t['--ink-faint'] = oklch(0.54, 0.012, neutralHue)
+    // Faint ink follows the ground, the way the accent does. It was a
+    // constant — 0.54 here, 0.60 on paper — and it was the one ink a moving
+    // ground could walk away from, so every theme reported it short of the
+    // 4.5:1 that reading costs: the label colour, the thing every kicker,
+    // key and rule-line is set in, failing on all four surfaces of both
+    // grounds at once. It is measured against the lightest surface here,
+    // because that is the one it has least room against, and it stops a
+    // visible step short of muted rather than merging with it — three
+    // strengths of ink is the whole secondary vocabulary, and at the far end
+    // of the lightness range a third strength that is both distinct and
+    // readable does not exist. There the step wins and `safety.contrast`
+    // says so, which is the honest half of a report that refuses nothing.
+    t['--ink-faint'] = oklch(Math.min(0.72 - 0.06, pageL + 0.07 + 0.44), 0.012, neutralHue)
     t['--ink-inverse'] = oklch(0.16, 0.01, neutralHue)
 
     // A lifted ground lifts the accent a little with it, so the one filled action keeps its distance from the page.
@@ -224,7 +236,9 @@ export function generateTheme(seeds: ThemeSeeds, opts: ThemeForm = {}): Record<s
     t['--surface-veil'] = oklch(0.3, 0.01, neutralHue, 0.4)
     t['--ink'] = oklch(0.24, 0.015, neutralHue)
     t['--ink-muted'] = oklch(0.45, 0.015, neutralHue)
-    t['--ink-faint'] = oklch(0.6, 0.012, neutralHue)
+    // As on the dark ground, and against the sunken surface: the deepest
+    // paper it is ever set on is the one it has least room against.
+    t['--ink-faint'] = oklch(Math.max(0.45 + 0.06, pageL - 0.03 - 0.43), 0.012, neutralHue)
     t['--ink-inverse'] = oklch(0.97, 0.005, neutralHue)
 
     // Light appearances need darker, denser accents to hold AA contrast, and a darkened ground needs them darker still.
@@ -238,11 +252,19 @@ export function generateTheme(seeds: ThemeSeeds, opts: ThemeForm = {}): Record<s
     t['--line'] = oklch(0.24, 0.015, neutralHue, 0.13)
     t['--line-strong'] = oklch(0.24, 0.015, neutralHue, 0.28)
     t['--focus-ring'] = oklch(accentL, accentC, hue, 0.65)
-    t['--positive'] = oklch(0.6, 0.15, 150)
-    t['--warning'] = oklch(0.66, 0.14, 75)
+    // Status inks are marks, and a mark that cannot be seen has not been
+    // made: 3:1 is what one costs. Amber is the hard one — it is the lightest
+    // hue at any given chroma, and at 0.66 it sat at 2.80:1 against sunken
+    // paper, the one status the house shipped that nobody could quite see.
+    // They darken as the ground darkens, the way the accent below does,
+    // because a bone ground takes the same room away from all of them.
+    // Danger is already dark enough at every lightness and is left alone.
+    const statusFloor = 0.07 * Math.max(0, -lightness)
+    t['--positive'] = oklch(0.6 - statusFloor, 0.15, 150)
+    t['--warning'] = oklch(0.63 - statusFloor * 1.07, 0.14, 75)
     t['--danger'] = oklch(0.55, 0.19, 22)
-    t['--positive-soft'] = oklch(0.6, 0.15, 150, 0.13)
-    t['--warning-soft'] = oklch(0.66, 0.14, 75, 0.15)
+    t['--positive-soft'] = oklch(0.6 - statusFloor, 0.15, 150, 0.13)
+    t['--warning-soft'] = oklch(0.63 - statusFloor * 1.07, 0.14, 75, 0.15)
     t['--danger-soft'] = oklch(0.55, 0.19, 22, 0.12)
     t['--shadow-color'] = oklch(0.3, 0.02, neutralHue, 0.18)
   }

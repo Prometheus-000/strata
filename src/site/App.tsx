@@ -79,7 +79,7 @@ function Hero() {
       />
       <div className="wrap hero__body">
         <Reveal>
-          <span className="hero__kicker">A design system for AI product teams · v0.2</span>
+          <span className="hero__kicker">A persistent design decision system · v0.2</span>
         </Reveal>
         <Reveal delay={80}>
           <h1 className="hero__title">

@@ -15,8 +15,15 @@ piece of design work bears on.
 Two commitments, stated once, enacted everywhere below:
 
 **The most important design choices are what you don't see.** The engine deepens accents on
-light grounds to hold AA contrast, honors reduced-motion at both the stylesheet and the
-runtime, and an evaluator reads every diff. None of it has a UI. All of it is the design.
+light grounds to hold AA contrast, derives faint ink and the status marks from the ground so
+they hold it too, honors reduced-motion at both the stylesheet and the runtime, and an
+evaluator reads every diff. None of it has a UI. All of it is the design.
+
+The three that follow the ground were constants once, and the ground moved without them:
+faint ink fell short on every surface of both appearances, and amber sat under the 3:1 a mark
+costs. The owner's sentence is the reason the engine holds them now — *"text that is too faint
+to read crosses the line from good design to an amateur's idea of what good design is"* — and
+the check reports what it reports so that nobody has to hold it in their head.
 
 **Less but better.** Seven seeds instead of a thousand hand-picked values. One filled action
 per surface. Promotion is earned by three appearances in the wild, so the inventory stays
