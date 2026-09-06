@@ -176,13 +176,14 @@
       "check": "none"
     },
     {
-      "id": "voice.dark-first",
+      "id": "voice.light-first",
       "authority": "policy",
-      "statement": "Dark is the first ground; light is one flipped bit.",
-      "reason": "Gallery is Obsidian with appearance flipped and nothing else changed, because the two poles are one theme's two grounds.",
-      "source": "GRAMMAR.md › The voice › Dark is the first ground",
+      "statement": "Light is the first ground; dark is one flipped bit.",
+      "reason": "Hairlines of ink on paper read as a drawing, not a console. Obsidian is Gallery with appearance flipped and nothing else changed, because the two poles are one theme’s two grounds.",
+      "source": "GRAMMAR.md › The voice › Light is the first ground",
       "scope": "product",
-      "check": "none"
+      "check": "none",
+      "incident": "The rule ran the other way until 2026-09-05, when the identity’s field was first drawn on a light ground and the house chose it; the reversal is a seed decision on the record."
     },
     {
       "id": "layer1.imported-not-copied",

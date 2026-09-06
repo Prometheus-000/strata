@@ -19,7 +19,7 @@ import { fallbacksFor, FALLBACKS, themeTokens } from './ledger'
 import { mintedRoles, readLedger, SEMANTIC_PATH } from './emit'
 import { COLOR_LITERAL } from './handlers'
 
-export const SCAN_DIRS = ['src/components', 'src/site', 'src/personalize']
+export const SCAN_DIRS = ['src/components', 'src/site', 'src/personalize', 'src/identity']
 const EXTS = ['.css', '.tsx', '.ts']
 const TOKEN_DIRS = ['src/tokens']
 
@@ -281,7 +281,7 @@ export function registerThemeEvaluators(home: { root: string }): void {
       const out: Finding[] = []
       const declared = new Set(CONTRAST_PAIRS.map((p) => p.token))
       for (const [ground, seeds] of [
-        ['dark', OBSIDIAN],
+        ['dark', PRESETS.Obsidian],
         ['light', PRESETS.Gallery],
       ] as const) {
         const values = themeTokens(generateTheme(seeds), ledger, 'value')
@@ -323,7 +323,7 @@ export function registerThemeEvaluators(home: { root: string }): void {
       if (d.kind !== 'token') return []
       const ledger = readLedger(root)
       const facts: Fact[] = []
-      for (const [ground, seeds] of [['dark', OBSIDIAN], ['light', PRESETS.Gallery]] as const) {
+      for (const [ground, seeds] of [['dark', PRESETS.Obsidian], ['light', PRESETS.Gallery]] as const) {
         const values = themeTokens(generateTheme(seeds), ledger, 'value')
         const mine = values[d.token]
         if (!mine) continue

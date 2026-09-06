@@ -48,8 +48,13 @@ export interface ThemeSeeds {
  * the one filled action on a screen is ink, not a hue; warmth −0.6 casts the
  * neutrals toward slate. This is the same voice as Visionary's production
  * Midnight, where applying it writes nothing and the stylesheet is the theme.
- * Gallery is the same six numbers on paper — the inverse of a theme is one
- * flipped bit.
+ * The ground is paper: the house decided on 2026-09-05 that the identity's
+ * field drawn on a light ground is the default (`seed` decision on the
+ * record), and dark is the same six numbers with one bit flipped.
+ *
+ * The constant keeps the name it had when the ground was dark, because the
+ * malleable layer's ship verb addresses the seed constant by this name and
+ * the record, not the identifier, holds the appearance.
  */
 export const OBSIDIAN: ThemeSeeds = {
   hue: 250,
@@ -57,11 +62,12 @@ export const OBSIDIAN: ThemeSeeds = {
   warmth: -0.6,
   energy: 0.35,
   density: 1,
-  appearance: 'dark',
+  appearance: 'light',
 }
 
+/** The two grounds of the house theme, by name: Obsidian is the dark pole, Gallery the paper. */
 export const PRESETS: Record<string, ThemeSeeds> = {
-  Obsidian: OBSIDIAN,
+  Obsidian: { ...OBSIDIAN, appearance: 'dark' },
   Gallery: { ...OBSIDIAN, appearance: 'light' },
   Ember: { hue: 40, chroma: 0.17, warmth: 0.8, energy: 0.75, density: 1, appearance: 'dark' },
   Ultraviolet: { hue: 300, chroma: 0.2, warmth: -0.6, energy: 0.9, density: 0.95, appearance: 'dark' },

@@ -131,16 +131,22 @@ body {
   overflow: hidden;
   padding-block: clamp(4rem, 12vh, 9rem) clamp(4rem, 10vh, 7rem);
 }
-.hero__mesh {
+.hero__field {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* The type sits on the field and lets the pointer through to it; only the
+   controls take the hand. */
+.hero__body {
+  position: relative;
   pointer-events: none;
-  /* A bloom, not a glow: the portfolio's hero carries one at 8% and it reads as
-     depth, not decoration. At the accent wash's own alpha it read as a lamp. */
-  background:
-    radial-gradient(42rem 30rem at 85% -10%, color-mix(in oklch, var(--accent-soft) 40%, transparent), transparent 60%),
-    radial-gradient(30rem 26rem at -5% 55%, color-mix(in oklch, var(--accent-soft) 30%, transparent), transparent 65%);
-  transition: background var(--motion-slow) var(--motion-ease);
+}
+.hero__body a,
+.hero__body button {
+  pointer-events: auto;
 }
 /* Labels are microtype: mono, small, tracked, faint. They name; they do not
    announce. The accent never carries a label — colour on a label is a second
@@ -610,11 +616,14 @@ body {
   width: 5.5rem;
   flex-shrink: 0;
 }
+/* A bar here is a measurement, and what carries the reading is the edge where it
+   stops. A gradient fades toward exactly that edge, so the ramp was softening
+   the one pixel the row exists to show. Solid, and no border: a hairline at
+   the accent's own alpha is invisible over the accent. */
 .space-scale__bar {
   height: 1.1rem;
   border-radius: var(--strata-radius-1);
-  background: linear-gradient(90deg, var(--accent), var(--accent-soft));
-  border: var(--strata-border-hair) solid var(--accent-line);
+  background: var(--accent);
 }
 
 .motion-stage {

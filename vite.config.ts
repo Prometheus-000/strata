@@ -2,12 +2,13 @@ import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { malleableDevPlugin } from './strata-malleable/src/store/server'
+import { registerIdentity } from './src/identity/handler'
 
 /**
- * One server, four surfaces: the showcase, the personalizer, the malleable
- * layer's harness, and the lab on its own for embedding. They used to be
- * separate dev servers on separate ports, which is several places to find the
- * same idea.
+ * One server, five surfaces: the showcase, the personalizer, the malleable
+ * layer's harness, the lab on its own for embedding, and the identity — the
+ * record projected as a field. They used to be separate dev servers on
+ * separate ports, which is several places to find the same idea.
  *
  * Two things make that safe. React is deduped, because the library carries
  * its own node_modules and a harness resolving a second React copy breaks
@@ -23,7 +24,13 @@ import { malleableDevPlugin } from './strata-malleable/src/store/server'
  */
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
-  plugins: [react(), malleableDevPlugin(resolve(__dirname, 'strata-malleable'), 'fixtures/app', __dirname)],
+  plugins: [
+    react(),
+    malleableDevPlugin(resolve(__dirname, 'strata-malleable'), 'fixtures/app', __dirname),
+    // The identity answers for deviations on its own surface — a click on the
+    // field — through the same write endpoint the malleable layer mounts.
+    { name: 'strata-identity', configureServer: () => registerIdentity() },
+  ],
   resolve: { dedupe: ['react', 'react-dom'] },
   build: {
     rollupOptions: {
@@ -32,6 +39,7 @@ export default defineConfig({
         personalize: resolve(__dirname, 'personalize.html'),
         malleable: resolve(__dirname, 'malleable.html'),
         lab: resolve(__dirname, 'lab.html'),
+        identity: resolve(__dirname, 'identity.html'),
       },
     },
   },

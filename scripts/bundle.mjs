@@ -57,12 +57,19 @@ const SYSTEM = [
   ['src/behavior/useDialog.ts', 'Layer 1. Native <dialog> lifecycle and backdrop dismissal.'],
   ['src/components/index.tsx', 'Layer 2. Twelve recipes, composed from Layer 0 + Layer 1.'],
   ['src/components/strata.css', 'Layer 2 styling. Speaks the semantic tier only — no literals.'],
+  ['identity/src/field.ts', 'THE IDENTITY. An append-only state of events, a field over the unit square, isolines, strata — no dependencies. Rules with reasons, in the header.'],
+  ['identity/src/record.ts', 'From the record to events: the one derivation, and the synthetic stream.'],
+  ['src/identity/handler.ts', 'A click on the field is a deviation on identity.html; the identity answers for it and writes no file.'],
+  ['scripts/emit-identity.ts', 'The favicon and the mark, emitted from the record by npm run identity and by every build.'],
 ]
 const SHOWCASE = [
   ['src/site/App.tsx', 'The showcase page.'],
   ['src/site/ThemeLab.tsx', 'The Theme Lab — describe, sample, wander, keep.'],
   ['src/site/Console.tsx', 'Layer 3 example: a generation console built from the recipes.'],
   ['src/site/site.css', 'Showcase styling.'],
+  ['identity/src/render.ts', 'Four projections of one frame — layers, contours, field, dot — and the SVG the files ship as.'],
+  ['src/identity/Trip.tsx', 'The identity page: the trip from the literal to the abstract, time, scale, the rules.'],
+  ['src/identity/identity.css', 'The identity page, in tokens.']
 ]
 
 const files = full ? [...SYSTEM, ...SHOWCASE] : SYSTEM

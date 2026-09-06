@@ -41,6 +41,8 @@ const { registerMalleable } = await import(path.join(ROOT, 'strata-malleable/src
 
 const MALLEABLE_ROOT = process.env.STRATA_MALLEABLE ?? path.join(ROOT, 'strata-malleable')
 registerTheme({ root: ROOT })
+const { registerIdentity } = await import(path.join(ROOT, 'src/identity/handler.ts'))
+registerIdentity()
 registerMalleable({ root: MALLEABLE_ROOT, source: process.env.MALLEABLE_ROOT ?? 'fixtures/app' })
 
 let clientName = 'unknown'

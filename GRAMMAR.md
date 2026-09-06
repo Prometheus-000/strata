@@ -112,10 +112,13 @@ nothing and answers to nobody, so a card in there read as one more thing to deci
 could work."* A labelled switch in the navigation was that card. Quiet and hidden are different
 things — it is a real button with a name, reachable by tab.
 
-**Dark is the first ground; light is one flipped bit.** The portfolio's review named the baseline
-that must be preserved — *"dark theme, minimal monochrome typography, and a technical 'research
-lab' feel"* — and `Gallery` is `Obsidian` with `appearance` flipped and nothing else changed,
-because the two poles are one theme's two grounds.
+**Light is the first ground; dark is one flipped bit.** The house chose paper on 2026-09-05, when
+the identity's field was first drawn on it: hairlines of ink on a light ground read as a drawing,
+not a console, and the decision is on the record as a `seed`. The rule used to run the other way —
+the portfolio's review had named *"dark theme, minimal monochrome typography, and a technical
+'research lab' feel"* as the baseline — and what survives the reversal is the shape: `Obsidian` is
+`Gallery` with `appearance` flipped and nothing else changed, because the two poles are one
+theme's two grounds, and the dot after the wordmark is the one click between them.
 
 ## Layer 1 — Behavior (never forked)
 
@@ -166,6 +169,8 @@ never granted by proposal.
 
 - `npm run tokens` — regenerate all Layer 0 projections from the engine, through the
   ledger. Adds a `proposed` line for any new token; never edits a decision.
+- `npm run identity` — regenerate the favicon and the mark from the record. The identity is
+  the record projected as a field, and its rules live in `identity/src/field.ts`.
 - `strata cut|keep --<token> --why "…"` — decide one generated token, on the record. A cut
   token collapses to its fallback (`src/theme/ledger.ts`, beside the engine, with a reason
   per entry) in every projection, and the decision is emitted beside the declaration.

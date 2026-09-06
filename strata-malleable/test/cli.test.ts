@@ -54,9 +54,9 @@ test('retheme moves the seeds from a terminal, and clamps what the engine would 
   assert.match(one.out, /hue 250 → 20/)
   assert.doesNotMatch(one.out, /chroma|warmth|energy|density/, 'an unnamed seed stays where it is')
 
-  const flip = run(['retheme', '--appearance', 'light', '--why', 'paper'])
+  const flip = run(['retheme', '--appearance', 'dark', '--why', 'a console'])
   assert.equal(flip.code, 0, flip.err)
-  assert.match(flip.out, /appearance dark → light/)
+  assert.match(flip.out, /appearance light → dark/)
 
   const same = run(['retheme', '--why', 'nothing'])
   assert.match(same.out, /nothing moved/, 'saying nothing moves nothing')

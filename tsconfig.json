@@ -24,6 +24,7 @@
   "include": [
     "src",
     "engine/src",
-    "substrate/src"
+    "substrate/src",
+    "identity/src"
   ]
 }

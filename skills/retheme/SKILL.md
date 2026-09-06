@@ -6,7 +6,7 @@ inputs: [intent]
 context:
   state: [tokens]
   precedent: { kind: seed }
-  rules: [layer0.light-not-inverted-dark, layer0.warmth-tints-neutrals, layer0.energy-buys-shape, voice.monochrome-default, voice.dark-first, layer0.engine-only-author, record.decided-not-written, record.use-is-not-decision]
+  rules: [layer0.light-not-inverted-dark, layer0.warmth-tints-neutrals, layer0.energy-buys-shape, voice.monochrome-default, voice.light-first, layer0.engine-only-author, record.decided-not-written, record.use-is-not-decision]
 constraints:
   - the engine is the only author of the semantic tier; a retheme is seeds, never values
   - stay inside the ranges tokens.json declares under strata.themeEngine.seeds.$ranges

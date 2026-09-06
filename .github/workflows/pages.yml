@@ -1,4 +1,4 @@
-# Runs every test, then builds the three surfaces into one static site and
+# Runs every test, then builds the five surfaces into one static site and
 # publishes it at https://prometheus-000.github.io/strata/. The build runs
 # `strata check --enforce`: only an invariant — the record parses, the
 # projections match it, every fallback chain ends, every var() resolves —

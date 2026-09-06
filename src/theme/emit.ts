@@ -63,8 +63,12 @@ export function mintedRoles(log: readonly Decision[]): Record<string, string> {
 
 export function emitTokens(root: string, opts: { dryRun?: boolean; ledger?: Ledger; log?: readonly Decision[] } = {}): EmitResult {
 
-  const DARK = OBSIDIAN
+  // The two grounds are the house seeds with the one bit each way; `:root`
+  // carries whichever ground the house decided, so a page without the
+  // attribute is the house.
+  const DARK = PRESETS.Obsidian
   const LIGHT = PRESETS.Gallery
+  const HOUSE = OBSIDIAN.appearance
   const minted = mintedRoles(opts.log ?? readAll(root))
   const fallbacks = fallbacksFor(minted)
   const theme = (seeds: ThemeSeeds) => ({ ...generateTheme(seeds), ...minted })
@@ -103,29 +107,29 @@ export function emitTokens(root: string, opts: { dryRun?: boolean; ledger?: Ledg
   const css = `/* ============================================================
    STRATA · TIER 2 — SEMANTIC ROLES · GENERATED FILE
    Do not edit. This file is a projection of src/theme/generateTheme.ts
-   compiled from the Obsidian (dark) and Gallery (light) seed sets,
-   through the decisions in src/theme/ledger.json — a cut token is
-   emitted as its fallback, with the decision beside it.
+   compiled from the house seeds on both grounds — Gallery (light) and
+   Obsidian (dark) — through the decisions in src/theme/ledger.json; a
+   cut token is emitted as its fallback, with the decision beside it.
+   :root carries the ground the house decided (${HOUSE}).
    Regenerate with: npm run tokens
    ============================================================ */
 
-:root,
-[data-theme='dark'] {
-  color-scheme: dark;
-${block(dark.tokens, isColor)}
-}
-
-[data-theme='light'] {
+${HOUSE === 'light' ? ':root,\n' : ''}[data-theme='light'] {
   color-scheme: light;
 ${block(light.tokens, isColor)}
 }
 
+${HOUSE === 'dark' ? ':root,\n' : ''}[data-theme='dark'] {
+  color-scheme: dark;
+${block(dark.tokens, isColor)}
+}
+
 :root {
-  /* ---- Engine-derived rhythm, motion, shape (Obsidian defaults) ---- */
-${block(dark.tokens, (p) => !isColor(p) && !againstPrimitive(p))}
+  /* ---- Engine-derived rhythm, motion, shape (house defaults) ---- */
+${block((HOUSE === 'light' ? light : dark).tokens, (p) => !isColor(p) && !againstPrimitive(p))}
 
   /* ---- Roles held against a Tier 1 primitive, and the names usage earned ---- */
-${block(dark.tokens, againstPrimitive)}
+${block((HOUSE === 'light' ? light : dark).tokens, againstPrimitive)}
 }
 
 @media (prefers-reduced-motion: reduce) {

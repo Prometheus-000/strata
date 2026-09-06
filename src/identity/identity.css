@@ -1,0 +1,358 @@
+/**
+ * The identity page. Imported last so it lands after site.css in dev and in
+ * the build alike. Tokens only: one face, mono for what is read as data,
+ * lines not shadows, two radii, and no colour of its own — the canvases are
+ * transparent, so the ground is the page's and the ink is the theme's.
+ */
+body {
+  margin: 0;
+}
+
+/* ---------- the opening: the field is the ground ---------- */
+.identity-open {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+.identity-open__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.identity-open__nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: var(--strata-space-5);
+  padding-block: var(--strata-space-5);
+  pointer-events: none;
+}
+.identity-open__nav a {
+  pointer-events: auto;
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  font-weight: 500;
+  letter-spacing: var(--strata-tracking-caps);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-decoration: none;
+  transition: color var(--motion-fast) var(--motion-ease);
+}
+.identity-open__nav a:hover,
+.identity-open__nav a:focus-visible {
+  color: var(--ink);
+}
+.identity-open__text {
+  position: relative;
+  padding-block: clamp(3rem, 8vh, 6rem);
+  pointer-events: none;
+  width: 100%;
+}
+.identity-open__text > * {
+  pointer-events: auto;
+}
+.identity-open__brand {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--strata-space-4);
+}
+.identity-open__mark {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--strata-text-4xl);
+  letter-spacing: var(--strata-tracking-tight);
+  line-height: 1;
+  color: var(--ink);
+}
+.identity-open__brand .appearance-dot {
+  width: 28px;
+  height: 28px;
+  margin-left: 2px;
+  align-self: flex-end;
+  margin-bottom: 0.3em;
+}
+.identity-open__brand .appearance-dot > span {
+  width: 9px;
+  height: 9px;
+}
+.identity-open__lede {
+  font-size: var(--strata-text-lg);
+  font-weight: 500;
+  line-height: var(--strata-leading-snug);
+  letter-spacing: var(--strata-tracking-normal);
+  color: var(--ink);
+  max-width: 30ch;
+  margin: 0 0 var(--strata-space-5);
+  text-wrap: balance;
+}
+.identity-open__note {
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  font-weight: 500;
+  letter-spacing: var(--strata-tracking-caps);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0;
+}
+
+/* ---------- the trip ---------- */
+.identity-trip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--strata-space-5);
+}
+@media (max-width: 960px) {
+  .identity-trip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 520px) {
+  .identity-trip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.identity-station {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--strata-space-3);
+}
+.identity-station__frame {
+  position: relative;
+  aspect-ratio: 1;
+  border: var(--strata-border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  overflow: hidden;
+}
+.identity-station__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.identity-station__tiny {
+  position: absolute;
+  right: var(--strata-space-3);
+  bottom: var(--strata-space-3);
+  width: 16px;
+  height: 16px;
+}
+.identity-station__tiny canvas {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+.identity-station figcaption,
+.identity-scale__item figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: var(--strata-space-1);
+}
+.identity-station__name {
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  font-weight: 500;
+  letter-spacing: var(--strata-tracking-caps);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.identity-station__note {
+  font-size: var(--strata-text-sm);
+  line-height: var(--strata-leading-normal);
+  color: var(--ink-muted);
+}
+
+/* ---------- time ---------- */
+.identity-time {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--strata-space-6) var(--strata-space-7);
+  align-items: end;
+}
+@media (max-width: 720px) {
+  .identity-time {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.identity-time__controls {
+  display: flex;
+  gap: var(--strata-space-2);
+}
+.identity-time__scrub {
+  width: 100%;
+}
+.identity-receipt {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--strata-space-4) var(--strata-space-6);
+  margin: 0;
+  padding-top: var(--strata-space-5);
+  border-top: var(--strata-border-hair) solid var(--line);
+}
+.identity-receipt > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--strata-space-1);
+  min-width: 0;
+}
+.identity-receipt dt {
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  font-weight: 700;
+  letter-spacing: var(--strata-tracking-caps);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.identity-receipt dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-sm);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- scale ---------- */
+.identity-scale {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--strata-space-5);
+}
+@media (max-width: 960px) {
+  .identity-scale {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.identity-scale__item {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--strata-space-3);
+}
+.identity-scale__box {
+  aspect-ratio: 1;
+  border: var(--strata-border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.identity-scale__box--favicon canvas {
+  width: 32px;
+  height: 32px;
+  display: block;
+}
+.identity-scale__box--mark img {
+  display: block;
+  width: 160px;
+  height: 160px;
+  max-width: 70%;
+  max-height: 70%;
+}
+.identity-scale__box--loading canvas {
+  width: 56%;
+  height: 56%;
+  display: block;
+}
+.identity-scale__box--full {
+  text-decoration: none;
+  color: var(--ink-muted);
+  font-size: var(--strata-text-sm);
+  font-weight: 600;
+  transition: color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
+}
+.identity-scale__box--full:hover,
+.identity-scale__box--full:focus-visible {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+/* ---------- rules ---------- */
+.identity-rules {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: var(--strata-space-5) var(--strata-space-7);
+  counter-reset: rule;
+}
+.identity-rules li {
+  counter-increment: rule;
+  font-size: var(--strata-text-sm);
+  line-height: var(--strata-leading-normal);
+  color: var(--ink-muted);
+  padding-top: var(--strata-space-3);
+  border-top: var(--strata-border-hair) solid var(--line);
+}
+.identity-rules li::before {
+  content: counter(rule, decimal-leading-zero);
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  letter-spacing: var(--strata-tracking-caps);
+  color: var(--ink-faint);
+  margin-bottom: var(--strata-space-2);
+}
+.identity-rules strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------- foot ---------- */
+.identity-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--strata-space-4) var(--strata-space-6);
+  padding-block: var(--strata-space-7);
+  border-top: var(--strata-border-hair) solid var(--line);
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  letter-spacing: var(--strata-tracking-wide);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.identity-foot a {
+  color: var(--ink-muted);
+  text-decoration: none;
+  margin-left: auto;
+}
+.identity-foot a:hover {
+  color: var(--ink);
+}
+
+/* ---------- the installation ---------- */
+.identity-full {
+  position: fixed;
+  inset: 0;
+  background: var(--surface-page);
+}
+.identity-full__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.identity-full__exit {
+  position: absolute;
+  left: var(--strata-space-5);
+  bottom: var(--strata-space-5);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--strata-text-sm);
+  letter-spacing: var(--strata-tracking-tight);
+  color: var(--ink-faint);
+  text-decoration: none;
+  transition: color var(--motion-fast) var(--motion-ease);
+}
+.identity-full__exit:hover,
+.identity-full__exit:focus-visible {
+  color: var(--ink);
+}

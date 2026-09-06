@@ -25,36 +25,15 @@ import LEDGER from '../theme/ledger.json'
 import { ThemeLab } from './ThemeLab'
 import { Console } from './Console'
 import './site.css'
+import { AppearanceDot } from './AppearanceDot'
+import { Identity } from '../identity/Identity'
+import { useIdentity } from '../identity/useIdentity'
 
 
 /* Links between pages follow the deploy base, so the same build serves at / and at /<repo>/. */
 const BASE = import.meta.env.BASE_URL
 
 /* ---------- Top bar ---------- */
-/* Appearance, on a mark rather than a switch. The dot after the wordmark is
-   the door and the state: faint ink when the theme is monochrome, the accent
-   when there is one. One click flips the ground; the Theme Lab holds the rest. */
-function AppearanceDot() {
-  const { seeds, setSeeds } = useTheme()
-  const dark = seeds.appearance === 'dark'
-  const dot = seeds.chroma > 0
-    ? themeTokens(generateTheme(seeds), LEDGER as Ledger, 'value')['--accent']
-    : undefined
-  return (
-    <button
-      className="appearance-dot"
-      type="button"
-      title={dark ? 'Appearance: dark — switch to light' : 'Appearance: light — switch to dark'}
-      aria-label={dark ? 'Switch to light appearance' : 'Switch to dark appearance'}
-      aria-pressed={!dark}
-      style={dot ? ({ ['--dot' as string]: dot } as React.CSSProperties) : undefined}
-      onClick={() => setSeeds((prev) => ({ ...prev, appearance: dark ? 'light' : 'dark' }))}
-    >
-      <span />
-    </button>
-  )
-}
-
 function TopBar() {
   return (
     <header className="topbar">
@@ -77,11 +56,27 @@ function TopBar() {
 }
 
 /* ---------- Hero ---------- */
+/* The ground of the hero is the identity: the record, drawn as a field. It
+   replays once on load, holds, bends under the pointer, and takes a click as
+   a decision — on the dev server, one that reaches the record. The bloom that
+   used to sit here was a picture of depth; this is the depth. */
 function Hero() {
+  const { state, palette, pb, pick, heroOpts } = useIdentity()
   return (
     <section className="hero" id="top">
-      <div className="hero__mesh" aria-hidden />
-      <div className="wrap">
+      <Identity
+        projection="contours"
+        state={state}
+        t={pb.t}
+        opts={heroOpts}
+        palette={palette}
+        presence={pb.presence}
+        label="Strata, the field"
+        className="hero__field"
+        onPointer={pb.setPointer}
+        onPick={pick}
+      />
+      <div className="wrap hero__body">
         <Reveal>
           <span className="hero__kicker">A design system for AI product teams · v0.2</span>
         </Reveal>

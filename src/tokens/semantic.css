@@ -1,41 +1,14 @@
 /* ============================================================
    STRATA · TIER 2 — SEMANTIC ROLES · GENERATED FILE
    Do not edit. This file is a projection of src/theme/generateTheme.ts
-   compiled from the Obsidian (dark) and Gallery (light) seed sets,
-   through the decisions in src/theme/ledger.json — a cut token is
-   emitted as its fallback, with the decision beside it.
+   compiled from the house seeds on both grounds — Gallery (light) and
+   Obsidian (dark) — through the decisions in src/theme/ledger.json; a
+   cut token is emitted as its fallback, with the decision beside it.
+   :root carries the ground the house decided (light).
    Regenerate with: npm run tokens
    ============================================================ */
 
 :root,
-[data-theme='dark'] {
-  color-scheme: dark;
-  --surface-page: oklch(0.170 0.014 236.0);
-  --surface-sunken: oklch(0.140 0.013 236.0);
-  --surface-raised: oklch(0.210 0.016 236.0);
-  --surface-overlay: oklch(0.240 0.017 236.0);
-  --surface-veil: oklch(0.100 0.014 236.0 / 0.62);
-  --ink: oklch(0.940 0.008 236.0);
-  --ink-muted: oklch(0.720 0.012 236.0);
-  --ink-faint: oklch(0.540 0.012 236.0);
-  --ink-inverse: oklch(0.160 0.010 236.0);
-  --accent: oklch(0.930 0.000 250.0);
-  --accent-strong: oklch(0.990 0.000 250.0);
-  --accent-ink: oklch(0.160 0.000 250.0);
-  --accent-soft: oklch(0.930 0.000 250.0 / 0.14);
-  --accent-line: oklch(0.930 0.000 250.0 / 0.45);
-  --line: oklch(0.940 0.008 236.0 / 0.12);
-  --line-strong: oklch(0.940 0.008 236.0 / 0.24);
-  --focus-ring: oklch(0.930 0.000 250.0 / 0.70);
-  --positive: oklch(0.780 0.160 150.0);
-  --warning: oklch(0.820 0.150 80.0);
-  --danger: oklch(0.680 0.190 22.0);
-  --positive-soft: oklch(0.780 0.160 150.0 / 0.15);
-  --warning-soft: oklch(0.820 0.150 80.0 / 0.15);
-  --danger-soft: oklch(0.680 0.190 22.0 / 0.15);
-  --shadow-color: transparent; /* cut by human prometheus-000: Lines, not shadows. The reference grammar — the portfolio and Visionary alike — draws every level with a 1px rule and an alpha wash, and paints no drop shadow anywhere; a shadow is decoration the eye pays for on every card. The elevation tokens keep their offsets and paint nothing, so the rule does the work it was already doing. */
-}
-
 [data-theme='light'] {
   color-scheme: light;
   --surface-page: oklch(0.970 0.014 236.0);
@@ -64,8 +37,36 @@
   --shadow-color: transparent; /* cut by human prometheus-000: Lines, not shadows. The reference grammar — the portfolio and Visionary alike — draws every level with a 1px rule and an alpha wash, and paints no drop shadow anywhere; a shadow is decoration the eye pays for on every card. The elevation tokens keep their offsets and paint nothing, so the rule does the work it was already doing. */
 }
 
+[data-theme='dark'] {
+  color-scheme: dark;
+  --surface-page: oklch(0.170 0.014 236.0);
+  --surface-sunken: oklch(0.140 0.013 236.0);
+  --surface-raised: oklch(0.210 0.016 236.0);
+  --surface-overlay: oklch(0.240 0.017 236.0);
+  --surface-veil: oklch(0.100 0.014 236.0 / 0.62);
+  --ink: oklch(0.940 0.008 236.0);
+  --ink-muted: oklch(0.720 0.012 236.0);
+  --ink-faint: oklch(0.540 0.012 236.0);
+  --ink-inverse: oklch(0.160 0.010 236.0);
+  --accent: oklch(0.930 0.000 250.0);
+  --accent-strong: oklch(0.990 0.000 250.0);
+  --accent-ink: oklch(0.160 0.000 250.0);
+  --accent-soft: oklch(0.930 0.000 250.0 / 0.14);
+  --accent-line: oklch(0.930 0.000 250.0 / 0.45);
+  --line: oklch(0.940 0.008 236.0 / 0.12);
+  --line-strong: oklch(0.940 0.008 236.0 / 0.24);
+  --focus-ring: oklch(0.930 0.000 250.0 / 0.70);
+  --positive: oklch(0.780 0.160 150.0);
+  --warning: oklch(0.820 0.150 80.0);
+  --danger: oklch(0.680 0.190 22.0);
+  --positive-soft: oklch(0.780 0.160 150.0 / 0.15);
+  --warning-soft: oklch(0.820 0.150 80.0 / 0.15);
+  --danger-soft: oklch(0.680 0.190 22.0 / 0.15);
+  --shadow-color: transparent; /* cut by human prometheus-000: Lines, not shadows. The reference grammar — the portfolio and Visionary alike — draws every level with a 1px rule and an alpha wash, and paints no drop shadow anywhere; a shadow is decoration the eye pays for on every card. The elevation tokens keep their offsets and paint nothing, so the rule does the work it was already doing. */
+}
+
 :root {
-  /* ---- Engine-derived rhythm, motion, shape (Obsidian defaults) ---- */
+  /* ---- Engine-derived rhythm, motion, shape (house defaults) ---- */
   --motion-instant: 96ms;
   --motion-fast: 192ms;
   --motion-base: 313ms;

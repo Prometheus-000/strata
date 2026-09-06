@@ -14,6 +14,7 @@ import { dirname, join } from 'node:path'
 import { runSubstrate, SUBSTRATE_COMMANDS } from '../substrate/src/cli.ts'
 import { runTheme, THEME_COMMANDS } from '../src/theme/cli.ts'
 import { registerTheme } from '../src/theme/handlers.ts'
+import { registerIdentity } from '../src/identity/handler.ts'
 import { runMalleable, MALLEABLE_COMMANDS } from '../strata-malleable/src/cli.ts'
 import { registerMalleable } from '../strata-malleable/src/decide/index.ts'
 import { registerProse } from '../substrate/src/prose.ts'
@@ -36,6 +37,7 @@ const MALLEABLE_HOME = {
 // Every projection this product has, registered before any command runs, so
 // `import`, `rebuild` and the checks see all of them.
 registerTheme({ root: ROOT })
+registerIdentity()
 registerMalleable({ root: MALLEABLE_HOME.root, source: MALLEABLE_HOME.source })
 // Prose last: the verbs it checks against are the ones the two above just registered.
 registerProse(ROOT, PROSE)
