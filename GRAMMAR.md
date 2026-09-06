@@ -64,6 +64,19 @@ want them. Every rule here carries `"scope": "product"` in `grammar/rules.json`,
 `strata check` says which is which, because a reader who cannot tell them apart reads this
 product's preference for two radii as the system's law.
 
+**What appears to be a monochromatic theme is really a vehicle for infinite creativity.** Those
+are the owner's words, and they are the reason under every rule below; for a year it went
+unwritten. The voice comes from Visionary, and Visionary is monochrome because it is a canvas: a
+blank ground for creating beauty on top of. The restraint
+governs the frame — panels, labels, type, controls — so that the work inside the frame can carry
+material, light, depth and colour without competing with anything. A picture held to the frame's
+rules is a canvas with nothing on it. What the picture may carry is still bound to something real
+— the record, the theme in force — but quiet is the frame's obligation, not the picture's. The
+incident that earned this sentence is the identity itself: for a day the record was drawn as ink
+hairlines on paper, because an agent read the rules below and, lacking this one, applied them to
+the picture. That is the grammar's own claim about rules without reasons, demonstrated on the
+grammar.
+
 What is worth keeping is the shape, not the content: a taste is a set of decisions with
 reasons, written the way everything else here is. It is enacted in three places, none of them
 a stylesheet: the `Obsidian` seeds in `generateTheme.ts`, the decisions in

@@ -5,3 +5,5 @@ strata.md
 *.tsbuildinfo
 .claude/launch.json.bak
 bench/runs/
+# A local lab for explorations of the identity in three dimensions; not a projection, not shipped.
+explorations/

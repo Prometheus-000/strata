@@ -112,6 +112,16 @@
       "check": "none"
     },
     {
+      "id": "voice.canvas",
+      "authority": "policy",
+      "statement": "What appears to be a monochromatic theme is really a vehicle for infinite creativity. Every rule in this section governs the frame — panels, labels, type, controls — and none of them governs the work inside it.",
+      "reason": "The voice comes from Visionary, and Visionary is monochrome because it is a canvas: a blank ground for creating beauty on top of. The restraint buys the picture its range — material, light, depth, colour — and a picture held to the frame’s rules is a canvas with nothing on it. What the picture may carry is still bound to something real (the record, the theme in force); what it may not be is quiet for the frame’s sake.",
+      "incident": "For a day in September 2026 the identity — the record drawn as a field — was drawn in ink hairlines on paper, because this section stated the voice’s rules and never their reason, and an agent applied the chrome’s restraint to the picture. The owner made the canvas explicit on 2026-09-06; it had never been written down, and the grammar’s own claim is that a rule without its reason produces exactly this.",
+      "source": "GRAMMAR.md › The voice › What appears to be a monochromatic theme",
+      "scope": "product",
+      "check": "none"
+    },
+    {
       "id": "voice.one-family",
       "authority": "policy",
       "statement": "One family. Hierarchy is weight, size and measure — never a second voice.",

@@ -507,8 +507,8 @@ Four kinds of statement, and they do not carry the same authority:
 | **Precedent** | "37 instances, 3 hands, converged on 12px." | Computed from the record. Never declared. Candidacy is the computed part; promoting a candidate is a decision. |
 
 Most policy is *cited*, not evaluated, and the count belongs here rather than
-in a footnote. Of 35 rules, four are invariants and 31 are not; thirteen of those 31
-have an evaluator that speaks for them, and the other eighteen say
+in a footnote. Of 36 rules, four are invariants and 32 are not; thirteen of those 32
+have an evaluator that speaks for them, and the other nineteen say
 `"check": "none"` in `grammar/rules.json` and are carried into skill packets
 to be read by a hand. `strata check` prints that count under CITED, NOT
 EVALUATED, because a rule nothing evaluates is silent, and silence is easily
