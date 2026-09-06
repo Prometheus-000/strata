@@ -94,7 +94,7 @@ A design that is different is evidence, not an error.
 npm run dev
 ```
 
-One server, five pages — open <http://localhost:5173>:
+One server, six pages — open <http://localhost:5173>:
 
 | Page | What it is |
 | --- | --- |
@@ -103,6 +103,7 @@ One server, five pages — open <http://localhost:5173>:
 | `/malleable.html` | **The malleable layer.** A live page you change by hand. Drag a corner and it is an override; drag a region into another landmark and the JSX rewrites itself; pick a value on a component's own control and the attribute is rewritten. The promote control asks one question — how far does this go — in four words. |
 | `/lab.html` | **The Theme Lab, alone.** The same instrument without the hub around it, for a frame that only has room for one. |
 | `/identity.html` | **The identity.** The record drawn as a field: one state, four projections, from the literal to the abstract. Move to disturb it; click to decide. `?full` is the field alone; `?seed=7` runs a synthetic record. |
+| `/sky.html` | **The sky.** The same record with depth: every record at a distance, one record as a galaxy, its families as systems, each target a planet, each decision a moon. One zoom; click a body to fly to it. |
 
 The dev server **writes through**: every one of those gestures appends a
 decision to `.strata/decisions.jsonl` in this repo. The published static site
@@ -372,7 +373,7 @@ every write names two hands, takes --why "…", and accepts --dry
 ```
 
 ```bash
-npm run dev       # the five pages
+npm run dev       # the six pages
 npm run identity  # the favicon and the mark, from the record
 npm test          # substrate + root + malleable
 npm run check     # what happened

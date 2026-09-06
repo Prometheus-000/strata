@@ -120,6 +120,7 @@ export function Trip() {
         />
         <nav className="wrap identity-open__nav" aria-label="Pages">
           <a href={BASE}>Hub</a>
+          <a href={`${BASE}sky.html`}>The sky</a>
           <a href={`${BASE}identity.html?full${synthetic ? `&seed=${seedParam}` : ''}`}>Installation</a>
           {synthetic ? <a href={`${BASE}identity.html`}>The record</a> : <a href={`${BASE}identity.html?seed=7`}>A synthetic record</a>}
         </nav>

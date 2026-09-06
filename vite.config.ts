@@ -5,10 +5,11 @@ import { malleableDevPlugin } from './strata-malleable/src/store/server'
 import { registerIdentity } from './src/identity/handler'
 
 /**
- * One server, five surfaces: the showcase, the personalizer, the malleable
- * layer's harness, the lab on its own for embedding, and the identity — the
- * record projected as a field. They used to be separate dev servers on
- * separate ports, which is several places to find the same idea.
+ * One server, six surfaces: the showcase, the personalizer, the malleable
+ * layer's harness, the lab on its own for embedding, the identity — the
+ * record projected as a field — and the sky, the same record with depth.
+ * They used to be separate dev servers on separate ports, which is several
+ * places to find the same idea.
  *
  * Two things make that safe. React is deduped, because the library carries
  * its own node_modules and a harness resolving a second React copy breaks
@@ -40,6 +41,7 @@ export default defineConfig({
         malleable: resolve(__dirname, 'malleable.html'),
         lab: resolve(__dirname, 'lab.html'),
         identity: resolve(__dirname, 'identity.html'),
+        sky: resolve(__dirname, 'sky.html'),
       },
     },
   },

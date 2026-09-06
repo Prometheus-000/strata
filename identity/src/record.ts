@@ -26,6 +26,7 @@
  */
 import { handText, problemsWith, targetKey, type Decision } from '@strata/substrate/decision'
 import { DEVIATION_W, GENERIC_W, append, clamp01, deviationPosition, emptyState, positionFor, type IdentityEvent, type IdentityState, type Receipt, type Vec } from './field.ts'
+import { skyFrom, type Sky, type Vec3 } from './sky.ts'
 
 /**
  * The file a mark on the identity is declared against. A visitor's click is a
@@ -197,3 +198,33 @@ export function syntheticStream(seed: number, count = 48): Decision[] {
   }
   return out
 }
+
+/* ---------- the sky: what a decision's system and target are called ---------- */
+
+/**
+ * The two levels between a record and a decision's moons, named from the
+ * decision's kind: a token's family and the token; a selector and its
+ * property; a component and its prop; a file and its line. The engine's
+ * `skyFrom` places them; this is only the naming.
+ */
+export function pathOf(d: Decision): [string, string] {
+  switch (d.kind) {
+    case 'token': {
+      const family = d.token.replace(/^--/, '').split('-')[0]
+      return [`--${family}`, d.token]
+    }
+    case 'override':
+      return [d.selector, `${d.selector} ${d.property}`]
+    case 'prop':
+      return [d.component, `${d.component}.${d.prop}`]
+    case 'move':
+      return ['regions', d.region]
+    case 'deviation':
+      return [d.file, `${d.file}:${d.line}`]
+    default:
+      return ['the record', d.kind]
+  }
+}
+
+/** A record as a sky, centred where the caller says. */
+export const skyOf = (name: string, decisions: readonly Decision[], centre?: Vec3): Sky => skyFrom(name, stateFrom(decisions), decisions.map(pathOf), centre)

@@ -19,7 +19,7 @@ import { fallbacksFor, FALLBACKS, themeTokens } from './ledger'
 import { mintedRoles, readLedger, SEMANTIC_PATH } from './emit'
 import { COLOR_LITERAL } from './handlers'
 
-export const SCAN_DIRS = ['src/components', 'src/site', 'src/personalize', 'src/identity']
+export const SCAN_DIRS = ['src/components', 'src/site', 'src/personalize', 'src/identity', 'src/sky']
 const EXTS = ['.css', '.tsx', '.ts']
 const TOKEN_DIRS = ['src/tokens']
 

@@ -1,0 +1,187 @@
+/**
+ * The sky page. Imported last so it lands after site.css in dev and in the
+ * build alike. The sky is the picture and keeps its own ground; everything
+ * here is the frame, and the frame is tokens only: one face, mono for what
+ * is read as data, hairlines, two radii.
+ */
+body {
+  margin: 0;
+  overflow: hidden;
+}
+.sky {
+  position: fixed;
+  inset: 0;
+}
+.sky__stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+.sky__labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.sky-label {
+  pointer-events: auto;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  letter-spacing: var(--strata-tracking-wide);
+  white-space: nowrap;
+  transform: translate(10px, -50%);
+  transition: opacity var(--motion-fast) var(--motion-ease);
+  /* The labels sit on the night, so they take the night's ink: the accent-free ink pole of a dark ground. */
+  color: var(--sky-ink, var(--ink-faint));
+  opacity: 0.75;
+}
+.sky-label:hover {
+  opacity: 1;
+}
+.sky-label--record {
+  text-transform: uppercase;
+  letter-spacing: var(--strata-tracking-caps);
+  opacity: 0.9;
+}
+
+/* ---------- the frame ---------- */
+.sky__panel {
+  position: absolute;
+  top: clamp(16px, 3vw, 32px);
+  left: clamp(16px, 3vw, 32px);
+  width: min(17rem, calc(100vw - 2 * clamp(16px, 3vw, 32px)));
+  max-height: calc(100vh - 2 * clamp(16px, 3vw, 32px));
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--strata-space-4);
+  padding: var(--strata-space-5);
+  border: var(--strata-border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  background: color-mix(in oklch, var(--surface-page) 88%, transparent);
+  backdrop-filter: blur(10px);
+  color: var(--ink);
+}
+.sky__brand {
+  display: flex;
+  align-items: center;
+}
+.sky__mark {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--strata-text-lg);
+  letter-spacing: var(--strata-tracking-tight);
+  color: var(--ink);
+  text-decoration: none;
+}
+.sky__kicker,
+.sky__readout dt,
+.sky__mass,
+.sky__nav a {
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  font-weight: 500;
+  letter-spacing: var(--strata-tracking-caps);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.sky__title {
+  font-family: var(--font-display);
+  font-size: var(--strata-text-lg);
+  font-weight: 600;
+  letter-spacing: var(--strata-tracking-tight);
+  line-height: 1.15;
+  margin: 0;
+}
+.sky__lede {
+  font-size: var(--strata-text-sm);
+  line-height: var(--strata-leading-normal);
+  color: var(--ink-muted);
+  margin: 0;
+}
+.sky__readout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--strata-space-3);
+  margin: 0;
+  padding-top: var(--strata-space-4);
+  border-top: var(--strata-border-hair) solid var(--line);
+}
+.sky__readout > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--strata-space-1);
+}
+.sky__readout dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--strata-text-xs);
+  color: var(--ink);
+}
+.sky__readout dd.sky__level {
+  font-family: var(--font-display);
+  font-size: var(--strata-text-lg);
+  font-weight: 600;
+  letter-spacing: var(--strata-tracking-tight);
+}
+.sky__records {
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--strata-space-4);
+  border-top: var(--strata-border-hair) solid var(--line);
+}
+.sky__records button {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--strata-space-3);
+  font: inherit;
+  font-size: var(--strata-text-sm);
+  text-align: left;
+  color: var(--ink-muted);
+  background: none;
+  border: 0;
+  border-bottom: var(--strata-border-hair) solid var(--line);
+  padding: var(--strata-space-2) 0;
+  cursor: pointer;
+  transition: color var(--motion-fast) var(--motion-ease);
+}
+.sky__records button:hover,
+.sky__records button:focus-visible {
+  color: var(--ink);
+}
+.sky__home {
+  font: inherit;
+  font-size: var(--strata-text-xs);
+  font-weight: 600;
+  letter-spacing: var(--strata-tracking-wide);
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  background: none;
+  border: var(--strata-border-hair) solid var(--line);
+  border-radius: var(--radius-interactive);
+  padding: var(--strata-space-2) var(--strata-space-3);
+  cursor: pointer;
+  transition: color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
+}
+.sky__home:hover,
+.sky__home:focus-visible {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+.sky__nav {
+  display: flex;
+  gap: var(--strata-space-4);
+}
+.sky__nav a {
+  text-decoration: none;
+  transition: color var(--motion-fast) var(--motion-ease);
+}
+.sky__nav a:hover,
+.sky__nav a:focus-visible {
+  color: var(--ink);
+}

@@ -647,6 +647,17 @@ no dependencies of its own; the adapter from the record sits beside it in
 field of their own from it. The rules, with their reasons, are the header of
 `identity/src/field.ts`.
 
+The sky is the field's counterpart. `sky.html` reads the same record with
+depth: every record the engine can draw at a distance, one record as a
+galaxy, its token families and selectors as systems, each target a planet
+massed by the decisions made on it, and each decision a moon in time order.
+One continuous zoom joins them, and the one rule that makes it possible is a
+hierarchical address — a place inside a place, the same hash rule applied at
+each level, so the same target always lands in the same spot inside the same
+system. The neighbours are synthetic records and say so; the only real one is
+this product's. That rule lives in `identity/src/sky.ts`; what a decision's
+system and target are called is the adapter's, in `identity/src/record.ts`.
+
 ## Examples
 
 **A token is cut.** A person decides; the projections regenerate in the same
@@ -765,7 +776,7 @@ the malleable layer
 
 ```bash
 npm install                # links the substrate into both packages
-npm run dev                # one server, five pages: /, /personalize.html, /malleable.html, /lab.html, /identity.html
+npm run dev                # one server, six pages: /, /personalize.html, /malleable.html, /lab.html, /identity.html, /sky.html
 npm run identity           # the favicon and the mark, projected from the record
 npx strata check           # what happened
 npx strata explain token:--shadow-color

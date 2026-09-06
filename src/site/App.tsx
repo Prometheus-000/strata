@@ -129,6 +129,18 @@ const SURFACES = [
     cta: 'open',
   },
   {
+    tag: 'THE IDENTITY',
+    what: 'The record drawn as a field: one state, four projections, from the literal to the abstract. Move to disturb it; click to decide. The same field is the ground of this page.',
+    href: `${BASE}identity.html`,
+    cta: 'open',
+  },
+  {
+    tag: 'THE SKY',
+    what: 'The same record with depth. Every record the engine can draw at a distance, one record as a galaxy, its families as systems, each target a planet, each decision a moon. One zoom.',
+    href: `${BASE}sky.html`,
+    cta: 'open',
+  },
+  {
     tag: 'MALLEABLE LAYER',
     what: 'Drag a corner or an edge on a live node and answer one question — how far does this go — in four words. Drag a region into another landmark and the JSX rewrites itself; the diff is the record. Un-promoted drift is the finding, and it is counted.',
     href: `${BASE}malleable.html`,
@@ -140,7 +152,7 @@ function Surfaces() {
   return (
     <Section
       kicker="Surfaces"
-      title="Three instruments. One record."
+      title="Five instruments. One record."
       sub="Each surface is a host for one library, and each library is provable without a browser. This page is the one place they are all reachable from."
       id="surfaces"
     >
