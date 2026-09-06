@@ -65,6 +65,8 @@ export function Sky() {
     if (!canvas.current || !labels.current) return
     const s = mountSky(canvas.current, labels.current, { skies: all, palette: night, paletteFor, onReadout: setReadout, reduced })
     scene.current = s
+    // On the dev server, a harness can drive the sky: the record's skies and the scene, and nothing else.
+    if (import.meta.env.DEV) Object.assign(window, { __sky: { scene: s, skies: all } })
     return () => {
       s.dispose()
       scene.current = null

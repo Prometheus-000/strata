@@ -3,8 +3,8 @@ import path from 'node:path'
 import { test } from 'node:test'
 import { readAll } from '@strata/substrate/log'
 import { targetKey, type Decision } from '@strata/substrate/decision'
-import { direction, dist3, levelFor, neighbourCentre, R_MOON, R_RECORD, R_SYSTEM, R_TARGET, skyFrom } from '@strata/identity/sky'
-import { pathOf, skyOf, stateFrom, syntheticStream } from '@strata/identity/record'
+import { direction, dist3, levelFor, neighbourCentre, PLANE_SCALE, R_MOON, R_RECORD, R_SYSTEM, R_TARGET, skyFrom } from '@strata/identity/sky'
+import { deriveEvents, pathOf, skyOf, stateFrom, syntheticStream } from '@strata/identity/record'
 
 const REPO = path.join(path.dirname(new URL(import.meta.url).pathname), '..')
 
@@ -85,4 +85,24 @@ test('the readout names the level a distance is at, from the supercluster in to 
   assert.equal(levelFor(R_SYSTEM * 2).name, 'system')
   assert.equal(levelFor(R_TARGET * 2).name, 'planet')
   assert.equal(levelFor(R_TARGET * 0.5).name, 'moons')
+})
+
+test('the sky from above is the field: every target sits in the sky at the place the field gives it, scaled and centred', () => {
+  const decisions = syntheticStream(7)
+  const sky = skyOf('the record', decisions)
+  const events = deriveEvents(decisions)
+  for (const tgt of sky.targets) {
+    const moon = tgt.children[0]
+    const ev = events[moon.index ?? -1]
+    if (ev.kind === 'deviation') continue // a mark on the identity is placed by the hand, not the address
+    const expectX = (ev.p[0] - 0.5) * PLANE_SCALE
+    const expectY = -(ev.p[1] - 0.5) * PLANE_SCALE
+    assert.ok(Math.abs(tgt.pos[0] - expectX) < 1e-9 && Math.abs(tgt.pos[1] - expectY) < 1e-9, `${tgt.name}: sky (${tgt.pos[0]}, ${tgt.pos[1]}) vs field (${expectX}, ${expectY})`)
+  }
+  // The same target lands in the same place in every record.
+  const other = skyOf('an adopter', syntheticStream(11), [4, 0, 0])
+  const shared = sky.targets.find((t) => other.targets.some((o) => o.name === t.name))
+  assert.ok(shared, 'the two synthetic records share a target')
+  const twin = other.targets.find((o) => o.name === shared.name)!
+  assert.ok(Math.abs(twin.pos[0] - 4 - shared.pos[0]) < 1e-9 && Math.abs(twin.pos[1] - shared.pos[1]) < 1e-9)
 })

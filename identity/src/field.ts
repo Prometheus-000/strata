@@ -11,7 +11,11 @@
  *
  *   - The state is the record. There is `append` and there is no remove.
  *   - Every decision has a place, and the same target always lands in the
- *     same place. Precedent is visible without being declared.
+ *     same place. Precedent is visible without being declared. The address
+ *     is hierarchical: a target's place is inside its system's place — a
+ *     token inside its family, a property inside its selector, a line
+ *     inside its file — so families are regions, and the sky, which reads
+ *     the same address with depth, is this field seen from above.
  *   - Time is sequence, not the clock. Two builds of one record look alike.
  *   - Age spreads and settles; it never erases. Amplitude decays to a floor,
  *     radius grows. An old decision is broad, low relief.
@@ -215,7 +219,44 @@ export function positionFor(key: string): Vec {
   return [lerp(INSET, 1 - INSET, x), lerp(INSET, 1 - INSET, y)]
 }
 
-/** A deviation lands on the outer ring, away from whatever it left. */
+/**
+ * THE ADDRESS. A system — a token family, a selector, a component, a file —
+ * has a place in the plane, and a target has a place inside its system's
+ * neighbourhood. The same two hashes give the sky its plane; depth is a
+ * third. `positionFor` above is the flat address the field began with, kept
+ * for a caller that has only a key.
+ */
+export const SYSTEM_RADIUS = 0.1
+/** Systems keep this far from the edge, so their neighbourhoods stay inside the square. */
+export const SYSTEM_INSET = 0.14
+
+/** Where a system lives in the plane. */
+export function systemPlace(system: string): Vec {
+  const x = unit(fnv1a(`system:${system}`))
+  const y = unit(fnv1a(`system:${system} y`))
+  return [lerp(SYSTEM_INSET, 1 - SYSTEM_INSET, x), lerp(SYSTEM_INSET, 1 - SYSTEM_INSET, y)]
+}
+
+/** The offset of a target inside its system's neighbourhood, as a fraction of `SYSTEM_RADIUS`: an angle and a distance, both from the key. */
+export function targetOffset(system: string, key: string): Vec {
+  const a = unit(fnv1a(`${system}/${key}`)) * Math.PI * 2
+  const d = 0.25 + 0.7 * unit(fnv1a(`${system}/${key} d`))
+  return [Math.cos(a) * d, Math.sin(a) * d]
+}
+
+/** Where a target lives: inside its system's place. Same system, same key, same place — in every record. */
+export function placeOf(system: string, key: string): Vec {
+  const c = systemPlace(system)
+  const o = targetOffset(system, key)
+  return [c[0] + o[0] * SYSTEM_RADIUS, c[1] + o[1] * SYSTEM_RADIUS]
+}
+
+/** Depth, for a reading that has it: a system's and a target's, each in [-1, 1], from the same names. */
+export function depthOf(system: string, key?: string): number {
+  return unit(fnv1a(key === undefined ? `system:${system} z` : `${system}/${key} z`)) * 2 - 1
+}
+
+/** A deviation lands on the outer ring, away from whatever it left. Kept for a reading that wants the old rule. */
 export function deviationPosition(key: string): Vec {
   const a = unit(fnv1a(key)) * Math.PI * 2
   return [0.5 + DEVIATION_RING * Math.cos(a), 0.5 + DEVIATION_RING * Math.sin(a)]

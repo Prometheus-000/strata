@@ -628,8 +628,10 @@ The Figma library was pushed by hand once and is already a stale projection.
 It is listed here so the next reader inherits the test and not the verdict.
 
 The identity is a projection too. `identity.html` reads the record and draws
-it as a field: every decision is a bump whose place is a hash of its target,
-so precedent lands on precedent; a cut moves to its fallback and leaves a
+it as a field: every decision is a bump whose place is a hash of its target
+inside a hash of its family — a token in its family, a property in its
+selector, a line in its file — so precedent lands on precedent and families
+are regions; a cut moves to its fallback and leaves a
 hollow; age spreads and settles and never erases; a ship closes an epoch, and
 what it froze stays beneath as a stratum, receding; a promotion drains the
 decisions whose convergence earned it into the promoted place; three of a
@@ -651,12 +653,14 @@ The sky is the field's counterpart. `sky.html` reads the same record with
 depth: every record the engine can draw at a distance, one record as a
 galaxy, its token families and selectors as systems, each target a planet
 massed by the decisions made on it, and each decision a moon in time order.
-One continuous zoom joins them, and the one rule that makes it possible is a
-hierarchical address — a place inside a place, the same hash rule applied at
-each level, so the same target always lands in the same spot inside the same
-system. The neighbours are synthetic records and say so; the only real one is
-this product's. That rule lives in `identity/src/sky.ts`; what a decision's
-system and target are called is the adapter's, in `identity/src/record.ts`.
+One continuous zoom joins them, and the one rule that makes it possible is the
+address the field already uses — a place inside a place, the same hash rule
+applied at each level — read with depth: the sky seen from above is the
+field, and the same target lands in the same spot in every record. The
+neighbours are synthetic records and say so; the only real one is this
+product's. The address lives in `identity/src/field.ts`, the sky's reading of
+it in `identity/src/sky.ts`; what a decision's system and target are called is
+the adapter's, in `identity/src/record.ts`.
 
 ## Examples
 

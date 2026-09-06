@@ -47,7 +47,7 @@ const STATIONS: Array<{ projection: Projection; name: string; note: string }> = 
 
 const RULES: Array<[string, string]> = [
   ['The state is the record.', 'One event per decision, appended and never removed. A visitor can add; nothing can take away.'],
-  ['The same target always lands in the same place.', 'Position is a hash of what was decided about, so precedent is visible without being declared.'],
+  ['The same target always lands in the same place.', 'Position is a hash of what was decided about, inside a hash of the family it belongs to: a token in its family, a property in its selector, a line in its file. Precedent is visible without being declared, families are regions, and the sky is this field seen from above.'],
   ['Time is sequence, not the clock.', 'Two builds of one record look alike; two visitors see the same structure.'],
   ['Age spreads and settles; it never erases.', 'An old decision is broad, low relief. The floor is the rule that nothing returns to zero.'],
   ['A cut is mass moving to its fallback, and it leaves a hollow.', 'The record says a cut collapses to something; the picture says the same.'],

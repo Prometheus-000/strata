@@ -8,6 +8,8 @@
  * host with a different source writes a sibling adapter and keeps the engine.
  *
  * The derivation, as rules:
+ *   - every event's place is its address: its system's place, and its own
+ *     place inside it — `pathOf` names the system, the target key is the key;
  *   - a token kept is a bump of weight one at the target's place;
  *   - a token cut is the same bump, travelling to the place of what it
  *     collapses to, and a hollow left where it was;
@@ -25,7 +27,7 @@
  *   - everything else is a smaller bump.
  */
 import { handText, problemsWith, targetKey, type Decision } from '@strata/substrate/decision'
-import { DEVIATION_W, GENERIC_W, append, clamp01, deviationPosition, emptyState, positionFor, type IdentityEvent, type IdentityState, type Receipt, type Vec } from './field.ts'
+import { DEVIATION_W, GENERIC_W, append, clamp01, emptyState, placeOf, type IdentityEvent, type IdentityState, type Receipt, type Vec } from './field.ts'
 import { skyFrom, type Sky, type Vec3 } from './sky.ts'
 
 /**
@@ -67,7 +69,9 @@ export function parseRecord(text: string): Decision[] {
   return out
 }
 
-const fallbackKey = (to: string | undefined) => (to === undefined ? 'literal:none' : to.startsWith('--') ? `token:${to}` : `literal:${to}`)
+/** Where a cut's mass goes: the fallback token's place in its family, or a literal's place among the literals. */
+const fallbackPlace = (to: string | undefined): Vec =>
+  to === undefined ? placeOf('literals', 'literal:none') : to.startsWith('--') ? placeOf(`--${to.replace(/^--/, '').split('-')[0]}`, `token:${to}`) : placeOf('literals', `literal:${to}`)
 
 /** The value a decision reached, as `precedent` reads it: a token reference or a literal. */
 const valueText = (d: Decision): string | undefined => {
@@ -85,28 +89,31 @@ export function deriveEvents(decisions: readonly Decision[]): IdentityEvent[] {
   }
   return decisions.map((d, i) => {
     const key = targetKey(d)
+    const [system] = pathOf(d)
+    const p = placeOf(system, key)
     const receipt: Receipt = { id: d.id, kind: d.kind, target: key, hand: handText(d.decided), date: d.at.slice(0, 10) }
     const base = { i, id: d.id, key, hand: d.decided.kind, receipt }
-    if (d.consequence.refused) return { ...base, kind: 'refused', p: positionFor(key), w: 0 }
+    if (d.consequence.refused) return { ...base, kind: 'refused', p, w: 0 }
     switch (d.kind) {
       case 'token':
-        if (d.action === 'cut') return { ...base, kind: 'cut', p: positionFor(key), w: 1, to: positionFor(fallbackKey(d.consequence.collapsesTo)) }
-        if (d.action === 'mint') return { ...base, kind: 'keep', p: positionFor(key), w: 1, drains: drainsOf(d.from, i) }
-        return { ...base, kind: 'keep', p: positionFor(key), w: 1 }
+        if (d.action === 'cut') return { ...base, kind: 'cut', p, w: 1, to: fallbackPlace(d.consequence.collapsesTo) }
+        if (d.action === 'mint') return { ...base, kind: 'keep', p, w: 1, drains: drainsOf(d.from, i) }
+        return { ...base, kind: 'keep', p, w: 1 }
       case 'override':
-        return { ...base, kind: 'generic', p: positionFor(key), w: GENERIC_W, value: valueText(d), drains: d.action === 'rescope' ? drainsOf(d.consequence.absorbed, i) : undefined }
+        return { ...base, kind: 'generic', p, w: GENERIC_W, value: valueText(d), drains: d.action === 'rescope' ? drainsOf(d.consequence.absorbed, i) : undefined }
       case 'prop':
-        return { ...base, kind: 'generic', p: positionFor(key), w: GENERIC_W, value: valueText(d) }
+        return { ...base, kind: 'generic', p, w: GENERIC_W, value: valueText(d) }
       case 'seed':
-        return { ...base, kind: 'generic', p: positionFor(key), w: GENERIC_W, seeds: d.seeds }
+        return { ...base, kind: 'generic', p, w: GENERIC_W, seeds: d.seeds }
       case 'deviation': {
+        // A mark made on the identity lands where the hand put it; any other deviation sits where it sits, in its file.
         const mark = d.file === IDENTITY_FILE ? parseMark(d.value) : undefined
-        return { ...base, kind: 'deviation', p: mark ?? deviationPosition(key), w: DEVIATION_W, receipt: mark ? { ...receipt, target: 'a mark on the field' } : receipt }
+        return { ...base, kind: 'deviation', p: mark ?? p, w: DEVIATION_W, receipt: mark ? { ...receipt, target: 'a mark on the field' } : receipt }
       }
       case 'ship':
-        return { ...base, kind: 'ship', p: positionFor(key), w: 0 }
+        return { ...base, kind: 'ship', p, w: 0 }
       default:
-        return { ...base, kind: 'generic', p: positionFor(key), w: GENERIC_W }
+        return { ...base, kind: 'generic', p, w: GENERIC_W }
     }
   })
 }

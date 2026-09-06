@@ -33,6 +33,8 @@ export interface Readout {
 export interface SkyScene {
   flyTo: (node: SkyNode) => void
   home: () => void
+  /** Put the camera at `from`, looking at `at`, at once. Straight above the record, the sky is the field. */
+  look: (from: readonly [number, number, number], at: readonly [number, number, number]) => void
   resize: () => void
   dispose: () => void
 }
@@ -260,6 +262,12 @@ export function mountSky(canvas: HTMLCanvasElement, labelsEl: HTMLElement, opts:
   return {
     flyTo,
     home,
+    look: (from, at) => {
+      flight = null
+      camera.position.set(...from)
+      controls.target.set(...at)
+      request()
+    },
     resize,
     dispose: () => {
       alive = false

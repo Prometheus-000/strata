@@ -8,7 +8,7 @@ import { readAll } from '@strata/substrate/log'
 import { problemsWith, type Decision } from '@strata/substrate/decision'
 import { PROMOTION_CANDIDATE_AT } from '@strata/substrate/precedent'
 import * as field from '@strata/identity/field'
-import { append, CONVERGE_AT, epochStartAt, fieldAt, fnv1a, frameAt, marchingSquares, positionFor, seedsAt, strataAt, type FieldOptions } from '@strata/identity/field'
+import { append, CONVERGE_AT, epochStartAt, fieldAt, fnv1a, frameAt, marchingSquares, placeOf, positionFor, seedsAt, strataAt, SYSTEM_RADIUS, systemPlace, type FieldOptions } from '@strata/identity/field'
 import { deriveEvents, IDENTITY_FILE, markValue, parseMark, stateFrom, syntheticStream, visitorDeviation } from '@strata/identity/record'
 import { svgFrom } from '@strata/identity/render'
 import { OBSIDIAN } from '../src/theme/generateTheme'
@@ -83,7 +83,10 @@ test('derivation: keep, cut, deviation, ship and refusal each become the event t
     ev.map((e) => e.w),
     [1, 1, 0.6, 0, 0],
   )
-  assert.deepEqual(ev[1].to, positionFor('token:--accent'))
+  assert.deepEqual(ev[1].to, placeOf('--accent', 'token:--accent'), 'a cut travels to its fallback, in the fallback\'s family')
+  assert.deepEqual(ev[0].p, placeOf('--surface', 'token:--surface-raised'), 'a token sits inside its family')
+  assert.ok(Math.hypot(ev[0].p[0] - systemPlace('--surface')[0], ev[0].p[1] - systemPlace('--surface')[1]) <= SYSTEM_RADIUS, 'inside the family\'s neighbourhood')
+  for (const e of ev) for (const v of e.p) assert.ok(v > 0 && v < 1, 'every place is in the square')
   assert.deepEqual(
     ev.map((e) => e.hand),
     ['human', 'agent', 'human', 'human', 'human'],
