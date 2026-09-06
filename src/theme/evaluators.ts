@@ -333,38 +333,61 @@ export function registerThemeEvaluators(home: { root: string }): void {
       const out: Finding[] = []
       const declared = new Set(CONTRAST_PAIRS.map((p) => p.token))
       const g = groundsOf(ctx.log)
-      for (const [ground, seeds] of [
-        ['dark', g.dark],
-        ['light', g.light],
-      ] as const) {
-        const values = themeTokens(generateTheme(seeds), ledger, 'value')
-        for (const pair of CONTRAST_PAIRS) {
-          if (!values[pair.token] || !live(pair.token)) continue
+      const grounds = [
+        ['dark', themeTokens(generateTheme(g.dark), ledger, 'value')],
+        ['light', themeTokens(generateTheme(g.light), ledger, 'value')],
+      ] as const
+
+      /**
+       * One finding per token, not one per pairing.
+       *
+       * Faint ink is set against four surfaces on two grounds, so it fell
+       * short eight times and said so eight times, in eight lines that
+       * differed by two decimal places — the loudest thing in the first
+       * report a new product ever ran, for what is one fact about one token.
+       * The pairings are the evidence, and evidence is what `facts` is for.
+       */
+      for (const pair of CONTRAST_PAIRS) {
+        if (!live(pair.token)) continue
+        const short: Array<{ ground: string; on: string; ratio: number }> = []
+        let measured = 0
+        for (const [ground, values] of grounds) {
+          if (!values[pair.token]) continue
           for (const on of pair.on) {
             if (!values[on] || !live(on)) continue
             const ratio = contrastRatio(values[pair.token], values[on])
-            if (ratio === null || ratio >= pair.need) continue
-            out.push({
-              rule: 'safety.contrast',
-              authority: 'policy',
-              where: `${pair.token} on ${on}`,
-              message: `${ratio.toFixed(2)}:1 on ${ground}, under the ${pair.need}:1 this measures ${pair.kind} against. Reported, not refused — move the seeds, or keep the token with the reason it stands (strata keep ${pair.token} --why "…") and the reason prints here.${standing(pair.token)}`,
-            })
+            if (ratio === null) continue
+            measured++
+            if (ratio < pair.need) short.push({ ground, on, ratio })
           }
         }
-        // A token that is read but named in no pairing is measured against
-        // nothing, and saying so is the whole difference between a check and
-        // a check that happens to be empty.
-        if (ground === 'dark')
-          for (const t of Object.keys(values))
-            if (/^--(ink|accent|positive|warning|danger|focus-ring)/.test(t) && live(t) && !declared.has(t) && !/soft|line|ring-/.test(t))
-              out.push({
-                rule: 'safety.contrast',
-                authority: 'policy',
-                where: t,
-                message: `is read somewhere and is measured against nothing — add it to CONTRAST_PAIRS with the ground it sits on, or this evaluator is silent about it`,
-              })
+        if (!short.length) continue
+        const ratios = short.map((x) => x.ratio)
+        const lo = Math.min(...ratios)
+        const hi = Math.max(...ratios)
+        const span = lo === hi ? `at ${lo.toFixed(2)}:1` : `from ${lo.toFixed(2)}:1 to ${hi.toFixed(2)}:1`
+        out.push({
+          rule: 'safety.contrast',
+          authority: 'policy',
+          where: pair.token,
+          message:
+            `${short.length} of the ${measured} grounds it is set against fall under the ${pair.need}:1 this measures ${pair.kind} against, ${span}. ` +
+            `Reported, not refused — move the seeds, or keep the token with the reason it stands (strata keep ${pair.token} --why "…") and the reason prints here.${standing(pair.token)}`,
+          facts: short.map((x) => ({ name: `${x.ground}, on ${x.on}`, value: `${x.ratio.toFixed(2)}:1` })),
+        })
       }
+
+      // A token that is read but named in no pairing is measured against
+      // nothing, and saying so is the whole difference between a check and
+      // a check that happens to be empty.
+      for (const t of Object.keys(grounds[0][1]))
+        if (/^--(ink|accent|positive|warning|danger|focus-ring)/.test(t) && live(t) && !declared.has(t) && !/soft|line|ring-/.test(t))
+          out.push({
+            rule: 'safety.contrast',
+            authority: 'policy',
+            where: t,
+            message: `is read somewhere and is measured against nothing — add it to CONTRAST_PAIRS with the ground it sits on, or this evaluator is silent about it`,
+          })
       return out
     },
   })

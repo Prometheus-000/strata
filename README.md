@@ -583,8 +583,11 @@ INVARIANTS
 
 POLICY
 ──────────────
-safety.contrast  --ink-faint on --surface-page
-    4.14:1 on dark, under the 4.5:1 this measures text against. Reported, not refused — move the seeds, or keep the token with the reason it stands (strata keep --ink-faint --why "…") and the reason prints here. Kept by human prometheus-000: The label colour. Every kicker, key and rule-line is faint ink, never the accent — a coloured label is a second voice.
+safety.contrast  --ink-faint
+    8 of the 8 grounds it is set against fall under the 4.5:1 this measures text against, from 3.45:1 to 4.17:1. Reported, not refused — move the seeds, or keep the token with the reason it stands (strata keep --ink-faint --why "…") and the reason prints here. Kept by human prometheus-000: The label colour. Every kicker, key and rule-line is faint ink, never the accent — a coloured label is a second voice.
+      dark, on --surface-page: 4.14:1
+      light, on --surface-sunken: 3.45:1
+      … 6 more
 
 KNOWLEDGE
 ──────────────

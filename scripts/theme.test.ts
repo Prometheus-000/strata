@@ -237,7 +237,24 @@ test('contrast is swept and reported, never enforced, and every read token is me
 
   // And it is not vacuous: the pairings resolve to real numbers on this palette.
   assert.ok(contrast.length > 0, 'the sweep found nothing at all, which on this palette means it did not run')
-  assert.ok(contrast.every((f) => /^\d+\.\d{2}:1 on (dark|light)/.test(f.message)))
+
+  // One finding per token, and every pairing under it as evidence. Faint ink
+  // is set against four surfaces on two grounds, so it used to fall short
+  // eight times and say so in eight lines that differed by two decimal
+  // places — the loudest thing in a first report, for one fact about one
+  // token. Grouping it hides nothing: the count, the range and every ground
+  // are all still there.
+  assert.deepEqual(
+    contrast.map((f) => f.where),
+    [...new Set(contrast.map((f) => f.where))],
+    'a token is reported once',
+  )
+  const faint = contrast.find((f) => f.where === '--ink-faint')!
+  assert.ok(faint, 'faint ink is measured as text and falls short on this palette')
+  assert.match(faint.message, /^8 of the 8 grounds it is set against fall under the 4\.5:1 this measures text against, from \d+\.\d{2}:1 to \d+\.\d{2}:1\./)
+  assert.equal(faint.facts?.length, 8, 'and every ground it fell short on is named')
+  assert.ok(faint.facts?.every((x) => /^(dark|light), on --surface-/.test(x.name) && /^\d+\.\d{2}:1$/.test(String(x.value))))
+  assert.match(faint.message, /Kept by human prometheus-000: The label colour\./, 'a token kept with a reason carries it here, so a decided colour does not read as an oversight')
 })
 
 test('retheme moves the seeds from a terminal: on the record, clamped where the engine clamps, and every projection recompiled', () => {
