@@ -494,6 +494,11 @@ Strata calls no model — many harnesses, one foundation. Six skills ship
 `review-handoff`), and the Claude Code plugin in
 `strata-malleable/integrations/claude-code` runs them.
 
+`.claude/skills` is shared ground: the harness's own skills live there too,
+and an OKLCH skill is vendored in `.agents/skills/` and linked in, for whoever
+works on the engine. What makes a `SKILL.md` Strata's is that it states a
+`purpose`; a skill without one is the harness's, and Strata leaves it alone.
+
 ## Governance
 
 Four kinds of statement, and they do not carry the same authority:

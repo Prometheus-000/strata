@@ -77,3 +77,24 @@ test('a skill parses, loads from its directory, and assembles a packet with rule
   assert.throws(() => parseSkill('no front matter', 'x/SKILL.md'), /starts with front matter/)
   assert.throws(() => parseSkill('---\nname: x\n---\nbody', 'x/SKILL.md'), /states its purpose/)
 })
+
+test("`.claude/skills` is shared ground: a harness skill there is left alone, a Strata skill there is found through its link, and in Strata's own directory a skill without a purpose is still an error", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'strata-shared-'))
+  const write = (rel: string, text: string) => {
+    fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true })
+    fs.writeFileSync(path.join(dir, rel), text)
+  }
+  const link = (name: string) => fs.symlinkSync(`../../.agents/skills/${name}`, path.join(dir, '.claude/skills', name))
+  write('skills/cut-token/SKILL.md', SKILL)
+  // As `npx skills add` lays it out: the copy in .agents, a link in .claude/skills.
+  write('.agents/skills/oklch-skill/SKILL.md', '---\nname: oklch-skill\ndescription: OKLCH color space for web projects. Triggers on oklch, chroma, dark mode colors.\n---\n\n# OKLCH Colors\n')
+  write('.agents/skills/promote/SKILL.md', SKILL.replace('name: cut-token', 'name: promote'))
+  fs.mkdirSync(path.join(dir, '.claude/skills'), { recursive: true })
+  link('oklch-skill')
+  link('promote')
+  fs.symlinkSync('../../.agents/skills/gone', path.join(dir, '.claude/skills/gone'))
+  assert.deepEqual(loadSkills(dir).map((s) => s.name).sort(), ['cut-token', 'promote'], 'the harness skill and the broken link are passed over; the linked Strata skill is found')
+  assert.equal(loadSkills(dir).find((s) => s.name === 'promote')?.file, path.join('.claude/skills/promote/SKILL.md'))
+  write('skills/broken/SKILL.md', '---\nname: broken\ndescription: a Strata skill that forgot to say why\n---\n\nbody\n')
+  assert.throws(() => loadSkills(dir), /states its purpose/)
+})

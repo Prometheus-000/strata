@@ -14,6 +14,18 @@
  * a typed front matter the substrate reads. The front matter is a small YAML:
  * scalars, `[a, b]` lists, `- item` lists, `{ k: v }` maps, nested maps, and
  * `|` blocks. Nothing else, and no dependency.
+ *
+ * `.claude/skills` is shared ground. Strata reads it because that is where
+ * Claude Code looks, so an adopter can keep Strata's skills there — but the
+ * harness installs its own skills there too, and those are not Strata's to
+ * perform. What makes a SKILL.md Strata's is that it states a purpose; the
+ * harness's carry a name and a description and nothing the substrate reads.
+ * A skill without a purpose in shared ground is left alone. In `skills/`,
+ * Strata's own directory, it is still an error, because silence there would
+ * hide a broken skill. Links are followed: `npx skills add` keeps the copy in
+ * `.agents/skills` and links it in. (6 Sept 2026: an OKLCH skill arrived that
+ * way, and the loader had been passing over it only because a link is not a
+ * directory to readdir — the same skill copied in would have thrown.)
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -131,17 +143,26 @@ export function parseSkill(text: string, file: string): Skill {
   return skill
 }
 
-export const SKILL_DIRS = ['skills', '.claude/skills']
+/** Strata's own directory. Every SKILL.md in it is Strata's, and must state its purpose. */
+export const OWN_SKILL_DIR = 'skills'
+/** Where skills are read from: Strata's own directory, then the ground it shares with the harness. */
+export const SKILL_DIRS = [OWN_SKILL_DIR, '.claude/skills']
+
+const frontMatterOf = (text: string): string => text.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? ''
+/** The field that makes a SKILL.md Strata's: the harness's skills name themselves and say what they are for, but only a skill the substrate performs states a purpose. */
+export const statesPurpose = (text: string): boolean => /^purpose:/m.test(frontMatterOf(text))
 
 export function loadSkills(root: string, dirs = SKILL_DIRS): Skill[] {
   const out = new Map<string, Skill>()
   for (const dir of dirs) {
     const abs = path.join(root, dir)
     if (!fs.existsSync(abs)) continue
-    for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
-      const file = path.join(abs, entry.name, 'SKILL.md')
-      if (!entry.isDirectory() || !fs.existsSync(file)) continue
-      const skill = parseSkill(fs.readFileSync(file, 'utf8'), path.relative(root, file))
+    for (const name of fs.readdirSync(abs)) {
+      const file = path.join(abs, name, 'SKILL.md')
+      if (!fs.existsSync(file)) continue // follows a link; a broken link is nothing
+      const text = fs.readFileSync(file, 'utf8')
+      if (dir !== OWN_SKILL_DIR && !statesPurpose(text)) continue // the harness's, not Strata's
+      const skill = parseSkill(text, path.relative(root, file))
       if (!out.has(skill.name)) out.set(skill.name, skill)
     }
   }

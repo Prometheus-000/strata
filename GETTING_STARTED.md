@@ -334,13 +334,14 @@ The new decision supersedes the old one and both stay readable — that is what
 | --- | --- |
 | `.strata/decisions.jsonl` | **The record.** Append-only. The one source of truth. |
 | `substrate/` | The core: decision type, log, `decide()`, projections, precedent, grammar, evaluators, `check`, skills. No dependencies, no framework, imports nothing above it. |
-| `engine/src/generateTheme.ts` | The semantic compiler. Six numbers in, every semantic role out, in OKLCH. One module — a vendored copy would be a second author. |
+| `engine/src/generateTheme.ts` | The semantic compiler. Seven seeds in, every semantic role out, in OKLCH. One module — a vendored copy would be a second author. |
 | `src/theme/` | The theme projection: handlers, the ledger, the emitters. |
 | `src/tokens/semantic.css`, `src/tokens/tokens.json`, `src/theme/ledger.json` | Generated. Do not edit. |
 | `strata-malleable/` | The layer a designer changes by hand — a projection, plus the dev-server write path. |
 | `strata-malleable/.malleable/overrides.json` | Generated. Do not edit. |
 | `grammar/rules.json` | The rules, as data — cited by skills, evaluated by `check`. |
 | `skills/` | The six `SKILL.md` files an agent performs. |
+| `.agents/skills/`, `.claude/skills/`, `skills-lock.json` | Harness skills, vendored and pinned — today one, `oklch-skill`: conversion, gamut and contrast, for whoever works on the engine. `.claude/skills` is shared ground: what makes a `SKILL.md` Strata's is that it states a `purpose`, and one without is the harness's, left alone. |
 | `mcp/server.mjs` | The same door over MCP. |
 | `bench/README.md` | The experiment: does a record of reasons change what an agent builds? |
 | `bin/strata.mjs` | The one CLI; it mounts the substrate and both projections. |
