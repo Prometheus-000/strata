@@ -52,6 +52,29 @@ const read = (root: string, rel: string) => readAt(join(root, rel))
 
 const policy = (rule: string, message: string, where?: string): Finding => ({ rule, authority: 'policy', message, ...(where ? { where } : {}) })
 
+/**
+ * The top-level components in a module, as the spans they occupy.
+ *
+ * A component is where a person draws a surface, and in React it is a
+ * capitalised declaration at column zero. Nested functions are left alone:
+ * they are handlers and helpers, not surfaces, and treating them as boundaries
+ * would split a screen into as many surfaces as it has callbacks.
+ */
+function componentsIn(text: string): Array<{ name: string; from: number; to: number }> {
+  const found: Array<{ name: string; from: number }> = []
+  for (const m of text.matchAll(/^(?:export\s+)?(?:default\s+)?(?:function\s+([A-Z]\w*)|const\s+([A-Z]\w*)\s*[:=][^\n]*(?:=>|function))/gm)) {
+    // A doc comment above a component belongs to it. Starting the span at the
+    // declaration put anything said about the component in the span of the one
+    // before it, so a component could not say why it is the way it is.
+    const before = text.slice(0, m.index ?? 0)
+    const closes = before.trimEnd().endsWith('*/') ? before.lastIndexOf('/*') : -1
+    found.push({ name: m[1] ?? m[2], from: closes >= 0 ? closes : (m.index ?? 0) })
+  }
+  // A file with no component of its own is one span, so its buttons are still counted.
+  if (!found.length) return [{ name: 'the module', from: 0, to: text.length }]
+  return found.map((c, i) => ({ ...c, to: found[i + 1]?.from ?? text.length }))
+}
+
 /** Every line of a file, numbered, with a matcher — the shape most of these want. */
 const lines = (text: string) => text.split('\n').map((line, i) => ({ line, n: i + 1 }))
 
@@ -146,9 +169,16 @@ export function registerGrammarEvaluators(home: { root: string }): void {
   })
 
   /**
-   * One filled action per surface. A surface is a file here, which is coarse
-   * and says so: a specimen page that shows every variant at once is counted
-   * like a screen. The number is the finding; the judgement is a hand's.
+   * One filled action per surface, and a surface is a component.
+   *
+   * It was a file, which is coarser than the rule: one file here holds a hero,
+   * a dialog and a specimen sheet — three surfaces with one filled action each
+   * — and reported seven, so the finding named a fault the page did not have.
+   * A component is where a person draws a surface, so it is where this counts.
+   *
+   * Still not exact, and it says which: a gallery whose whole job is to show
+   * every variant at once is one component and counts like a screen. The
+   * number is the finding; the judgement is a hand's.
    */
   registerEvaluator({
     id: 'layer2.one-filled-action',
@@ -160,16 +190,36 @@ export function registerGrammarEvaluators(home: { root: string }): void {
         const text = read(root, file)
         // `variant` defaults to primary, so a <Button> that names no variant is filled.
         const hits = [...text.matchAll(/<Button(\s[^>]*)?>/g)].filter((m) => !/variant=/.test(m[1] ?? '')).concat([...text.matchAll(/variant="primary"/g)])
-        const filled = hits.length
-        if (filled > 1) {
-          // The lines, not just the count: "7 filled actions in one file" sends
-          // a reader looking, and the lines show which are the specimen sheet.
-          const at = hits.map((m) => text.slice(0, m.index ?? 0).split('\n').length).sort((a, b) => a - b)
+        if (!hits.length) continue
+        const lineOf = (i: number) => text.slice(0, i).split('\n').length
+        for (const c of componentsIn(text)) {
+          const mine = hits.filter((m) => (m.index ?? 0) >= c.from && (m.index ?? 0) < c.to).map((m) => lineOf(m.index ?? 0))
+          if (mine.length < 2) continue
+          // A component that says why it has many keeps the finding and carries
+          // the reason, the way a kept token does under safety.contrast. A
+          // specimen sheet showing every variant is the case: it is not a screen
+          // with four calls to action, and the sentence saying so is worth more
+          // on the page than in a reviewer's head.
+          // A reason is a sentence and a block comment wraps it over several
+          // lines, each opening with its own asterisk. Read to the end of the
+          // comment and put it back together.
+          const span = text.slice(c.from, c.to)
+          const said = /deviation:\s*([\s\S]*?)\*\//.exec(span)?.[1] ?? /deviation:\s*(.*)/.exec(span)?.[1]
+          const declared = said
+            ?.replace(/^\s*\*+/gm, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
           out.push({
-            ...policy('layer2.one-filled-action', `${filled} filled actions in one file. Primary is filled, Secondary is an edge, Ghost is bare text; when three calls to action carry the same chrome, the screen has no point.`, file),
+            ...policy(
+              'layer2.one-filled-action',
+              `${mine.length} filled actions in <${c.name}>. Primary is filled, Secondary is an edge, Ghost is bare text; when three calls to action carry the same chrome, the screen has no point.` +
+                (declared ? ` Declared: ${declared}` : ''),
+              `${file}:${lineOf(c.from)}`,
+            ),
             facts: [
-              { name: 'filled buttons', value: filled },
-              { name: 'at', value: collapseWheres(at.map((l) => `${file}:${l}`)) },
+              { name: 'component', value: c.name },
+              { name: 'filled buttons', value: mine.length },
+              { name: 'at', value: collapseWheres(mine.map((l) => `${file}:${l}`)) },
             ],
           })
         }

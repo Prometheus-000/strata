@@ -207,7 +207,10 @@ your feature, keep the two imports, restyle freely. The adversarial relationship
 design system ends the moment taking the code is sanctioned.
 
 **One filled action per surface.** Primary is filled; Secondary is an edge; Ghost is bare
-text. When three calls to action carry the same chrome, the screen has no point.
+text. When three calls to action carry the same chrome, the screen has no point. A surface
+is a component, which is where a person draws one — a sheet whose whole job is to show
+every variant says so in a `deviation:` comment, and the finding carries the reason rather
+than disappearing.
 
 **Disabled is `opacity: 0.45` on the whole control, not a third palette.** A disabled
 variant per color multiplies the matrix without adding meaning; a uniform veil reads as

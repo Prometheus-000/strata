@@ -420,6 +420,13 @@ function Spec({ name, badge, children }: { name: string; badge?: string; childre
   )
 }
 
+/**
+ * The recipe inventory. Every variant and state, kept as specimen sheets.
+ *
+ * deviation: the filled buttons here are specimens, not calls to action — a
+ * sheet whose job is to show every variant at once has as many as there are
+ * variants, and the one real primary is the dialog's confirm.
+ */
 function Gallery() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [switchOn, setSwitchOn] = useState(true)
