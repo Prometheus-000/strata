@@ -15,6 +15,7 @@ import { SUBSTRATE_COMMANDS } from '@strata/substrate/cli'
 import { THEME_COMMANDS } from '../src/theme/cli'
 import { MALLEABLE_COMMANDS } from '../strata-malleable/src/cli'
 import { INIT_COMMANDS } from '../src/init'
+import { VOICE_COMMANDS } from '../src/voices'
 
 export const PROSE: ProseOptions = {
   // `runs` is the bench's gitignored arms — copies of this repo, whose prose
@@ -28,7 +29,7 @@ export const PROSE: ProseOptions = {
    * unnoticed for exactly that reason.
    */
   depth: 4,
-  commands: [...INIT_COMMANDS, ...SUBSTRATE_COMMANDS, ...THEME_COMMANDS, ...MALLEABLE_COMMANDS, 'help'],
+  commands: [...INIT_COMMANDS, ...VOICE_COMMANDS, ...SUBSTRATE_COMMANDS, ...THEME_COMMANDS, ...MALLEABLE_COMMANDS, 'help'],
   /**
    * Three phrases this repository retired, each of which survived in prose for
    * months after the thing it described was gone. They are allowed exactly

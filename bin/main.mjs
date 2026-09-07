@@ -28,6 +28,7 @@ import { registerIdentity } from '../src/identity/handler.ts'
 import { runMalleable, MALLEABLE_COMMANDS } from '../strata-malleable/src/cli.ts'
 import { registerMalleable } from '../strata-malleable/src/decide/index.ts'
 import { runInit, INIT_COMMANDS } from '../src/init.ts'
+import { runVoice, VOICE_COMMANDS } from '../src/voices.ts'
 import { PROSE } from '../scripts/prose.ts'
 
 const PACKAGE = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -41,7 +42,7 @@ const fail = (msg) => {
   console.error(`\n  ${msg}\n`)
   process.exit(1)
 }
-const ALL_COMMANDS = [...INIT_COMMANDS, ...SUBSTRATE_COMMANDS, ...THEME_COMMANDS, ...MALLEABLE_COMMANDS, 'help']
+const ALL_COMMANDS = [...INIT_COMMANDS, ...VOICE_COMMANDS, ...SUBSTRATE_COMMANDS, ...THEME_COMMANDS, ...MALLEABLE_COMMANDS, 'help']
 
 const help = () => {
   console.log(`strata — the record of what this product decided, and the one way to change it
@@ -86,6 +87,17 @@ const help = () => {
 if (!cmd || cmd === 'help' || cmd === '--help') {
   help()
   process.exit(0)
+}
+
+// `voice list` reads the store, which is nowhere near a product; `voice save`
+// reads the product it is typed in. Neither needs a record above the cwd.
+if (VOICE_COMMANDS.includes(cmd)) {
+  try {
+    process.exit(runVoice(argv, productRoot() ?? process.cwd()))
+  } catch (err) {
+    console.error(`\n  ${err instanceof Error ? err.message : String(err)}\n`)
+    process.exit(1)
+  }
 }
 
 const found = productRoot()

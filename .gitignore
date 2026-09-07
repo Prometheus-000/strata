@@ -10,8 +10,7 @@ explorations/
 # Reference photographs for the sky, downloaded from the web; not a projection, not shipped.
 universe/
 hero-card.png
-# A designer's own voice, and the notes it is written from. Personal, and a
-# different thing from this product's taste: it belongs to the person, travels
-# between their projects, and is carried in with `npx strata init --voice` from
-# wherever they keep it.
+# A working copy of a voice, when one is being written here. The place a voice
+# is kept is ~/.strata/voices, outside every repository — one copy, reached by
+# name, so the same rules are not sharpened in one project and not another.
 voice/

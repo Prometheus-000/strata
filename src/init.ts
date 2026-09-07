@@ -26,6 +26,7 @@ import { LOG_PATH } from '@strata/substrate/log'
 import { registerTheme } from './theme/handlers'
 import { initTheme } from './theme/init'
 import { formatSurvey, survey } from './theme/survey'
+import { resolveVoice } from './voices'
 import { init as initMalleable } from '../strata-malleable/src/init'
 
 export const INIT_COMMANDS = ['init'] as const
@@ -39,8 +40,10 @@ export const TEMPLATE_GRAMMAR = 'templates/GRAMMAR.md'
 
 export interface InitOptions {
   source?: string[]
-  /** Where to take a voice from: a path, or a git URL. */
+  /** Where to take a voice from: a name in the store, a path, or a git URL. */
   voice?: string
+  /** The home the voice store sits under. Given only by tests, so they never read the machine they run on. */
+  voiceHome?: string
   /**
    * Take the voice in as this product's house rules rather than as a person's.
    *
@@ -127,13 +130,15 @@ const isRemote = (s: string) => /^(https?:\/\/|git@|ssh:\/\/|git:\/\/)/.test(s)
  * The seeds are read but not applied. A seed change is a decision, and `init`
  * makes none — they are reported with the one command that adopts them.
  */
-export function readVoice(source: string): Voice {
-  let dir = source
+export function readVoice(source: string, home?: string): Voice {
+  // A name reaches the store; a path and a URL are left as they are.
+  const given = resolveVoice(source, home)
+  let dir = given
   let clone: string | null = null
   try {
-    if (isRemote(source)) {
+    if (isRemote(given)) {
       clone = fs.mkdtempSync(path.join(os.tmpdir(), 'strata-voice-'))
-      execFileSync('git', ['clone', '--depth', '1', '--quiet', source, clone], { stdio: ['ignore', 'ignore', 'pipe'] })
+      execFileSync('git', ['clone', '--depth', '1', '--quiet', given, clone], { stdio: ['ignore', 'ignore', 'pipe'] })
       dir = clone
     }
     const rulesAt = path.join(dir, RULES_PATH)
@@ -214,7 +219,7 @@ export function init(root: string, pkg: string, opts: InitOptions = {}): InitRep
   const system = canon.rules.filter((r) => (r.scope ?? 'system') === 'system').map((r) => ({ ...r, source: sourceInPackage(r.source, name) }))
   // A voice is frame, so init carries it the way it carries the system's rules.
   // The seeds it finds are a decision, and are reported rather than applied.
-  const voice = opts.voice ? readVoice(opts.voice) : undefined
+  const voice = opts.voice ? readVoice(opts.voice, opts.voiceHome) : undefined
   // Whose the carried rules are once they are here. `personal` by default: a
   // product works under a voice and does not come to own it.
   const carriedRules = voice ? (opts.house ? voice.rules.map((r) => ({ ...r, scope: 'product' as const })) : voice.rules) : []

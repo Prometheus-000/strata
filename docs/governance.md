@@ -39,6 +39,12 @@ adopted by a product stays `personal` — the product works under it and does no
 come to own it — unless `--house` is passed, which is a decision to make it the
 product's and stop it travelling.
 
+A voice is kept once, in `~/.strata/voices/<name>`, outside every repository and
+reached by name. A copy inside each product would be the same nine rules in
+three places, and sharpening one of them is how a decision typed twice diverges.
+`npx strata voice` lists what is there; `npx strata voice save <name>` puts a
+product's personal rules and the prose they cite into it.
+
 Seven of the nineteen are marked `"scope": "product"` (nine rules carry that
 mark; two of them gained evaluators and left the cited list): they are this
 product's taste — one family, two radii, lines not shadows — not the system's
