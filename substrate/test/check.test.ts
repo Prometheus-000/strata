@@ -52,7 +52,9 @@ test('check evaluates everything and enforces only invariants; a policy finding 
   const text = formatCheck(r)
   // The verdict is the first line: whether anything needs the reader should
   // not take reaching the last one.
-  assert.match(text, /^\n  1 decision\(s\) on the record  ·  every invariant holds  ·  2 finding\(s\), none of them blocking\n/)
+  // The report is wrapped for a terminal, so this reads it unwrapped.
+  const flat = (x: string) => x.replace(/\s+/g, ' ').trim()
+  assert.match(flat(text), /^1 decision\(s\) on the record · every invariant holds · 2 finding\(s\), none of them blocking/)
   // Each band says what it obliges, where the band is.
   assert.match(text, /INVARIANTS  ·  [^\n]*\n──────────────\n✓ record\.parses — 1 decision\(s\)\n✓ projections\.match-record\n✓ floors\.exist/)
   assert.match(text, /POLICY  ·  [^\n]*\n──────────────\nnames\.semantic  a\.css:3\n    #fff — undeclared/)
@@ -69,7 +71,10 @@ test('an invariant fails on a hand-edited projection, a malformed record, or an 
   const r = runCheck(dir)
   assert.ok(!enforced(r))
   assert.deepEqual(r.invariants.map((i) => [i.rule, i.ok]), [['record.parses', true], ['projections.match-record', false], ['floors.exist', false]])
-  assert.match(formatCheck(r), /✗ projections\.match-record\n    tokens\.txt  tokens\.txt differs from what the record projects — strata rebuild\n✗ floors\.exist\n    --b  no fallback/)
+  assert.match(
+    formatCheck(r).replace(/\s+/g, ' '),
+    /✗ projections\.match-record tokens\.txt tokens\.txt differs from what the record projects — strata rebuild ✗ floors\.exist --b no fallback/,
+  )
 
   resetEvaluators()
   const r2 = runCheck(dir)

@@ -55,6 +55,34 @@ export function fold(text: string, indent: number, width = COLUMNS): string[] {
   return out
 }
 
+/**
+ * A labelled value, hung under its label.
+ *
+ * The value is folded on its own rather than with the label in front of it: a
+ * label counted into the first line's width gives that line less room than the
+ * ones beneath it, and the paragraph comes out with a short first line and a
+ * ragged left edge in the same breath.
+ */
+export function labelled(label: string, value: string): string[] {
+  const at = label.length + 2
+  const [first, ...rest] = fold(value, at)
+  return [`${label}: ${first}`, ...rest.map((l) => ' '.repeat(at) + l)]
+}
+
+/**
+ * One line, cut to fit, at a word rather than through one.
+ *
+ * An index has to stay one line per entry to be an index, so something is lost
+ * — but a name cut in half reads as a different name, and the whole point of
+ * the line is that a reader can tell what it is.
+ */
+export function clip(text: string, width = COLUMNS): string {
+  if (text.length <= width) return text
+  const cut = text.slice(0, width - 1)
+  const at = cut.lastIndexOf(' ')
+  return `${(at > width * 0.6 ? cut.slice(0, at) : cut).trimEnd()}…`
+}
+
 /** A paragraph whose first line follows a prefix already `indent` wide. */
 export const hang = (text: string, indent: number): string[] => fold(text, indent).map((l, i) => (i ? ' '.repeat(indent) + l : l))
 
@@ -115,7 +143,7 @@ const consequenceRows = (d: Decision): Array<[string, string]> => {
 }
 
 const block = (title: string, lines: string[], means?: string) => (lines.length ? [...band(title, means), ...lines, ''] : [])
-const factLines = (facts: Fact[]) => facts.map((f) => `${f.name}: ${String(f.value)}${f.source ? `  (${f.source})` : ''}`)
+const factLines = (facts: Fact[]) => facts.flatMap((f) => labelled(f.name, `${String(f.value)}${f.source ? `  (${f.source})` : ''}`))
 
 /**
  * What each block is, said where the block is. Nothing in the word EVIDENCE
@@ -134,7 +162,10 @@ export function formatDecision(d: Decision, extras: { context?: Fact[]; evidence
     ...block(
       'DECISION',
       [
-        ...rows(d).map(([k, v]) => `${k}: ${v}`),
+        // A reason is prose and a `because` is a paragraph. Hung under their
+        // labels they read; printed straight they were two hundred and seventy
+        // characters wrapping into the middle of the next row.
+        ...rows(d).flatMap(([k, v]) => labelled(k, v)),
         `Id: ${d.id}${d.supersedes ? ` (supersedes ${d.supersedes})` : ''}`,
         `At: ${d.at} · via ${d.via}`,
       ],
@@ -147,9 +178,17 @@ export function formatDecision(d: Decision, extras: { context?: Fact[]; evidence
   return out.join('\n').trimEnd() + '\n'
 }
 
-/** One line, for lists. */
-export function describe(d: Decision): string {
-  const who = ` · ${handText(d.decided)}${d.written.kind === d.decided.kind && d.written.actor === d.decided.actor ? '' : ` (written ${handText(d.written)})`}`
+/**
+ * One line, for lists.
+ *
+ * `brief` drops the writing hand. In an index the deciding hand is what a
+ * reader scans for and the writing hand is detail — and the parenthetical is
+ * thirty characters, which in a line that has to fit a terminal is the
+ * difference between seeing who chose and seeing half their name.
+ */
+export function describe(d: Decision, opts: { brief?: boolean } = {}): string {
+  const sameHand = d.written.kind === d.decided.kind && d.written.actor === d.decided.actor
+  const who = ` · ${handText(d.decided)}${sameHand || opts.brief ? '' : ` (written ${handText(d.written)})`}`
   switch (d.kind) {
     case 'token':
       return `${d.action} ${d.token}${d.value ? ` = ${valueText(d.value)}` : ''}${d.consequence.collapsesTo ? ` → ${d.consequence.collapsesTo}` : ''}${who}${d.reason ? ` · ${d.reason}` : ''}`

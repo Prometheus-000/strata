@@ -6,7 +6,7 @@
 import { decide, type DecideContext } from './decide.ts'
 import { targetKey } from './decision.ts'
 import { authorFrom } from './author.ts'
-import { band, describe, fold, formatDecision, formatHandoff } from './format.ts'
+import { band, clip, describe, fold, formatDecision, formatHandoff, hang } from './format.ts'
 import { byId, collapseReversals, current, history, pending, readAll, since } from './log.ts'
 import { importAll, rebuild, registeredProjections } from './projection.ts'
 import { buildIndex, search, PROMOTION_CANDIDATE_AT } from './precedent.ts'
@@ -43,8 +43,23 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
       const kind = flag('kind')
       const shown = all.filter((d) => !kind || d.kind === kind)
       if (!shown.length) io.out('\n  nothing on the record yet\n')
-      for (const d of shown) io.out(`  ${d.id}  ${d.at.slice(0, 16)}  ${d.kind.padEnd(9)} ${describe(d)}${d.consequence.refused ? '  (refused)' : ''}`)
-      if (shown.length) io.out(`\n  ${shown.length} decision(s)${kind ? ` of kind ${kind}` : ''}\n`)
+      // One line each, and it has to be true to be worth anything: a reason is
+      // a paragraph, and seventy-two decisions printed whole came to three
+      // hundred wrapped lines, which is a dump rather than an index. The reason
+      // is last, so the cut lands there — the id is on the line to reach the
+      // rest with.
+      if (shown.length) io.out('')
+      for (const d of shown) {
+        // The kind is its own column, so a description that opens with it is
+        // saying it twice: "deviation  deviation src/sky/scene.ts:125".
+        const said = describe(d, { brief: true })
+          .replace(/\s+/g, ' ')
+          .replace(new RegExp(`^${d.kind}\\b\\s*`), '')
+          .replace(/^· /, '')
+        const line = `  ${d.id}  ${d.at.slice(0, 10)}  ${d.kind.padEnd(9)} ${said}${d.consequence.refused ? '  (refused)' : ''}`
+        io.out(clip(line))
+      }
+      if (shown.length) io.out(`\n  ${shown.length} decision(s)${kind ? ` of kind ${kind}` : ''} · strata show <id> for one in full\n`)
       return 0
     }
 
@@ -148,22 +163,25 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
       // is. Without the threshold a list of single reaches reads like findings.
       const candidates = r.convergence.filter((c) => c.candidate).length
       const most = r.convergence.reduce((m, c) => Math.max(m, c.count), 0)
-      io.out(
-        `  ${r.decisions.length} decision(s) matched  ·  ` +
+      for (const l of fold(
+        `${r.decisions.length} decision(s) matched  ·  ` +
           (candidates
             ? `${candidates} candidate(s) for promotion — promoting one is a hand's decision`
             : `no candidates yet — ${candidateAt} independent reaches is what this grammar prefers${most > 1 ? `, and the most any value has is ${most}` : ''}`),
-      )
+        2,
+      ))
+        io.out(`  ${l}`)
       io.out('')
       if (r.lines.length) {
         for (const line of band('CONVERGENCE', 'a count of what the record already holds')) io.out(line)
-        for (const line of r.lines) io.out(`  ${line}`)
+        for (const line of r.lines) for (const l of hang(line, 4)) io.out(`  ${l}`)
         io.out('')
       }
       const limit = Number(flag('limit') ?? 40)
       for (const line of band('DECISIONS', 'what the search matched, newest last')) io.out(line)
       if (r.decisions.length > limit) io.out(`  … ${r.decisions.length - limit} earlier, not shown`)
-      for (const d of r.decisions.slice(-limit)) io.out(`  ${d.id}  ${d.at.slice(0, 10)}  ${describe(d)}`)
+      // An index, like the log: one line each, cut at a word, with the id to reach the rest.
+      for (const d of r.decisions.slice(-limit)) io.out(clip(`  ${d.id}  ${d.at.slice(0, 10)}  ${describe(d, { brief: true }).replace(/\s+/g, ' ')}`))
       io.out('')
       return 0
     }
@@ -202,7 +220,9 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
           io.out(`  ${s.name.padEnd(NAME)}  ${first}`)
           for (const l of rest) io.out(`  ${' '.repeat(NAME)}  ${l}`)
         }
-        io.out('\n  strata skill <name> [--<input> value …] assembles the packet the harness performs\n')
+        io.out('')
+        for (const l of fold('strata skill <name> [--<input> value …] assembles the packet the harness performs', 2)) io.out(`  ${l}`)
+        io.out('')
         return 0
       }
       const skill = skills.find((s) => s.name === name)

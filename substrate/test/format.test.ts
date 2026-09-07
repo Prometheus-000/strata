@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { newId, type Decision } from '../src/decision.ts'
-import { describe, formatDecision, formatHandoff } from '../src/format.ts'
+import { clip, describe, formatDecision, formatHandoff } from '../src/format.ts'
 
 const cut: Decision = {
   id: newId(Date.parse('2026-09-03T12:00:00.000Z')),
@@ -110,4 +110,20 @@ test('the handoff fits the terminal it is read in, however long a decision is', 
   assert.match(text, /→ /, 'the line a person must rule on is marked in place')
   assert.match(text, /d1/, 'with the id that reaches it')
   assert.match(text, /npx strata ready/, 'and an un-handed-off record says what hands it off')
+})
+
+test('a line is cut at a word, and counted in characters rather than bytes', () => {
+  // Both halves were got wrong once. A name cut in half reads as a different
+  // name, so the cut lands at a space. And `·`, `→` and `…` are one character
+  // and several bytes each — a check that counted bytes called a
+  // seventy-seven character line eighty-one and sent me wrapping what already
+  // fitted.
+  assert.equal(clip('short enough', 40), 'short enough')
+  assert.equal(clip('a b c d e f g h i j k l m n o p', 20), 'a b c d e f g h i…')
+  assert.ok(clip('x'.repeat(60), 20).length <= 20, 'one long word is cut through, because there is nowhere else')
+  assert.ok(!clip('keep --surface-page · human prometheus-000 · Ink is the accent', 40).includes('promethe…'), 'never mid-name')
+
+  const withMarks = `${'a'.repeat(70)} · b → c`
+  assert.ok(withMarks.length < Buffer.byteLength(withMarks), 'the marks are multi-byte, which is the trap')
+  assert.ok(clip(withMarks, 78).length <= 78, 'and the cut is by character, which is what a terminal shows')
 })
