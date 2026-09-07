@@ -9,7 +9,11 @@ bench/runs/
 explorations/
 # Reference photographs for the sky, downloaded from the web; not a projection, not shipped.
 universe/
-hero-card.png
+# The social card and the browser profile the script uses to draw it. The card
+# is a projection — `npm run social-card` writes it and it is uploaded by hand
+# — and the profile is Chrome's scratch space, which used to land here.
+hero-card*.png
+*.png-profile/
 # A working copy of a voice, when one is being written here. The place a voice
 # is kept is ~/.strata/voices, outside every repository — one copy, reached by
 # name, so the same rules are not sharpened in one project and not another.

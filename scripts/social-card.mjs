@@ -16,7 +16,9 @@
  *   node scripts/social-card.mjs public/hero-light.svg out.png
  */
 import { spawn } from 'node:child_process'
-import { readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { setTimeout as wait } from 'node:timers/promises'
 
 // The browser this machine has. CHROME overrides it; on Linux the usual name
@@ -27,13 +29,21 @@ if (!svgPath || !outPath) {
   console.error('usage: node scripts/social-card.mjs <hero.svg> <out.png>')
   process.exit(1)
 }
-const page = outPath + '.html'
+// Chrome writes a profile wherever it is told to. Pointed at the output path
+// it wrote one into the repository, and the tidy-up at the end only ran when
+// nothing threw — so a failed run left a browser profile behind, and eleven of
+// its files were committed and dirtied every `git status` afterwards. It goes
+// where temporary things go, and is removed whether this succeeds or not.
+const profile = mkdtempSync(join(tmpdir(), 'strata-social-card-'))
+const page = join(profile, 'card.html')
+const done = () => rmSync(profile, { recursive: true, force: true })
+process.on('exit', done)
 writeFileSync(page, `<style>html,body{margin:0;padding:0}svg{display:block}</style>${readFileSync(svgPath, 'utf8')}`)
 
 const PORT = 9400 + Math.floor(Math.random() * 500)
 const chrome = spawn(
   CHROME,
-  ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run', '--no-default-browser-check', `--user-data-dir=${outPath}-profile`, `--remote-debugging-port=${PORT}`, '--window-size=1280,640', 'about:blank'],
+  ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run', '--no-default-browser-check', `--user-data-dir=${join(profile, 'chrome')}`, `--remote-debugging-port=${PORT}`, '--window-size=1280,640', 'about:blank'],
   { stdio: 'ignore' },
 )
 const get = async (path) => {
@@ -68,6 +78,5 @@ if (shot.error || !shot.result?.data) { chrome.kill(); throw new Error('capture 
 writeFileSync(outPath, Buffer.from(shot.result.data, 'base64'))
 ws.close()
 chrome.kill()
-rmSync(page, { force: true })
-rmSync(outPath + '-profile', { recursive: true, force: true })
+done()
 console.log(`${outPath} — 1280×640, from ${svgPath}`)
