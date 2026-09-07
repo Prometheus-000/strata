@@ -50,9 +50,8 @@ test('check evaluates everything and enforces only invariants; a policy finding 
   assert.deepEqual(r.invariants.map((i) => [i.rule, i.ok]), [['record.parses', true], ['projections.match-record', true], ['floors.exist', true]])
   assert.deepEqual(r.findings.map((f) => [f.authority, f.rule]), [['policy', 'names.semantic'], ['precedent', 'drift.convergence']])
   const text = formatCheck(r)
-  // The verdict is the first line, because a reader who has to reach the last
-  // one to learn whether anything needs them is reading a report written for
-  // something that does not get tired.
+  // The verdict is the first line: whether anything needs the reader should
+  // not take reaching the last one.
   assert.match(text, /^\n  1 decision\(s\) on the record  ·  every invariant holds  ·  2 finding\(s\), none of them blocking\n/)
   // Each band says what it obliges, where the band is.
   assert.match(text, /INVARIANTS  ·  enforced — the only class a build fails on\n──────────────\n✓ record\.parses — 1 decision\(s\)\n✓ projections\.match-record\n✓ floors\.exist/)
@@ -124,8 +123,7 @@ test("an evaluator that speaks for a rule is silent where the product's grammar 
 
 test('one judgement said in many places is one entry with its sites, not many entries', () => {
   // Seven declared deviations on seven consecutive lines of one stylesheet are
-  // one decision a reader already understood; printed seven times they bury
-  // everything under them. The sites collapse, the sentence is said once.
+  // one judgement; printed seven times they bury everything under them.
   assert.equal(collapseWheres(['a.css:868', 'a.css:869', 'a.css:870', 'a.css:874']), 'a.css:868-870, 874')
   assert.equal(collapseWheres(['b.tsx:98', 'b.tsx:440', 'b.tsx:441', 'b.tsx:442', 'b.tsx:443']), 'b.tsx:98, 440-443')
   assert.equal(collapseWheres(['x.css:9', 'x.css:9']), 'x.css:9', 'the same site twice is one site')

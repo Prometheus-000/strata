@@ -145,8 +145,7 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
         return 0
       }
       // The verdict first: whether anything crossed the bar, and where the bar
-      // is. A reader who cannot see the threshold cannot tell a list of single
-      // reaches from a list of findings, and this record is mostly the former.
+      // is. Without the threshold a list of single reaches reads like findings.
       const candidates = r.convergence.filter((c) => c.candidate).length
       const reached = r.convergence.filter((c) => c.count > 1).length
       io.out(

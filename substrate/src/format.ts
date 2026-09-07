@@ -64,9 +64,8 @@ export function rows(d: Decision): Array<[string, string]> {
       break
   }
   r.push(['Decided by', handText(d.decided)], ['Written by', handText(d.written)])
-  // How both hands were determined, verbatim, directly under the two rows it
-  // is the evidence for. The report asserted who chose and showed nothing for
-  // it; this is the one claim here a reviewer most needs to be able to check.
+  // How both hands were determined, verbatim, under the two rows it is the
+  // evidence for. Who chose is the claim a reviewer most needs to check.
   if (d.because) r.push(['Because', d.because])
   if (d.reason) r.push(['Reason', d.reason])
   return r
@@ -89,11 +88,9 @@ const block = (title: string, lines: string[], means?: string) => (lines.length 
 const factLines = (facts: Fact[]) => facts.map((f) => `${f.name}: ${String(f.value)}${f.source ? `  (${f.source})` : ''}`)
 
 /**
- * What each block is, said where the block is. These four sentences lived in
- * the README — which is proof the report needed them and did not have them: a
- * reader looking at EVIDENCE cannot know from the word alone that it was
- * computed just now, and never on the write path, and that a drag mid-design
- * therefore hears nothing.
+ * What each block is, said where the block is. Nothing in the word EVIDENCE
+ * tells a reader it was computed just now and never on the write path, which
+ * is the reason a drag mid-design hears nothing.
  */
 const MEANS = {
   decision: 'on the record — what was chosen, by whom, and why',

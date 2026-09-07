@@ -79,7 +79,7 @@ hand *wrote*. Everything downstream is derived and can be produced again.
 </picture>
 
 <details>
-<summary>The same loop as text — the original, kept for agents reading the source</summary>
+<summary>The same loop as text</summary>
 
 ```
                        HUMAN INTENT
@@ -136,10 +136,9 @@ hand *wrote*. Everything downstream is derived and can be produced again.
 
 ## It will not get in your way
 
-This is the part designers ask about first, so it is answered here rather than
-on page nine. **A build fails only on a mechanical truth about the artifact** —
-the record parses, the projections match it, every fallback chain ends, every
-`var()` resolves. Four rules out of thirty-six.
+**A build fails only on a mechanical truth about the artifact** — the record
+parses, the projections match it, every fallback chain ends, every `var()`
+resolves. Four rules out of thirty-six.
 
 Everything else — including contrast, including this product's own taste — is
 **reported, never refused**. Nothing runs while someone is designing: no hook,
@@ -249,8 +248,6 @@ keep working:
 ---
 
 ## The reference
-
-The front door is short on purpose. Everything that was here is still here:
 
 | Page | What it covers |
 | --- | --- |

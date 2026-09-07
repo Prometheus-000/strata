@@ -195,7 +195,7 @@ export function sentence(c: Convergence): string {
   const where = c.views.length > 1 ? ` across ${c.views.length} views` : c.nodes.length > 1 ? ` across ${c.nodes.length} nodes` : ''
   const unit = c.kind === 'prop' ? 'call site' : 'instance'
   // One instance has not converged on anything, and saying it did makes a list
-  // of ones read like a list of findings. A single reach is a single reach.
+  // of ones read like a list of findings.
   const verb = c.count === 1 ? 'of' : `${c.independent ? 'independently ' : ''}converged on`
   return `${c.count} ${unit}${c.count === 1 ? '' : 's'} ${verb} ${what}${where} · ${handsIn(c)} · ${who}${c.candidate ? ' — a candidate for promotion, which is a hand\'s to decide' : ''}`
 }

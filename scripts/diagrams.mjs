@@ -1,9 +1,8 @@
 /**
  * THE DIAGRAMS, PROJECTED.
  *
- * The three pictures the README and `docs/architecture.md` carry were ASCII
- * for as long as the only readers were agents, which reads them fine. A
- * designer does not, and the front door is the one page a stranger meets.
+ * The three pictures the README and `docs/architecture.md` carry were ASCII,
+ * which an agent reads and a designer does not.
  *
  * They are drawn here rather than by hand for the reason every other artifact
  * here is: two files that must agree — a light one and a dark one — are two
