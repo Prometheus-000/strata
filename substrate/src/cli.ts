@@ -6,7 +6,7 @@
 import { decide, type DecideContext } from './decide.ts'
 import { targetKey } from './decision.ts'
 import { authorFrom } from './author.ts'
-import { band, describe, formatDecision, formatHandoff } from './format.ts'
+import { band, describe, fold, formatDecision, formatHandoff } from './format.ts'
 import { byId, collapseReversals, current, history, pending, readAll, since } from './log.ts'
 import { importAll, rebuild, registeredProjections } from './projection.ts'
 import { buildIndex, search, PROMOTION_CANDIDATE_AT } from './precedent.ts'
@@ -192,7 +192,16 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
       if (!name) {
         if (!skills.length) return fail("no skills here — a skill is skills/<name>/SKILL.md or .claude/skills/<name>/SKILL.md, and strata init installs Strata's")
         io.out('')
-        for (const s of skills) io.out(`  ${s.name.padEnd(16)} ${s.purpose}`)
+        // A purpose is a sentence, and these run to two hundred and fifty
+        // characters. Folded under the name column they read as a list — the
+        // purpose alone is folded, so the first line gets the same room as the
+        // rest rather than the name eating into it.
+        const NAME = 16
+        for (const s of skills) {
+          const [first, ...rest] = fold(s.purpose, NAME + 4)
+          io.out(`  ${s.name.padEnd(NAME)}  ${first}`)
+          for (const l of rest) io.out(`  ${' '.repeat(NAME)}  ${l}`)
+        }
         io.out('\n  strata skill <name> [--<input> value …] assembles the packet the harness performs\n')
         return 0
       }

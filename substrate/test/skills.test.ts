@@ -99,3 +99,39 @@ test("`.claude/skills` is shared ground: a harness skill there is left alone, a 
   write('skills/broken/SKILL.md', '---\nname: broken\ndescription: a Strata skill that forgot to say why\n---\n\nbody\n')
   assert.throws(() => loadSkills(dir), /states its purpose/)
 })
+
+test('the packet carries the voice a product works under, whoever it belongs to', () => {
+  // A packet that dropped personal rules left an agent with none of what
+  // `--voice` had just carried in — the section was absent entirely, which
+  // defeats the point of carrying a voice at all.
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'strata-voice-packet-')))
+  fs.mkdirSync(path.join(dir, path.dirname(RULES_PATH)), { recursive: true })
+  fs.mkdirSync(path.join(dir, 'skills/cut-token'), { recursive: true })
+  fs.writeFileSync(path.join(dir, 'skills/cut-token/SKILL.md'), '---\nname: cut-token\npurpose: Decide whether a token earns its place.\ninputs: [token]\ncontext: {}\n---\n\nThe procedure.\n')
+  const rule = (id: string, scope: string) => ({ id, authority: 'policy', scope, statement: `${id} says so.`, reason: `${id} was earned.`, source: 'GRAMMAR.md › x', check: 'none' })
+  fs.writeFileSync(path.join(dir, RULES_PATH), JSON.stringify({ rules: [rule('house.two-radii', 'product'), rule('voice.no-slogans', 'personal')] }))
+
+  const text = formatPacket(assemblePacket(loadSkills(dir)[0], {}, dir))
+  assert.match(text, /## The voice this product works under/)
+  assert.match(text, /house\.two-radii/, "the product's own taste is there")
+  assert.match(text, /voice\.no-slogans/, 'and so is the voice carried into it')
+  assert.match(text, /1 this product added to the system’s, and 1 carried in from a person’s voice/, 'and the heading says which is which')
+
+  // Said once at the head, not on every line — and never called a person's
+  // voice the product's own taste, which is the one thing the section states.
+  assert.equal(text.match(/this product added/g)?.length, 1)
+  assert.doesNotMatch(text, /\(policy, this product's own taste/)
+})
+
+test('a voice that is only a person’s is named as theirs', () => {
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'strata-voice-only-')))
+  fs.mkdirSync(path.join(dir, path.dirname(RULES_PATH)), { recursive: true })
+  fs.mkdirSync(path.join(dir, 'skills/cut-token'), { recursive: true })
+  fs.writeFileSync(path.join(dir, 'skills/cut-token/SKILL.md'), '---\nname: cut-token\npurpose: Decide whether a token earns its place.\ninputs: [token]\ncontext: {}\n---\n\nThe procedure.\n')
+  fs.writeFileSync(
+    path.join(dir, RULES_PATH),
+    JSON.stringify({ rules: [{ id: 'voice.no-slogans', authority: 'policy', scope: 'personal', statement: 'A headline states a fact.', reason: 'The genus is the problem.', source: 'GRAMMAR.md › x', check: 'none' }] }),
+  )
+  const text = formatPacket(assemblePacket(loadSkills(dir)[0], {}, dir))
+  assert.match(text, /A person’s voice, carried into this product — 1 rule that belongs to them and travels on/)
+})

@@ -225,7 +225,12 @@ export interface Packet {
   rulesMissing: string[]
   /** Whether the product has a grammar at all. */
   grammar: boolean
-  /** This product's own taste — every product-scoped rule, on every packet, because the frame travels with the work. */
+  /**
+   * The voice this product works under, on every packet, because the frame
+   * travels with the work. Both kinds: a product's own taste, and a person's
+   * voice carried into it — a packet that dropped the second left an agent
+   * with none of what `--voice` had just brought in.
+   */
   voice: Rule[]
   precedent: PrecedentResult | null
   state: Record<string, unknown>
@@ -245,7 +250,7 @@ export function assemblePacket(skill: Skill, inputs: Record<string, string>, roo
   const cited = skill.context.rules ?? []
   const rules = rulesFor(all, cited)
   const rulesMissing = cited.filter((id) => !rules.some((r) => r.id === id))
-  const voice = byScope(all, 'product').filter((r) => !rules.some((x) => x.id === r.id))
+  const voice = [...byScope(all, 'product'), ...byScope(all, 'personal')].filter((r) => !rules.some((x) => x.id === r.id))
   let precedent: PrecedentResult | null = null
   if (skill.context.precedent) {
     const q: PrecedentQuery = {}
@@ -273,7 +278,7 @@ export function formatPacket(p: Packet): string {
     for (const k of p.skill.inputs) out.push(`- ${k}: ${p.inputs[k] ?? '(missing — pass --' + k + ' …)'}`)
     out.push('')
   }
-  const ruleLine = (r: Rule) => [`- **${r.id}** (${r.authority}${scopeOf(r) === 'product' ? ", this product's own taste, not the system's" : ''}) — ${r.statement}`, `  _${r.reason}_`]
+  const ruleLine = (r: Rule) => [`- **${r.id}** (${r.authority}) — ${r.statement}`, `  _${r.reason}_`]
   if (p.rules.length || p.rulesMissing.length) {
     out.push('## Rules that bear on this', '')
     if (!p.grammar) out.push(`no grammar here — \`${RULES_PATH}\` is missing, so the ${p.rulesMissing.length} rule(s) this skill cites cannot be read; \`strata init\` brings the system's`)
@@ -282,7 +287,19 @@ export function formatPacket(p: Packet): string {
     out.push('')
   }
   if (p.voice.length) {
-    out.push("## This product's voice", '', 'Every rule this product added to the system’s, because the taste travels with every piece of work:', '')
+    // Whose it is, said once at the head rather than in a parenthetical on
+    // every line — and said accurately: a carried voice belongs to a person,
+    // and calling it the product's own taste was wrong about the one thing
+    // this section exists to state.
+    const own = p.voice.filter((r) => scopeOf(r) === 'product').length
+    const mine = p.voice.length - own
+    const whose =
+      own && mine
+        ? `${own} this product added to the system’s, and ${mine} carried in from a person’s voice`
+        : mine
+          ? `A person’s voice, carried into this product — ${mine} ${mine === 1 ? 'rule that belongs to them and travels' : 'rules that belong to them and travel'} on`
+          : `Every rule this product added to the system’s`
+    out.push("## The voice this product works under", '', `${whose}, because the taste travels with every piece of work:`, '')
     for (const r of p.voice) out.push(...ruleLine(r))
     out.push('')
   }
