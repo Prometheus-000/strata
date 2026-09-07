@@ -27,7 +27,7 @@
  *   - everything else is a smaller bump.
  */
 import { handText, problemsWith, targetKey, type Decision } from '@strata/substrate/decision'
-import { DEVIATION_W, GENERIC_W, append, clamp01, emptyState, placeOf, type IdentityEvent, type IdentityState, type Receipt, type Vec } from './field.ts'
+import { DEVIATION_W, GENERIC_W, append, clamp01, emptyState, placeOf, type IdentityEvent, type IdentityState, type Caption, type Vec } from './field.ts'
 import { skyFrom, type Sky, type Vec3 } from './sky.ts'
 
 /**
@@ -91,8 +91,8 @@ export function deriveEvents(decisions: readonly Decision[]): IdentityEvent[] {
     const key = targetKey(d)
     const [system] = pathOf(d)
     const p = placeOf(system, key)
-    const receipt: Receipt = { id: d.id, kind: d.kind, target: key, hand: handText(d.decided), date: d.at.slice(0, 10) }
-    const base = { i, id: d.id, key, hand: d.decided.kind, receipt }
+    const caption: Caption = { id: d.id, kind: d.kind, target: key, hand: handText(d.decided), date: d.at.slice(0, 10) }
+    const base = { i, id: d.id, key, hand: d.decided.kind, caption }
     if (d.consequence.refused) return { ...base, kind: 'refused', p, w: 0 }
     switch (d.kind) {
       case 'token':
@@ -108,7 +108,7 @@ export function deriveEvents(decisions: readonly Decision[]): IdentityEvent[] {
       case 'deviation': {
         // A mark made on the identity lands where the hand put it; any other deviation sits where it sits, in its file.
         const mark = d.file === IDENTITY_FILE ? parseMark(d.value) : undefined
-        return { ...base, kind: 'deviation', p: mark ?? p, w: DEVIATION_W, receipt: mark ? { ...receipt, target: 'a mark on the field' } : receipt }
+        return { ...base, kind: 'deviation', p: mark ?? p, w: DEVIATION_W, caption: mark ? { ...caption, target: 'a mark on the field' } : caption }
       }
       case 'ship':
         return { ...base, kind: 'ship', p, w: 0 }
@@ -124,8 +124,8 @@ export const stateFrom = (decisions: readonly Decision[]): IdentityState => deri
 /**
  * A visitor's click, before or without the record. On a dev server the same
  * click is also written through as a deviation on `IDENTITY_FILE`, and the
- * receipt then carries the decision's id; on a static host it lives in
- * session memory and the receipt says so.
+ * caption then carries the decision's id; on a static host it lives in
+ * session memory and the caption says so.
  */
 export function visitorDeviation(p: Vec, i: number, date: string, id?: string): IdentityEvent {
   const key = `deviation:${IDENTITY_FILE}:${i}`
@@ -137,7 +137,7 @@ export function visitorDeviation(p: Vec, i: number, date: string, id?: string): 
     hand: 'human',
     p: [clamp01(p[0]), clamp01(p[1])],
     w: DEVIATION_W,
-    receipt: { id: id ?? 'not on the record', kind: 'deviation', target: 'a mark on the field', hand: 'human visitor', date },
+    caption: { id: id ?? 'not on the record', kind: 'deviation', target: 'a mark on the field', hand: 'human visitor', date },
   }
 }
 

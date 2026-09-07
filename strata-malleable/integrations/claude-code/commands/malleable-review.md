@@ -31,4 +31,4 @@ whole picture; only a mechanical invariant can fail it, never a design.
 ## 4. Commit
 
 Source and `.strata/decisions.jsonl` together, with a message that says what
-the designer decided and what you wired. There is no receipt file to delete.
+the designer decided and what you wired. There is no handoff file to delete.

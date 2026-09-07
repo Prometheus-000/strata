@@ -192,28 +192,28 @@ export function Trip() {
             </span>
             <input type="range" min={0} max={max} step={reduced ? 1 : 0.01} value={pb.t} onChange={(e) => pb.setT(Number(e.target.value))} />
           </label>
-          <dl className="identity-receipt" aria-live="polite">
+          <dl className="identity-caption" aria-live="polite">
             {current ? (
               <>
                 <div>
                   <dt>Decision</dt>
-                  <dd>{current.receipt.id}</dd>
+                  <dd>{current.caption.id}</dd>
                 </div>
                 <div>
                   <dt>Kind</dt>
-                  <dd>{current.kind === 'refused' ? `${current.receipt.kind} · refused` : current.receipt.kind}</dd>
+                  <dd>{current.kind === 'refused' ? `${current.caption.kind} · refused` : current.caption.kind}</dd>
                 </div>
                 <div>
                   <dt>Target</dt>
-                  <dd>{current.receipt.target}</dd>
+                  <dd>{current.caption.target}</dd>
                 </div>
                 <div>
                   <dt>Decided by</dt>
-                  <dd>{current.receipt.hand}</dd>
+                  <dd>{current.caption.hand}</dd>
                 </div>
                 <div>
                   <dt>On</dt>
-                  <dd>{current.receipt.date}</dd>
+                  <dd>{current.caption.date}</dd>
                 </div>
               </>
             ) : (
@@ -272,7 +272,7 @@ export function Trip() {
           <div className="identity-theme__dials">
             <SeedDials seeds={seeds} onChange={setSeeds} />
           </div>
-          <dl className="identity-receipt identity-theme__receipt">
+          <dl className="identity-caption identity-theme__caption">
             <div>
               <dt>In force</dt>
               <dd>{`${seeds.hue}° · c${seeds.chroma.toFixed(3)} · l${(seeds.lightness ?? 0).toFixed(2)} · w${seeds.warmth.toFixed(2)} · e${seeds.energy.toFixed(2)} · d${seeds.density.toFixed(2)} · ${seeds.appearance}`}</dd>

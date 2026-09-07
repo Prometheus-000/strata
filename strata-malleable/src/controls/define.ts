@@ -16,7 +16,7 @@
  *   })
  *
  * Two kinds, one declaration. A prop pick rewrites the JSX where the component
- * is used — a diff, receipted like a move. A CSS control shapes the handle the
+ * is used — a diff, recorded like a move. A CSS control shapes the handle the
  * overlay already offers; the drag still goes through the store.
  */
 import type { CssControl } from '../schema'

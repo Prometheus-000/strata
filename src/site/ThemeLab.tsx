@@ -7,10 +7,10 @@ import { hashFromSeeds, useTheme } from '../theme/ThemeContext'
 /**
  * The engine's output with the ledger applied, resolved to values. The page
  * is styled through `applyTheme`, which collapses cut tokens the same way; a
- * receipt computed from the raw engine would describe a theme nobody is seeing.
+ * reading computed from the raw engine would describe a theme nobody is seeing.
  */
 const compiled = (seeds: ThemeSeeds) => themeTokens(generateTheme(seeds), LEDGER as Ledger, 'value')
-import { compilePrompt, type Receipt } from '../theme/compilePrompt'
+import { compilePrompt, type Reading } from '../theme/compilePrompt'
 import { seedsFromImage } from '../theme/imageSeeds'
 import { contrastRatio } from '../theme/color'
 import { Avatar, Badge, Button, Card, Input, Progress, Switch } from '../components'
@@ -49,7 +49,7 @@ export function ThemeLab() {
   const { seeds, setSeeds } = useTheme()
   const [notify, setNotify] = useState(true)
   const [phrase, setPhrase] = useState('')
-  const [receipts, setReceipts] = useState<Receipt[] | null>(null)
+  const [readings, setReadings] = useState<Reading[] | null>(null)
   const [unmatched, setUnmatched] = useState<string[]>([])
   const [temperature, setTemperature] = useState(0.4)
   const [wanderTick, setWanderTick] = useState(0)
@@ -71,8 +71,8 @@ export function ThemeLab() {
 
   const compile = () => {
     if (!phrase.trim()) return
-    const { seeds: next, receipts: rec, unmatched: un } = compilePrompt(phrase, seeds)
-    setReceipts(rec)
+    const { seeds: next, readings: rec, unmatched: un } = compilePrompt(phrase, seeds)
+    setReadings(rec)
     setUnmatched(un)
     adopt(next, phrase.trim())
   }
@@ -81,7 +81,7 @@ export function ThemeLab() {
     if (!file) return
     try {
       const next = await seedsFromImage(file, seeds)
-      setReceipts(null)
+      setReadings(null)
       adopt(next, `⌾ ${file.name.replace(/\.[a-z]+$/i, '')}`)
     } catch {
       /* an undecodable file simply changes nothing */
@@ -132,7 +132,7 @@ export function ThemeLab() {
   return (
     <div className="lab">
       <div className="lab__panel">
-        {/* Say it — the phrase is the record, the seeds are the receipt */}
+        {/* Say it — the phrase is the record, the seeds are the reading */}
         <div className="lab-say">
           <Input
             label="Describe it"
@@ -151,9 +151,9 @@ export function ThemeLab() {
               onChange={(e) => onImage(e.target.files?.[0])}
             />
           </div>
-          {receipts && (
-            <p className="lab-say__receipts" aria-live="polite">
-              {receipts.map((r) => (
+          {readings && (
+            <p className="lab-say__readings" aria-live="polite">
+              {readings.map((r) => (
                 <span key={r.word + r.effect}>
                   <em>«{r.word}»</em> → {r.effect}
                 </span>
@@ -251,7 +251,7 @@ export function ThemeLab() {
           )}
         </div>
 
-        {/* Contrast receipts — the engine's promise, measured live */}
+        {/* Contrast readings — the engine's promise, measured live */}
         <div className="lab-contrast" aria-label="Live contrast ratios">
           {contrastRows.map((row) => {
             const ratio = row.ratio ?? 0

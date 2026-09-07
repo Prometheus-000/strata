@@ -82,8 +82,8 @@ export function Identity({ projection, state, t, opts, palette, presence, n, lab
     return toUnit(world, aspect)
   }
 
-  const receipt = frame.newest?.event.receipt
-  const name = receipt ? `${label}: ${frame.arrived.length} of ${frame.total} decisions; latest ${receipt.kind} on ${receipt.target}, decided by ${receipt.hand}` : `${label}: nothing decided yet`
+  const caption = frame.newest?.event.caption
+  const name = caption ? `${label}: ${frame.arrived.length} of ${frame.total} decisions; latest ${caption.kind} on ${caption.target}, decided by ${caption.hand}` : `${label}: nothing decided yet`
 
   return (
     <canvas

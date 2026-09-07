@@ -136,7 +136,7 @@ meet my own design grammar."* The two references it was measured against — the
 Visionary — set everything in one face and let scale contrast do the work: one display line,
 everything else at reading size.
 
-**Mono is for what is read as data — labels, values, receipts — and never for prose.** The
+**Mono is for what is read as data — labels, values, readings — and never for prose.** The
 same correction, from the other side: when Visionary's compiled prompt was dressed as a
 developer tool, the owner wrote *"I did not actually want it to look like code. My whole design
 thesis is it should not feel utilitarian."* A value in mono is honest; a paragraph in mono is a

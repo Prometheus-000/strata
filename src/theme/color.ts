@@ -1,6 +1,6 @@
 /**
  * LAYER 0 UTILITIES — OKLCH ↔ sRGB, and WCAG contrast.
- * Used by the lab for contrast receipts and image sampling.
+ * Used by the lab for contrast readings and image sampling.
  * Reference implementation of the OKLab transforms (Björn Ottosson).
  */
 

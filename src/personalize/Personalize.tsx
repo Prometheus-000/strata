@@ -8,7 +8,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { PRESETS, type ThemeSeeds } from '../theme/generateTheme'
 import { useTheme } from '../theme/ThemeContext'
-import { compilePrompt, type Receipt } from '../theme/compilePrompt'
+import { compilePrompt, type Reading } from '../theme/compilePrompt'
 import { Button } from '../components'
 import { Console } from '../site/Console'
 
@@ -35,7 +35,7 @@ export function Personalize() {
   const { seeds, setSeeds } = useTheme()
   const [open, setOpen] = useState(true)
   const [phrase, setPhrase] = useState('')
-  const [receipts, setReceipts] = useState<Receipt[] | null>(null)
+  const [readings, setReadings] = useState<Reading[] | null>(null)
   const loaded = useRef(false)
 
   // Per-viewer convenience: the theme survives a return visit on this device.
@@ -63,8 +63,8 @@ export function Personalize() {
 
   const compile = () => {
     if (!phrase.trim()) return
-    const { seeds: next, receipts: rec } = compilePrompt(phrase, seeds)
-    setReceipts(rec)
+    const { seeds: next, readings: rec } = compilePrompt(phrase, seeds)
+    setReadings(rec)
     setSeeds(next)
   }
 
@@ -100,9 +100,9 @@ export function Personalize() {
               />
               <Button size="sm" onClick={compile}>Set</Button>
             </div>
-            {receipts && (
-              <p className="pz-panel__receipt" aria-live="polite">
-                {receipts.slice(0, 3).map((r) => `«${r.word}» ${r.effect}`).join(' · ')}
+            {readings && (
+              <p className="pz-panel__reading" aria-live="polite">
+                {readings.slice(0, 3).map((r) => `«${r.word}» ${r.effect}`).join(' · ')}
               </p>
             )}
 
@@ -112,7 +112,7 @@ export function Personalize() {
                   key={m.name}
                   className={`pz-mood ${JSON.stringify(m.seeds) === JSON.stringify(seeds) ? 'pz-mood--active' : ''}`}
                   onClick={() => {
-                    setReceipts(null)
+                    setReadings(null)
                     setSeeds(m.seeds)
                   }}
                 >
@@ -137,7 +137,7 @@ export function Personalize() {
                   </button>
                 ))}
               </div>
-              <button className="pz-panel__reset" onClick={() => { setReceipts(null); setPhrase(''); setSeeds(PRESETS.Obsidian) }}>
+              <button className="pz-panel__reset" onClick={() => { setReadings(null); setPhrase(''); setSeeds(PRESETS.Obsidian) }}>
                 Reset
               </button>
             </div>

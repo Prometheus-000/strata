@@ -118,7 +118,7 @@ function Hero() {
 const SURFACES = [
   {
     tag: 'THEME LAB',
-    what: 'Seven dials, a phrase, or a dropped image. The whole page recompiles on every drag, and every compiled word shows its receipt.',
+    what: 'Seven dials, a phrase, or a dropped image. The whole page recompiles on every drag, and every compiled word shows what it did.',
     href: '#lab',
     cta: 'on this page',
   },

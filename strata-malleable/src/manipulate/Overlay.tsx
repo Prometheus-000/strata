@@ -434,7 +434,7 @@ function Readout({
  *
  * `<Badge tone="accent">` has three tones because Badge said so, beside
  * itself. They appear as a strip above the selected instance; a pick writes
- * the attribute at the call site — a diff, receipted — and the page re-renders
+ * the attribute at the call site — a diff, recorded — and the page re-renders
  * from source. No panel, no field: only the values the component allows.
  */
 function PropControls({ element, onStatus }: { element: HTMLElement; onStatus: (s: { text: string; error?: boolean }) => void }) {

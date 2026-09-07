@@ -56,7 +56,7 @@ export interface Polyline {
 
 export type EventKind = 'keep' | 'cut' | 'deviation' | 'ship' | 'generic' | 'refused'
 
-export interface Receipt {
+export interface Caption {
   id: string
   /** The decision's kind, as the record names it. A string here so the engine has no dependency. */
   kind: string
@@ -94,7 +94,7 @@ export interface IdentityEvent {
   value?: string
   /** A seed decision: the theme it put in force. */
   seeds?: Seeds
-  receipt: Receipt
+  caption: Caption
 }
 
 /** Append-only. The type has no method that shortens `events`, and the module exports none. */
@@ -305,7 +305,7 @@ export const seedState = (): IdentityState =>
     hand: 'human',
     p: [0.5, 0.5],
     w: 1,
-    receipt: { id: 'seed', kind: 'token', target: 'the first decision', hand: 'human', date: '' },
+    caption: { id: 'seed', kind: 'token', target: 'the first decision', hand: 'human', date: '' },
   })
 
 export function append(state: IdentityState, ev: Omit<IdentityEvent, 'i'> & { i?: number }): IdentityState {

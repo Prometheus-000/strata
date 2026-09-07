@@ -19,7 +19,7 @@ reasons: |
   A component says what may be changed about it, beside itself, the way
   Framer's property controls sit beside a component — because the person who
   wrote <Badge> is the one who knows tone has three values. A pick writes the
-  attribute at the call site: a diff, not an override, receipted with its
+  attribute at the call site: a diff, not an override, recorded with its
   author like a move. If one card in a group must differ, that is data, and
   the reviewer changes the data.
 ---

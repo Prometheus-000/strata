@@ -29,7 +29,7 @@ test('a decision prints as four blocks, and only the blocks it has', () => {
   assert.ok(full.indexOf('DECISION') < full.indexOf('CONTEXT') && full.indexOf('CONTEXT') < full.indexOf('EVIDENCE') && full.indexOf('EVIDENCE') < full.indexOf('CONSEQUENCE'))
 })
 
-test('one-line descriptions and the handoff read like the receipt did', () => {
+test('one-line descriptions and the handoff read the way they are written', () => {
   assert.equal(describe(cut), 'cut --accent-strong → --accent · human · one filled action per surface')
   const move: Decision = {
     ...cut,

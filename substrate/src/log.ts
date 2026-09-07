@@ -2,8 +2,8 @@
  * THE LOG — `.strata/decisions.jsonl`, one decision per line, appended and
  * never rewritten.
  *
- * The ledger used to be last-write-wins; the receipt deleted a move that
- * reversed the one before it. Both lost the path to the current state, and
+ * The ledger used to be last-write-wins, and a reversal deleted the move it
+ * reversed. Both lost the path to the current state, and
  * the path is where precedent lives. So nothing here removes a line. A
  * reversal is two decisions; "what does the reviewer need to see" is a query
  * (`collapseReversals`), not a deletion. A refusal is a line too — the state

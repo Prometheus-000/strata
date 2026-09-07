@@ -922,7 +922,7 @@ body {
 .lab-say__file:hover {
   color: var(--ink);
 }
-.lab-say__receipts {
+.lab-say__readings {
   margin: 0;
   font-family: var(--font-mono);
   font-size: var(--strata-text-xs);
@@ -932,11 +932,11 @@ body {
   flex-direction: column;
   gap: 2px;
 }
-.lab-say__receipts em {
+.lab-say__readings em {
   font-style: normal;
   color: var(--accent);
 }
-[data-theme='light'] .lab-say__receipts em {
+[data-theme='light'] .lab-say__readings em {
   color: var(--accent-strong);
 }
 .lab-say__unmatched {
@@ -1047,7 +1047,7 @@ body {
   border-radius: var(--radius-pill);
 }
 
-/* ---------- Contrast receipts ---------- */
+/* ---------- Contrast readings ---------- */
 .lab-contrast {
   display: flex;
   flex-direction: column;

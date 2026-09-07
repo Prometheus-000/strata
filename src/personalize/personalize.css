@@ -97,7 +97,7 @@
 .pz-panel__say .st-input {
   flex: 1;
 }
-.pz-panel__receipt {
+.pz-panel__reading {
   margin: 0;
   font-family: var(--font-mono);
   font-size: 0.68rem;

@@ -5,9 +5,9 @@
  *
  * A click appends a deviation to the state at once, so every projection
  * responds now. On the dev server it is also written through to the record
- * as a decision on `identity.html`, and the receipt then carries the id the
+ * as a decision on `identity.html`, and the caption then carries the id the
  * record gave it; the published site cannot write, so there the mark lives
- * for the session and the receipt says it is not on the record. Either way
+ * for the session and the caption says it is not on the record. Either way
  * the state only grows.
  */
 import { useCallback, useMemo, useRef, useState } from 'react'
@@ -91,8 +91,8 @@ export function useIdentity({ seed, still = false }: IdentitySource = {}) {
         .then((res) => {
           if (!res?.ok || !res.decision) return
           const id = res.decision.id
-          // The mark is on the record: let its receipt say so, by the id the record gave it.
-          setState((s) => ({ events: s.events.map((e) => (e.id === `session-${index}` ? { ...e, id, receipt: { ...e.receipt, id } } : e)) }))
+          // The mark is on the record: let its caption say so, by the id the record gave it.
+          setState((s) => ({ events: s.events.map((e) => (e.id === `session-${index}` ? { ...e, id, caption: { ...e.caption, id } } : e)) }))
         })
         .catch(() => {})
     },

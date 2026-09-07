@@ -47,16 +47,16 @@ test('nothing cut, nothing changed — the ledger is invisible until someone dec
   const tokens = generateTheme(OBSIDIAN)
   const proposed = reconcileLedger(ENGINE, emptyLedger()).ledger
   assert.deepEqual(applyLedger(tokens, proposed).tokens, tokens)
-  assert.deepEqual(applyLedger(tokens, proposed).receipts, [])
+  assert.deepEqual(applyLedger(tokens, proposed).cuts, [])
 })
 
-test('a cut token collapses to var(--fallback) in the stylesheet and to a value for receipts', () => {
+test('a cut token collapses to var(--fallback) in the stylesheet and to a value for cuts', () => {
   const tokens = generateTheme(OBSIDIAN)
   const cut = ledger({ '--accent-strong': { status: 'cut', decided: { kind: 'human' }, reason: 'one accent' } })
   const css = applyLedger(tokens, cut, { mode: 'var' })
   assert.equal(css.tokens['--accent-strong'], 'var(--accent)')
   assert.equal(css.tokens['--accent'], tokens['--accent'], 'the fallback itself is untouched')
-  assert.deepEqual(css.receipts, [{ token: '--accent-strong', to: '--accent', decided: { kind: 'human' }, reason: 'one accent' }])
+  assert.deepEqual(css.cuts, [{ token: '--accent-strong', to: '--accent', decided: { kind: 'human' }, reason: 'one accent' }])
   const value = applyLedger(tokens, cut, { mode: 'value' })
   assert.equal(value.tokens['--accent-strong'], tokens['--accent'])
 })

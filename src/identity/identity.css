@@ -187,7 +187,7 @@ body {
 .identity-time__scrub {
   width: 100%;
 }
-.identity-receipt {
+.identity-caption {
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
@@ -196,13 +196,13 @@ body {
   padding-top: var(--strata-space-5);
   border-top: var(--strata-border-hair) solid var(--line);
 }
-.identity-receipt > div {
+.identity-caption > div {
   display: flex;
   flex-direction: column;
   gap: var(--strata-space-1);
   min-width: 0;
 }
-.identity-receipt dt {
+.identity-caption dt {
   font-family: var(--font-mono);
   font-size: var(--strata-text-xs);
   font-weight: 700;
@@ -210,7 +210,7 @@ body {
   text-transform: uppercase;
   color: var(--ink-faint);
 }
-.identity-receipt dd {
+.identity-caption dd {
   margin: 0;
   font-family: var(--font-mono);
   font-size: var(--strata-text-sm);
@@ -290,7 +290,7 @@ body {
   flex-direction: column;
   gap: var(--strata-space-5);
 }
-.identity-theme__receipt {
+.identity-theme__caption {
   grid-column: auto;
   padding-top: 0;
   border-top: 0;

@@ -166,7 +166,7 @@ test('a move and a pick rewrite source through decide; the handoff lists them, c
   const text = formatHandoff(handoff, ready.decision)
   assert.match(text, /<Badge tone>\s+accent → positive/)
   assert.match(text, /ready for review — agent/)
-  assert.ok(!fs.existsSync(path.join(dir, '.malleable/ready.json')), 'no receipt file: the handoff is a query')
+  assert.ok(!fs.existsSync(path.join(dir, '.malleable/ready.json')), 'no handoff file: the handoff is a query')
 })
 
 test('a refused move is returned, not recorded; a seed change and a ship are decisions too', () => {

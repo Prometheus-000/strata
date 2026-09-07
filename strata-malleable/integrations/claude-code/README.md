@@ -22,7 +22,7 @@ The loop, and who does what:
 **Nothing speaks until you say ready.** A design in progress fails any check by
 definition, so there is no hook, no lint, no cost mark mid-drag. The only
 things the layer ever reports are the drift report for properties and the
-receipt of who moved what.
+record of who moved what.
 
 ## Install
 
@@ -58,7 +58,7 @@ components — is not packaged yet. `ADOPTING.md` says so in the same words.
 |---|---|
 | `skills/malleable` | Teaches Claude how to generate a page whose regions can be moved, how to write as an agent, and how to review a handoff by adapting code to the design |
 | `/malleable-preview` | Stamps identity, serves the page, then **gets out of the way** — it is told not to suggest layouts |
-| `/malleable-review` | Reads the receipt and the diff, wires what a move left behind, reports what it noticed, commits |
+| `/malleable-review` | Reads the record and the diff, wires what a move left behind, reports what it noticed, commits |
 
 ## The rule the review turns on
 

@@ -7,7 +7,7 @@
 
 **A persistent design decision system for humans and agents.**
 
-> **When artifacts become regenerable, decisions become infrastructure.**
+> **When components become disposable, decisions become the architecture.**
 
 While a stylesheet was hand-made, it was where the thinking lived. An artifact
 that can be produced again from something else carries the *output* of the
@@ -20,7 +20,7 @@ CSS, tokens, components, Figma libraries and generated screens are **projections
 of that record. They can be regenerated, replaced or discarded without losing
 the decisions that produced them.
 
-**The record is the decision. Everything else is a receipt.**
+**The record is the decision. Everything else can be made again.**
 
 ---
 
@@ -273,10 +273,10 @@ months — [docs/not-built.md](docs/not-built.md) is the rest of that list.
 
 Strata is the design-system instance of a thesis that first held in a
 generative media platform: *the user's prose is the record; everything derived
-from it is a receipt.* A prompt is a compilation target, not something a person
-writes; a stored artefact is worth nothing to the next model, but intent
-recompiles. The same argument, applied to a stylesheet, produces seven seeds and
-an engine. Applied to a review process, it produces an evaluator that reports
-instead of failing. Applied to a layout, it produces a drag that lands, and a
-reviewer who adapts the code to it. Applied to all of them at once, it produces
-one record, and everything else as a projection.
+from it can be made again.* A prompt is a compilation target, not something a
+person writes; a stored artefact is worth nothing to the next model, but
+intent recompiles. The same argument, applied to a stylesheet, produces seven
+seeds and an engine. Applied to a review process, it produces an evaluator
+that reports instead of failing. Applied to a layout, it produces a drag that
+lands, and a reviewer who adapts the code to it. Applied to all of them at
+once, it produces one record, and everything else as a projection.

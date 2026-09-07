@@ -205,7 +205,7 @@ Three things to notice:
 2. **The sentence that decided authorship is printed and kept.** It lands on
    the decision as `because`, so a wrong default is visible where it happened.
 3. **`--why` is not optional in spirit.** The reason is the durable part; the
-   CSS is a receipt.
+   CSS can be written again.
 
 Drop `--dry` and the same call writes: it appends the decision *and*
 regenerates every projection it touches, in one step.

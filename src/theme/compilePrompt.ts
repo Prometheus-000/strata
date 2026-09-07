@@ -1,13 +1,13 @@
 /**
  * PROMPT → SEEDS COMPILER
- * "The user's prose is the record; everything derived from it is a receipt."
+ * "The user's prose is the record; everything derived from it is a reading."
  * A phrase compiles to a seed set deterministically, and every effect is
  * itemized so the derivation is inspectable — no word acts silently.
  * Fragments are the expected input: out of order, incomplete, self-correcting.
  */
 import type { ThemeSeeds } from './generateTheme'
 
-export interface Receipt {
+export interface Reading {
   word: string
   effect: string
 }
@@ -85,10 +85,10 @@ const describe = (e: Effect): string =>
 export function compilePrompt(
   phrase: string,
   base: ThemeSeeds,
-): { seeds: ThemeSeeds; receipts: Receipt[]; unmatched: string[] } {
+): { seeds: ThemeSeeds; readings: Reading[]; unmatched: string[] } {
   const words = phrase.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)
   const seeds: ThemeSeeds = { ...base }
-  const receipts: Receipt[] = []
+  const readings: Reading[] = []
   const unmatched: string[] = []
   let hueSet = false
 
@@ -98,10 +98,10 @@ export function compilePrompt(
     if (HUES[singular] !== undefined) {
       seeds.hue = HUES[singular]
       hueSet = true
-      receipts.push({ word: singular, effect: `hue ${HUES[singular]}°` })
+      readings.push({ word: singular, effect: `hue ${HUES[singular]}°` })
     } else if (WORDS[singular]) {
       Object.assign(seeds, WORDS[singular])
-      receipts.push({ word: singular, effect: describe(WORDS[singular]) })
+      readings.push({ word: singular, effect: describe(WORDS[singular]) })
     } else if (!STOP.has(w)) {
       unmatched.push(w)
     }
@@ -111,8 +111,8 @@ export function compilePrompt(
   // so the same sentence always compiles to the same theme.
   if (!hueSet && words.length) {
     seeds.hue = fnvHue(words.join(' '))
-    receipts.push({ word: '(whole phrase)', effect: `hue ${seeds.hue}° — hashed, no color word found` })
+    readings.push({ word: '(whole phrase)', effect: `hue ${seeds.hue}° — hashed, no color word found` })
   }
 
-  return { seeds, receipts, unmatched }
+  return { seeds, readings, unmatched }
 }

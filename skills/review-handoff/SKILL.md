@@ -12,7 +12,7 @@ constraints:
   - anything you notice against the grammar is an observation in a line, never a cost and never a violation
   - "an agent-decided line needs a person's eyes before it is committed — decided.kind, never written.kind: an agent typing a person's decision is the ordinary case and needs nothing"
   - list the agent-decided lines in the handoff separately, and say so in the commit message
-  - commit the source and the record together; there is no receipt file to delete
+  - commit the source and the record together; there is no handoff file to delete
   - every write carries --why; the sentence is the decision, and the record keeps it
 evidenceRequired: [needs wiring]
 typicalDecisions: [move, prop, ready]

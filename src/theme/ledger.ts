@@ -159,16 +159,16 @@ export function fallbacksFor(minted: Record<string, string> = {}): Record<string
 /**
  * Cut tokens collapse; everything else passes through. `var` mode emits
  * `var(--fallback)` so the stylesheet keeps following the theme; `value` mode
- * resolves the chain to a concrete string, for contrast receipts and swatches
+ * resolves the chain to a concrete string, for contrast cuts and swatches
  * that need a colour rather than a reference.
  */
 export function applyLedger(
   tokens: Record<string, string>,
   ledger: Ledger,
   opts: { mode: 'var' | 'value'; fallbacks?: Record<string, Fallback> } = { mode: 'var' },
-): { tokens: Record<string, string>; receipts: Array<{ token: string; to: string; decided?: Hand; reason?: string }> } {
+): { tokens: Record<string, string>; cuts: Array<{ token: string; to: string; decided?: Hand; reason?: string }> } {
   const out: Record<string, string> = {}
-  const receipts: ReturnType<typeof applyLedger>['receipts'] = []
+  const cuts: ReturnType<typeof applyLedger>['cuts'] = []
   const isCut = (name: string) => ledger.tokens[name]?.status === 'cut'
   const table = opts.fallbacks ?? FALLBACKS
 
@@ -188,10 +188,10 @@ export function applyLedger(
     }
     const to = landing(name)
     const decision = ledger.tokens[name]
-    receipts.push({ token: name, to, decided: decision.decided, reason: decision.reason })
+    cuts.push({ token: name, to, decided: decision.decided, reason: decision.reason })
     out[name] = !isToken(to) ? to : opts.mode === 'var' ? `var(${to})` : (tokens[to] ?? to)
   }
-  return { tokens: out, receipts }
+  return { tokens: out, cuts }
 }
 
 /**

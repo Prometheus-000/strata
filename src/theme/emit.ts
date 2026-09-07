@@ -57,7 +57,7 @@ export interface EmitResult {
   counts: Record<TokenStatus, number>
   added: string[]
   stale: string[]
-  receipts: Array<{ token: string; to: string; decided?: Hand; reason?: string }>
+  cuts: Array<{ token: string; to: string; decided?: Hand; reason?: string }>
   /** The projections, as text, so a check can compare them with what is on disk. */
   files: Record<string, string>
   written: string[]
@@ -110,7 +110,7 @@ export function emitTokens(root: string, opts: { dryRun?: boolean; ledger?: Ledg
 
   const dark = applyLedger(theme(DARK), ledger, { mode: 'var', fallbacks })
   const light = applyLedger(theme(LIGHT), ledger, { mode: 'var', fallbacks })
-  const cutNote = new Map(dark.receipts.map((r) => [r.token, r]))
+  const cutNote = new Map(dark.cuts.map((r) => [r.token, r]))
 
   /** A declaration, with the decision beside it when the token was cut. */
   const decl = (p: string, v: string, indent = '  ') => {
@@ -226,7 +226,7 @@ ${block((HOUSE === 'light' ? light : dark).tokens, againstPrimitive)}
           'Every generated token is a proposal; the ledger records what people decided. proposed = unreviewed, ships as generated. kept = reviewed and wanted. cut = collapses to its fallback everywhere; the fallback is named on the token. Agents: never reach for a cut token; to cut or keep one, run npx strata cut|keep --<token> --why "…".',
         source: paths.ledger,
         counts,
-        cut: dark.receipts.map((r) => ({ token: r.token, fallback: r.to, decided: r.decided, reason: r.reason })),
+        cut: dark.cuts.map((r) => ({ token: r.token, fallback: r.to, decided: r.decided, reason: r.reason })),
       },
       font: {
         display: { $value: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif", $type: 'fontFamily' },
@@ -255,5 +255,5 @@ ${block((HOUSE === 'light' ? light : dark).tokens, againstPrimitive)}
       written.push(file)
     }
   }
-  return { counts, added, stale, receipts: dark.receipts, files, written }
+  return { counts, added, stale, cuts: dark.cuts, files, written }
 }

@@ -91,8 +91,8 @@ test('derivation: keep, cut, deviation, ship and refusal each become the event t
     ev.map((e) => e.hand),
     ['human', 'agent', 'human', 'human', 'human'],
   )
-  assert.equal(ev[0].receipt.hand, 'human p')
-  assert.equal(ev[0].receipt.date, '2026-09-01')
+  assert.equal(ev[0].caption.hand, 'human p')
+  assert.equal(ev[0].caption.date, '2026-09-01')
   const state = stateFrom(record)
   assert.equal(strataAt(state, 3, OPTS).length, 0, 'no stratum before the ship arrives')
   const strata = strataAt(state, 4.5, OPTS)
@@ -175,7 +175,7 @@ test('a click on the field is a deviation on identity.html: accepted by the iden
   const [ev] = deriveEvents(readAll(dir))
   assert.equal(ev.kind, 'deviation')
   assert.deepEqual(ev.p, [0.31, 0.72], 'the place on the record is the place in the field')
-  assert.equal(ev.receipt.target, 'a mark on the field')
+  assert.equal(ev.caption.target, 'a mark on the field')
   assert.deepEqual(parseMark('0.3100,0.7200'), [0.31, 0.72])
   assert.equal(parseMark('1.5,0.2'), undefined)
   assert.equal(parseMark('not a place'), undefined)

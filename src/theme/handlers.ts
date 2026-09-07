@@ -178,12 +178,12 @@ function tokenHandler(req: TokenRequest, ctx: ResolvedContext, root: string, log
   // The new decision is not on the record yet — the substrate appends after a
   // handler returns — so the emit is told about it here.
   const emitted = emitTokens(root, { dryRun: ctx.dryRun, log: [...log, { ...body, id: ctx.id, at: ctx.at, decided: ctx.decided, written: ctx.written, via: ctx.via, consequence: {} } as Decision] })
-  const receipt = emitted.receipts.find((r) => r.token === req.token)
+  const cut = emitted.cuts.find((r) => r.token === req.token)
   return {
     body,
     consequence:
       status === 'cut'
-        ? { collapsesTo: receipt?.to ?? fallbacks[req.token]?.to }
+        ? { collapsesTo: cut?.to ?? fallbacks[req.token]?.to }
         : req.action === 'mint'
           ? {
               affected: req.from?.length ?? 0,
