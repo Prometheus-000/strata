@@ -32,7 +32,7 @@ import { loadConfig, tokenPaths } from '@strata/substrate/config'
 /** Where this product's token projections live, from its frame file. */
 export function themePaths(root: string): { ledger: string; semantic: string; tokens: string; primitives: string } {
   const paths = tokenPaths(loadConfig(root))
-  if (!paths) throw new Error('this product keeps its own tokens (`tokens` is null in .strata/config.json), so the theme projection writes nothing here')
+  if (!paths) throw new Error('this product keeps its own tokens — tokens is null in .strata/config.json, so the theme projection writes nothing here')
   return paths
 }
 

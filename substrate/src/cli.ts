@@ -190,7 +190,7 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
       const skills = loadSkills(home.root)
       const [name] = positional
       if (!name) {
-        if (!skills.length) return fail('no skills here — a skill is skills/<name>/SKILL.md or .claude/skills/<name>/SKILL.md, and `strata init` installs Strata’s')
+        if (!skills.length) return fail("no skills here — a skill is skills/<name>/SKILL.md or .claude/skills/<name>/SKILL.md, and strata init installs Strata's")
         io.out('')
         for (const s of skills) io.out(`  ${s.name.padEnd(16)} ${s.purpose}`)
         io.out('\n  strata skill <name> [--<input> value …] assembles the packet the harness performs\n')

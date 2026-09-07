@@ -30,7 +30,7 @@ export function findProductRoot(from: string): string | undefined {
 }
 
 /** What a verb prints when it needs a product and finds none. */
-export const NOT_A_PRODUCT = 'not a Strata product here — `npx strata init` starts one, or STRATA_ROOT names the product'
+export const NOT_A_PRODUCT = 'not a Strata product here — npx strata init starts one, or STRATA_ROOT names the product'
 
 /** The product root: `STRATA_ROOT` when set, else the nearest `.strata/` above the working directory. */
 export function productRoot(env: Record<string, string | undefined> = process.env, cwd: string = process.cwd()): string | undefined {
