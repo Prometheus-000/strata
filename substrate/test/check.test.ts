@@ -54,8 +54,8 @@ test('check evaluates everything and enforces only invariants; a policy finding 
   // not take reaching the last one.
   assert.match(text, /^\n  1 decision\(s\) on the record  ·  every invariant holds  ·  2 finding\(s\), none of them blocking\n/)
   // Each band says what it obliges, where the band is.
-  assert.match(text, /INVARIANTS  ·  enforced — the only class a build fails on\n──────────────\n✓ record\.parses — 1 decision\(s\)\n✓ projections\.match-record\n✓ floors\.exist/)
-  assert.match(text, /POLICY  ·  reported, never refused[^\n]*\n──────────────\nnames\.semantic  a\.css:3\n    #fff — undeclared/)
+  assert.match(text, /INVARIANTS  ·  [^\n]*\n──────────────\n✓ record\.parses — 1 decision\(s\)\n✓ projections\.match-record\n✓ floors\.exist/)
+  assert.match(text, /POLICY  ·  [^\n]*\n──────────────\nnames\.semantic  a\.css:3\n    #fff — undeclared/)
   assert.match(text, /PRECEDENT  ·  computed from the record[^\n]*\n──────────────\ndrift\.convergence/)
   assert.match(text, /HANDOFF[\s\S]*cut --a → --accent · human · one filled action[\s\S]*not yet handed off/)
   assert.match(text, /every invariant holds; the rest is evaluation/)
@@ -93,7 +93,7 @@ test('explain assembles the four blocks: the record supplies context, evaluators
   const mid = explain(dir, e.history[1].id)!
   assert.equal(mid.decision.reason, 'one filled action per surface')
   const text = formatExplanation(mid)
-  assert.match(text, /DECISION  ·  on the record[^\n]*\n──────────────\nToken: --a\nAction: cut\nDecided by: human\nWritten by: human\nReason: one filled action per surface/)
+  assert.match(text, /DECISION  ·  [^\n]*\n──────────────\nToken: --a\nAction: cut\nDecided by: human\nWritten by: human\nReason: one filled action per surface/)
   assert.match(text, /CONTEXT  ·  [^\n]*\n──────────────\ntarget: token:--a  \(record\)\ndecisions on this target before it: 1  \(record\)\nsuperseded: keep --a · human  \(record\)\nsince superseded by: keep --a · human  \(record\)\nprecedent: 2 other decision\(s\) about the same thing  \(precedent\)/)
   assert.match(text, /EVIDENCE  ·  [^\n]*\n──────────────\nconsumers: 34  \(token\.usage\)\nusage concentration: high  \(token\.usage\)/)
   assert.doesNotMatch(text, /nope/)

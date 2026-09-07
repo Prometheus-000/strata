@@ -24,7 +24,7 @@ the decisions that produced them.
 
 ---
 
-## See it — nothing to install
+## The published site
 
 [![The Theme Lab. Left column: a describe-it prompt, six named themes, and the seven seed sliders — hue 250°, chroma 0.000, lightness +1.00, warmth 0.00, energy 0.35, density ×1.00, and a dark/light ground toggle — over the seed JSON. Right column: four neighbouring themes, a live contrast table reading ink 15.7:1, muted 7.1:1, faint 5.1:1 and label-on-accent 12.9:1, each marked AA, and a specimen panel of real controls.](public/shot-lab.png)](https://prometheus-000.github.io/strata/lab.html)
 
@@ -134,7 +134,7 @@ hand *wrote*. Everything downstream is derived and can be produced again.
 
 ---
 
-## It will not get in your way
+## What can fail a build
 
 **A build fails only on a mechanical truth about the artifact** — the record
 parses, the projections match it, every fallback chain ends, every `var()`

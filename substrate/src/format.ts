@@ -123,9 +123,9 @@ const factLines = (facts: Fact[]) => facts.map((f) => `${f.name}: ${String(f.val
  * is the reason a drag mid-design hears nothing.
  */
 const MEANS = {
-  decision: 'on the record — what was chosen, by whom, and why',
+  decision: 'what was chosen, by whom, and why',
   context: 'what the record already knew about this target',
-  evidence: 'computed when you asked — never on the write path',
+  evidence: 'computed when you asked, not when the decision was written',
   consequence: 'what the operation already knew when it ran',
 } as const
 

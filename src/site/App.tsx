@@ -83,14 +83,14 @@ function Hero() {
         </Reveal>
         <Reveal delay={80}>
           <h1 className="hero__title">
-            Design systems for the <em>generative</em> era.
+            When components become <em>disposable</em>, decisions become the architecture.
           </h1>
         </Reveal>
         <Reveal delay={160}>
           <p className="hero__lede">
-            Strata works the way the products it serves work: seven seeds, one deterministic
-            derivation, endless coherent variation. Themes as sampling, not styling — a grammar
-            written for product teams shipping models, and for the agents building beside them.
+            Seven numbers derive every colour, surface, stroke, radius and easing, in OKLCH.
+            What a product decided is held on a record, and the stylesheet, the tokens and the
+            React theme are written out of it. They can be written again.
           </p>
         </Reveal>
         <Reveal delay={240}>

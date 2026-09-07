@@ -156,7 +156,7 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
       )
       io.out('')
       if (r.lines.length) {
-        for (const line of band('CONVERGENCE', 'computed from the record, never declared — a count, not a verdict')) io.out(line)
+        for (const line of band('CONVERGENCE', 'a count of what the record already holds')) io.out(line)
         for (const line of r.lines) io.out(`  ${line}`)
         io.out('')
       }

@@ -231,10 +231,10 @@ export function formatInit(r: InitReport, opts: { dry?: boolean } = {}): string 
   out.push('')
   if (r.fresh) {
     out.push('Nothing here has been decided yet. Two ways to start:', '')
-    out.push(...step('the theme', 'npx strata retheme --hue 20 --chroma 0.12 --why "…"', 'seven numbers, on the record — or pick them by eye in the Theme Lab and pass the link with --link', 14), '')
+    out.push(...step('the theme', 'npx strata retheme --hue 20 --chroma 0.12 --why "…"', 'seven numbers, on the record. The Theme Lab picks them by eye; pass the link with --link.', 14), '')
     out.push(
       ...(r.skills.includes('write-grammar')
-        ? step('the voice', '/write-grammar in Claude Code', 'your rules, each with its reason — or npx strata skill write-grammar, for any harness', 14)
+        ? step('the voice', '/write-grammar in Claude Code', 'your rules, each with its reason. npx strata skill write-grammar assembles the same packet for any harness.', 14)
         : step('the voice', 'npx strata skill write-grammar', 'your rules, each with its reason', 14)),
       '',
     )
@@ -250,7 +250,7 @@ export function formatInit(r: InitReport, opts: { dry?: boolean } = {}): string 
       '',
     )
   }
-  out.push('npx strata check says what happened, and never refuses a design.')
+  out.push('npx strata check reports what happened. It fails only on an invariant.')
   for (const n of r.notes) out.push('', ...hang(`note: ${n}`, 6))
   return out.join('\n')
 }
