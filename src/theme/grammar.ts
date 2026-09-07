@@ -169,6 +169,57 @@ export function registerGrammarEvaluators(home: { root: string }): void {
   })
 
   /**
+   * The accent is surgical: it paints a state, never text.
+   *
+   * The token on a state is the rule being kept — an active preset, a hovered
+   * row, a selected mood. The token as ink on prose is the rule being broken,
+   * and it is invisible while the theme is monochrome, because a monochrome
+   * accent compiles to ink and looks like every other word. It appears the
+   * moment chroma goes above zero, which is the incident this rule carries:
+   * when everything flashes red, it becomes a marketing banner.
+   *
+   * `--accent-ink` is the label *on* an accent fill and is the rule working, so
+   * it is not counted. Neither is a fill, a border or a wash — those are the
+   * accent being a mark rather than a word.
+   */
+  registerEvaluator({
+    id: 'voice.surgical-accent',
+    rule: 'voice.surgical-accent',
+    findings: () => {
+      const out: Finding[] = []
+      for (const file of scanFiles(root, appDirs(root))) {
+        if (!file.endsWith('.css')) continue
+        const all = lines(read(root, file))
+        for (const { line, n } of all) {
+          // `color`, and not `background-color` or `border-color`: ink on text.
+          if (!/(?<![\w-])color\s*:\s*[^;]*var\(\s*--accent(?!-ink)[\w-]*/.test(line)) continue
+          // A rule is written either way — the selector on its own line above,
+          // or the whole rule on one. Reading only the line above found no
+          // selector for the second, so every one-line rule was reported as if
+          // it carried no state at all.
+          const here = line.slice(0, line.indexOf('{'))
+          const selector = (line.includes('{') && here.trim() ? here : (all.slice(0, n - 1).reverse().find((l) => l.line.includes('{'))?.line.split('{')[0] ?? ''))
+            .trim()
+            .replace(/\s*\{$/, '')
+          // A state is what the rule allows the accent on, and a selector says
+          // so: an active mood, a hovered row, the current page.
+          if (selector && /--active|--selected|--current|--on\b|:hover|:focus|:checked|:active|\[aria-current|\[aria-selected|\[data-state|\[data-active/.test(selector)) continue
+          const declared = /deviation:\s*(.*?)(?:\*\/|$)/.exec(line)?.[1]?.trim()
+          out.push(
+            policy(
+              'voice.surgical-accent',
+              `the accent is ink here${selector ? `, on ${selector}` : ''} — it paints a state, never text. Monochrome hides this; it appears the moment chroma goes above zero.` +
+                (declared ? ` Declared: ${declared}` : ''),
+              `${file}:${n}`,
+            ),
+          )
+        }
+      }
+      return out
+    },
+  })
+
+  /**
    * One filled action per surface, and a surface is a component.
    *
    * It was a file, which is coarser than the rule: one file here holds a hero,
