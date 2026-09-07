@@ -75,6 +75,34 @@ function componentsIn(text: string): Array<{ name: string; from: number; to: num
   return found.map((c, i) => ({ ...c, to: found[i + 1]?.from ?? text.length }))
 }
 
+/** A `deviation:` on the line or the two above it — where a person would put one. */
+function declaredNear(all: Array<{ line: string; n: number }>, n: number): string | undefined {
+  for (const l of all.slice(Math.max(0, n - 3), n).reverse()) {
+    const m = /deviation:\s*(.*?)(?:\*\/|$)/.exec(l.line)
+    if (m) return m[1].trim()
+  }
+  return undefined
+}
+
+/**
+ * The copy in a component: what a reader reads, and not what the file says.
+ *
+ * A JSX text node, and the props that carry a sentence. Anything holding a
+ * brace, a semicolon or an arrow is code — a first pass without that test read
+ * `const [temperature, setTemperature] = useState(0.4)` as a sentence with two
+ * commas in it.
+ */
+function copyIn(text: string): Array<{ at: number; said: string }> {
+  const out: Array<{ at: number; said: string }> = []
+  for (const m of text.matchAll(/>\s*\n?\s*([A-Z][^<>{}\n]{24,}?)\s*\n?\s*</g)) {
+    const said = m[1].replace(/\s+/g, ' ').trim()
+    if (/[;={}()[\]]|=>|\bconst |\breturn /.test(said)) continue
+    out.push({ at: m.index ?? 0, said })
+  }
+  for (const m of text.matchAll(/\b(?:sub|what|title|kicker|lede)=['"]([^'"]{25,})['"]/g)) out.push({ at: m.index ?? 0, said: m[1] })
+  return out
+}
+
 /** Every line of a file, numbered, with a matcher — the shape most of these want. */
 const lines = (text: string) => text.split('\n').map((line, i) => ({ line, n: i + 1 }))
 
@@ -163,6 +191,85 @@ export function registerGrammarEvaluators(home: { root: string }): void {
           if (/box-shadow\s*:\s*(inset\s+)?0\s+0\s+0\s+[\d.]+(px|rem|em)/.test(line)) continue
           out.push(policy('voice.lines-not-shadows', `a shadow written by hand: ${line.trim()}. The elevation roles carry the offsets; --shadow-color decides whether they paint.`, `${file}:${n}`))
         }
+      }
+      return out
+    },
+  })
+
+  /**
+   * Tracking and weight, which are the two halves of this rule a machine can
+   * hold. The family it names is a judgement — a product may keep its own —
+   * but "no tighter than -.01em" and "no heavier than 700" are numbers.
+   */
+  registerEvaluator({
+    id: 'voice.mono-and-weight',
+    rule: 'voice.mono-and-weight',
+    findings: () => {
+      const out: Finding[] = []
+      for (const file of scanFiles(root, appDirs(root))) {
+        if (!file.endsWith('.css')) continue
+        for (const { line, n } of lines(read(root, file))) {
+          const track = /letter-spacing\s*:\s*(-[\d.]+)em/.exec(line)
+          if (track && Number(track[1]) < -0.01)
+            out.push(policy('voice.mono-and-weight', `tracking is ${track[1]}em here, tighter than the -.01em this voice holds. Hierarchy comes from weight, not from closing the letters up.`, `${file}:${n}`))
+          const weight = /font-weight\s*:\s*(\d{3}|bolder)/.exec(line)
+          if (weight && (weight[1] === 'bolder' || Number(weight[1]) > 700))
+            out.push(policy('voice.mono-and-weight', `font-weight is ${weight[1]} here, above the 700 this voice caps at. A heavier face is a second voice.`, `${file}:${n}`))
+        }
+      }
+      return out
+    },
+  })
+
+  /**
+   * Everything in plain view: no autoplay, and nothing a person has to open.
+   *
+   * A `<details>` is the shape of the rule being broken, and sometimes of an
+   * index whose summary is the thing in plain view and whose body is the
+   * drill-down. Which it is, is a hand's to say, so it is reported and a
+   * `deviation:` comment carries the reason.
+   */
+  registerEvaluator({
+    id: 'voice.plain-view',
+    rule: 'voice.plain-view',
+    findings: () => {
+      const out: Finding[] = []
+      for (const file of scanFiles(root, appDirs(root))) {
+        if (!file.endsWith('.tsx') && !file.endsWith('.html')) continue
+        const all = lines(read(root, file))
+        for (const { line, n } of all) {
+          const declared = declaredNear(all, n)
+          if (/<details[\s>]/.test(line))
+            out.push(policy('voice.plain-view', `an expand-to-reveal here. Form makes function self-explanatory, and a drawer is a decision to hide something from the person the page is for.${declared ? ` Declared: ${declared}` : ''}`, `${file}:${n}`))
+          if (/\bautoPlay\b|\bautoplay\b/.test(line))
+            out.push(policy('voice.plain-view', `autoplay here. A tool waits to be used.${declared ? ` Declared: ${declared}` : ''}`, `${file}:${n}`))
+        }
+      }
+      return out
+    },
+  })
+
+  /**
+   * Copy is short. The rule says minimize commas too, and commas are not the
+   * signal: the two pieces of copy in this product with three of them are
+   * both lists, which is what commas are for. Length is the signal — a
+   * sentence past about thirty words has a setup and a second beat in it,
+   * which is the cadence this voice refuses.
+   */
+  registerEvaluator({
+    id: 'voice.hemingway-economy',
+    rule: 'voice.hemingway-economy',
+    findings: () => {
+      const out: Finding[] = []
+      for (const file of scanFiles(root, appDirs(root))) {
+        if (!file.endsWith('.tsx')) continue
+        const text = read(root, file)
+        for (const { at, said } of copyIn(text))
+          for (const sentence of said.split(/(?<=[.!?])\s+/)) {
+            const words = sentence.split(/\s+/).filter(Boolean).length
+            if (words > 28)
+              out.push(policy('voice.hemingway-economy', `${words} words in one sentence: “${sentence.slice(0, 80)}${sentence.length > 80 ? '…' : ''}”. The deepest true meaning in the fewest words — break it or cut it.`, `${file}:${text.slice(0, at).split('\n').length}`))
+          }
       }
       return out
     },
