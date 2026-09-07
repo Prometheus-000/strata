@@ -136,8 +136,8 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
         unpromoted: has('unpromoted'),
         text: positional.join(' ') || undefined,
       }
-      const at = flag('at') ? Number(flag('at')) : PROMOTION_CANDIDATE_AT
-      const r = search(buildIndex(readAll(home.root)), q, { candidateAt: at })
+      const candidateAt = flag('at') ? Number(flag('at')) : PROMOTION_CANDIDATE_AT
+      const r = search(buildIndex(readAll(home.root)), q, { candidateAt })
       io.out('')
       if (!r.decisions.length) {
         io.out('  no precedent on the record for that')
@@ -147,12 +147,12 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
       // The verdict first: whether anything crossed the bar, and where the bar
       // is. Without the threshold a list of single reaches reads like findings.
       const candidates = r.convergence.filter((c) => c.candidate).length
-      const reached = r.convergence.filter((c) => c.count > 1).length
+      const most = r.convergence.reduce((m, c) => Math.max(m, c.count), 0)
       io.out(
         `  ${r.decisions.length} decision(s) matched  ·  ` +
           (candidates
             ? `${candidates} candidate(s) for promotion — promoting one is a hand's decision`
-            : `no candidates yet — ${at} independent reaches is what this grammar prefers${reached ? `, and the most any value has is ${Math.max(...r.convergence.map((c) => c.count))}` : ''}`),
+            : `no candidates yet — ${candidateAt} independent reaches is what this grammar prefers${most > 1 ? `, and the most any value has is ${most}` : ''}`),
       )
       io.out('')
       if (r.lines.length) {
@@ -161,9 +161,9 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
         io.out('')
       }
       const limit = Number(flag('limit') ?? 40)
-      for (const line of band('DECISIONS', 'what the search matched, oldest last')) io.out(line)
+      for (const line of band('DECISIONS', 'what the search matched, newest last')) io.out(line)
+      if (r.decisions.length > limit) io.out(`  … ${r.decisions.length - limit} earlier, not shown`)
       for (const d of r.decisions.slice(-limit)) io.out(`  ${d.id}  ${d.at.slice(0, 10)}  ${describe(d)}`)
-      if (r.decisions.length > limit) io.out(`  … ${r.decisions.length - limit} earlier`)
       io.out('')
       return 0
     }

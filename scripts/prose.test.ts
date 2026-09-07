@@ -43,9 +43,7 @@ test('every skill cites a rule, a state provider, an example and a kind that exi
 test('the count the governance page claims about the grammar is the count the grammar has', () => {
   // The governance page states how much of the grammar is machine-checked. That
   // number moved twice in one day — adding evaluators moves rules out of the
-  // cited list — and the sentence did not follow it either time. The sentence
-  // moved out of the README when the front door was split from the reference;
-  // this test follows the prose rather than the filename.
+  // cited list — and the sentence did not follow it either time.
   const rules = loadRules(REPO)
   const invariants = rules.filter((r) => r.authority === 'invariant').length
   const rest = rules.length - invariants

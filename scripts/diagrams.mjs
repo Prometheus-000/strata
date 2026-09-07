@@ -17,7 +17,17 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-const OUT = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'public')
+const ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), '..')
+const OUT = path.join(ROOT, 'public')
+
+/**
+ * The grammar, counted at draw time. Written into the picture by hand these are
+ * two more sentences that go stale silently — the drift `scripts/prose.test.ts`
+ * exists to catch, in the one file it cannot read.
+ */
+const RULES = JSON.parse(fs.readFileSync(path.join(ROOT, 'grammar', 'rules.json'), 'utf8')).rules
+const INVARIANTS = RULES.filter((r) => r.authority === 'invariant').length
+const EVALUATED = RULES.length - INVARIANTS
 
 /** The semantic tier at the seeds in force, as sRGB. Lines, never shadows. */
 const THEME = {
@@ -35,15 +45,15 @@ const R_INTERACTIVE = 8
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 /** A label: the type is one family, and hierarchy is weight and size. */
-const label = (x, y, s, { size = 14, weight = 500, fill = 'ink', anchor = 'middle', mono = false, tracking = 0, opacity = 1 } = {}, t) =>
-  `<text x="${x}" y="${y}" font-family="${mono ? MONO : SANS}" font-size="${size}" font-weight="${weight}" fill="${t[fill]}"` +
-  `${opacity < 1 ? ` fill-opacity="${opacity}"` : ''} text-anchor="${anchor}"` +
+const label = (x, y, s, { size = 14, weight = 500, fill = 'ink', anchor = 'middle', mono = false, tracking = 0 } = {}, t) =>
+  `<text x="${x}" y="${y}" font-family="${mono ? MONO : SANS}" font-size="${size}" font-weight="${weight}"` +
+  ` fill="${t[fill]}" text-anchor="${anchor}"` +
   `${tracking ? ` letter-spacing="${tracking}"` : ''}>${esc(s)}</text>`
 
-/** A kicker: mono, faint, tracked — a key, never the accent. */
 /** An estimate wide enough to lay out by: the stack is one family everywhere. */
-const w = (s, size, mono = false) => s.length * size * (mono ? 0.6 : 0.53)
+const textWidth = (s, size, mono = false) => s.length * size * (mono ? 0.6 : 0.53)
 
+/** A kicker: mono, faint, tracked — a key, never the accent. */
 const kicker = (x, y, s, opts, t) => label(x, y, s.toUpperCase(), { size: 10, weight: 500, fill: 'faint', mono: true, tracking: 1.2, ...opts }, t)
 
 /** A panel: a 1px rule and an alpha wash, and no drop shadow anywhere. */
@@ -56,10 +66,11 @@ const line = (x1, y1, x2, y2, t, o = 0.3) =>
 /** A flow arrow. The head is drawn, not a marker, so one file carries no defs. */
 const arrow = (x1, y1, x2, y2, t, o = 0.34) => {
   const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1
-  const ux = dx / len, uy = dy / len, px = -uy, py = ux, H = 6, W = 3.4
-  const tipX = x2, tipY = y2, bx = x2 - ux * H, by = y2 - uy * H
+  const ux = dx / len, uy = dy / len, px = -uy, py = ux, HEAD = 6, HALF = 3.4
+  const bx = x2 - ux * HEAD, by = y2 - uy * HEAD
+  const pt = (sign) => `${(bx + sign * px * HALF).toFixed(2)} ${(by + sign * py * HALF).toFixed(2)}`
   return `<path d="M${x1} ${y1}L${bx} ${by}" stroke="${t.rule}" stroke-opacity="${o}" stroke-width="1" fill="none"/>` +
-    `<path d="M${tipX} ${tipY}L${(bx + px * W).toFixed(2)} ${(by + py * W).toFixed(2)}L${(bx - px * W).toFixed(2)} ${(by - py * W).toFixed(2)}Z" fill="${t.rule}" fill-opacity="${o + 0.18}"/>`
+    `<path d="M${x2} ${y2}L${pt(1)}L${pt(-1)}Z" fill="${t.rule}" fill-opacity="${o + 0.18}"/>`
 }
 
 const svg = (w, h, t, body, title) =>
@@ -70,9 +81,9 @@ const svg = (w, h, t, body, title) =>
 
 /** Rows inside a panel: a name in the one family, its file in mono, because
  *  a path is data and data is the only thing that gets a second face. */
-const rows = (x, y, w, items, t, gap = 22) => items.map(([name, file], i) =>
+const rows = (x, y, width, items, t, gap = 22) => items.map(([name, file], i) =>
   label(x + 20, y + 20 + i * gap, name, { anchor: 'start', size: 13, weight: 450, fill: 'ink' }, t) +
-  (file ? label(x + w - 20, y + 20 + i * gap, file, { anchor: 'end', size: 11, weight: 400, fill: 'faint', mono: true }, t) : '')
+  (file ? label(x + width - 20, y + 20 + i * gap, file, { anchor: 'end', size: 11, weight: 400, fill: 'faint', mono: true }, t) : '')
 ).join('\n')
 
 function loop(t) {
@@ -101,7 +112,7 @@ function loop(t) {
   ax.forEach((x) => o.push(line(x, 276, x, 286, t, 0.22)))
   ax.forEach((x, i) => {
     o.push(panel(x - 86, 286, 172, 52, t, { r: R_INTERACTIVE, fill: 'sunken', stroke: 0.14 }))
-    o.push(label(x, 307, ['Agent', 'Agent', 'Agent'][i] + ' ' + 'ABC'[i], { size: 13, weight: 500 }, t))
+    o.push(label(x, 307, `Agent ${'ABC'[i]}`, { size: 13, weight: 500 }, t))
     o.push(kicker(x, 324, ['generate', 'evaluate', 'explore'][i], {}, t))
   })
   ax.forEach((x) => o.push(line(x, 338, x, 350, t, 0.22)))
@@ -156,7 +167,7 @@ function authority(t) {
   o.push(label(LX + 24, 122, 'The only class a build fails on.', { anchor: 'start', size: 12, weight: 400, fill: 'muted' }, t))
   o.push(label(LX + 24, 140, 'A mechanical truth about the artifact,', { anchor: 'start', size: 12, weight: 400, fill: 'faint' }, t))
   o.push(label(LX + 24, 157, 'never a design judgement.', { anchor: 'start', size: 12, weight: 400, fill: 'faint' }, t))
-  o.push(label(LX + 24, 176, '4 of 36 rules', { anchor: 'start', size: 11, mono: true, fill: 'faint' }, t))
+  o.push(label(LX + 24, 176, `${INVARIANTS} of ${RULES.length} rules`, { anchor: 'start', size: 11, mono: true, fill: 'faint' }, t))
 
   // the divide
   o.push(`<path d="M${(LX + LW + RX) / 2} 34L${(LX + LW + RX) / 2} 196" stroke="${t.rule}" stroke-opacity="0.18" stroke-width="1" stroke-dasharray="2 5"/>`)
@@ -167,12 +178,12 @@ function authority(t) {
   let sx = RX + 24
   steps.forEach((s, i) => {
     o.push(label(sx, 104, s, { size: 13, weight: 500, anchor: 'start' }, t))
-    sx += w(s, 13)
+    sx += textWidth(s, 13)
     if (i < steps.length - 1) { o.push(arrow(sx + 8, 100, sx + 26, 100, t, 0.3)); sx += 34 }
   })
   o.push(label(RX + 24, 136, 'A design that is different is reported, never refused.', { anchor: 'start', size: 12, weight: 400, fill: 'muted' }, t))
   o.push(label(RX + 24, 157, 'Nothing runs while someone is designing.', { anchor: 'start', size: 12, weight: 400, fill: 'faint' }, t))
-  o.push(label(RX + 24, 176, '32 of 36 rules', { anchor: 'start', size: 11, mono: true, fill: 'faint' }, t))
+  o.push(label(RX + 24, 176, `${EVALUATED} of ${RULES.length} rules`, { anchor: 'start', size: 11, mono: true, fill: 'faint' }, t))
 
   o.push(label(W / 2, 224, 'Report, don’t police.', { size: 13, weight: 500, fill: 'muted' }, t))
   return svg(W, H, t, o.join('\n'), 'Report, don’t police: invariants are enforced, everything else is observed, recorded, evaluated and learned from')

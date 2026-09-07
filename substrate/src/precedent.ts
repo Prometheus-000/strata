@@ -187,9 +187,8 @@ export const handsIn = (c: Convergence): string => {
 
 export function sentence(c: Convergence): string {
   const what = `${c.property} = ${c.value}`
-  // The unit, named. `1 call site · 2 by hand` reads as a contradiction and is
-  // not one: the first counts distinct targets, the second counts decisions,
-  // and a reader cannot know that from two bare numbers.
+  // `1 call site · 2 by hand` counts targets and decisions in one sentence.
+  // Naming the unit is what stops it reading as a contradiction.
   const dec = (n: number) => `${n} decision${n === 1 ? '' : 's'}`
   const who = [c.byAuthor.human ? `${dec(c.byAuthor.human)} by hand` : '', c.byAuthor.agent ? `${dec(c.byAuthor.agent)} by agent` : ''].filter(Boolean).join(', ')
   const where = c.views.length > 1 ? ` across ${c.views.length} views` : c.nodes.length > 1 ? ` across ${c.nodes.length} nodes` : ''

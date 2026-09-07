@@ -84,8 +84,8 @@ ready for review — human prometheus-000, …
 every invariant holds; the rest is evaluation, and none of it blocks anything
 ```
 
-The first line is the verdict and the last line is the same verdict, because a
-reader should not have to reach the bottom to learn whether anything needs them.
+The verdict is the first line as well as the last: whether anything needs a
+reader should not take reaching the bottom.
 
 `strata check` exits 0. `strata check --enforce` runs in `npm run build` and
 exits 1 only when an invariant does not hold. This is the distinction the

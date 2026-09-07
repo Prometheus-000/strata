@@ -21,10 +21,9 @@ export interface Fact {
 const RULE = '──────────────'
 
 /**
- * A band, and what it obliges of the reader, said where the band is. Every
- * report here uses it — check, explain, precedent — so a reader learns the
- * shape once, and it is written once rather than transcribed into three
- * modules that then disagree.
+ * A band, and what it obliges of the reader, said where the band is. Check,
+ * explain and precedent all use it, so the shape is written once rather than
+ * transcribed into three modules that drift.
  */
 export const band = (name: string, means?: string): string[] => [means ? `${name}  ·  ${means}` : name, RULE]
 
