@@ -20,7 +20,7 @@ CSS, tokens, components, Figma libraries and generated screens are **projections
 of that record. They can be regenerated, replaced or discarded without losing
 the decisions that produced them.
 
-**The record is the decision. Everything else can be made again.**
+**The record is the decision. Everything else is a projection.**
 
 ---
 
