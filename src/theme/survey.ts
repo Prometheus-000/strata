@@ -12,8 +12,9 @@
  */
 import { COLUMNS, fold } from '@strata/substrate/format'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import { homedir } from 'node:os'
 import { readSheet } from './sheet'
-import { join, relative } from 'node:path'
+import { join, resolve } from 'node:path'
 import { COLOR_LITERAL } from './handlers'
 import { literals, scanFiles } from './evaluators'
 
@@ -22,6 +23,12 @@ export interface Quotation {
   file: string
   line: number
   text: string
+  /**
+   * Found outside the repository — in a harness's memory, keyed to this
+   * project. Worth reading and worth reporting as such: prose that is not in
+   * the tree is not in anyone's history either.
+   */
+  outside?: boolean
 }
 
 export interface Survey {
@@ -196,7 +203,7 @@ function stylesIn(text: string): Array<{ css: string; at: number }> {
 const top = (m: Map<string, number>, n = 5): Array<[string, number]> => [...m].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, n)
 const bump = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1)
 
-export function survey(root: string): Survey {
+export function survey(root: string, opts: { home?: string } = {}): Survey {
   const files = scanFiles(root)
   const css = files.filter((f) => f.endsWith('.css'))
   const fonts = new Map<string, number>()
@@ -244,6 +251,13 @@ export function survey(root: string): Survey {
     })
     .join(' ')
   for (const file of sheetsIn(root)) quoted.push(...editsIn(readFileSync(join(root, file)), file, shipped))
+  for (const { file, abs } of harnessMemory(root, opts.home)) {
+    try {
+      for (const q of sentencesIn(readFileSync(abs, 'utf8'), file)) quoted.push({ ...q, outside: true })
+    } catch {
+      // A memory file this cannot read is not worth failing a survey over.
+    }
+  }
 
   return {
     stylesheets: css.length,
@@ -307,6 +321,31 @@ function referencesIn(root: string, dir = '.', depth = 3): string[] {
     } else out.push(...referencesIn(root, rel, depth - 1))
   }
   return [...new Set(out)]
+}
+
+/** A project's own path, as a harness files it: every character that is not a letter or a digit becomes a dash. */
+export const projectSlug = (root: string) => resolve(root).replace(/[^A-Za-z0-9]/g, '-')
+
+/**
+ * Where a harness keeps what it remembers about this project.
+ *
+ * Claude Code files memory under the project's own path with every character
+ * that is not a letter or a digit turned into a dash. It is keyed to the
+ * project, so it is this product's reasoning — and it sits outside the tree,
+ * which is the whole reason to read it and to say where it came from. One
+ * portfolio keeps more design reasoning there than in every file it commits.
+ */
+export function harnessMemory(root: string, home = homedir()): Array<{ file: string; abs: string }> {
+  const slug = projectSlug(root)
+  const dir = join(home, '.claude', 'projects', slug, 'memory')
+  if (!existsSync(dir)) return []
+  try {
+    return readdirSync(dir)
+      .filter((n) => n.endsWith('.md'))
+      .map((n) => ({ file: `~/.claude/projects/${slug}/memory/${n}`, abs: join(dir, n) }))
+  } catch {
+    return []
+  }
 }
 
 /** Every stylesheet in the repository, wherever the product keeps it. */
@@ -376,8 +415,38 @@ function packFacts(facts: string[], indent: number, width = COLUMNS): string[] {
   return out
 }
 
+/** What the product said about its design, and where it is kept. */
+function saidLines(s: Survey): string[] {
+  return [
+    ...(s.quoted.length
+      ? [
+          `  ${s.quoted.length} thing(s) this product already said about its design`,
+          // The count is a harvest; this is a finding. Prose that is not in the
+          // tree is not in anyone's history, not on a second machine, and not
+          // readable by anyone else working here — which is the condition this
+          // system exists to name, arrived at from the other side.
+          ...(s.quoted.some((q) => q.outside)
+            ? fold(
+                `${s.quoted.filter((q) => q.outside).length} of them are not in this repository. They are in a harness's memory, keyed to this project: not committed, not on another machine, and not readable by anyone else working here.`,
+                4,
+              ).map((l) => `    ${l}`)
+            : []),
+          ...s.quoted.slice(0, 6).flatMap((q) => [`    ${q.file}:${q.line}`, ...fold(q.text.length > 200 ? `${q.text.slice(0, 200)}…` : q.text, 6).map((l) => `      ${l}`)]),
+          s.quoted.length > 6 ? `    … ${s.quoted.length - 6} more; /write-grammar reads them all` : '',
+        ].filter(Boolean)
+      : []),
+  ]
+    .filter(Boolean)
+    .flat()
+    .filter(Boolean) as string[]
+}
+
 export function formatSurvey(s: Survey): string {
-  if (s.sources === 0) return '  no stylesheets or components under the source yet — nothing to survey; the voice starts from references and rejections'
+  // The values and the words are two reports. One portfolio keeps its whole
+  // stylesheet inside a single page, so nothing is counted under the source and
+  // six hundred things it said about its design were being thrown away with the
+  // sentence that said there was nothing to survey.
+  if (s.sources === 0) return ['  no stylesheets or components under the source yet — nothing to count', ...saidLines(s)].join('\n')
   const facts = [
     `${s.stylesheets} stylesheet(s) in ${s.sources} file(s)`,
     `${s.colours.count} raw colour(s)${s.colours.declared ? ` (${s.colours.declared} declared)` : ''}`,
@@ -393,13 +462,7 @@ export function formatSurvey(s: Survey): string {
     ...rows('colours reached for most', s.colours.top),
     ...rows('durations', s.durations),
     s.colours.count ? fold('npx strata check lists every raw colour with the way to declare it; /write-grammar asks which of these were decided', 2).map((l) => `  ${l}`).join('\n') : '',
-    ...(s.quoted.length
-      ? [
-          `  ${s.quoted.length} thing(s) this product already said about its design`,
-          ...s.quoted.slice(0, 6).flatMap((q) => [`    ${q.file}:${q.line}`, ...fold(q.text.length > 200 ? `${q.text.slice(0, 200)}…` : q.text, 6).map((l) => `      ${l}`)]),
-          s.quoted.length > 6 ? `    … ${s.quoted.length - 6} more; /write-grammar reads them all` : '',
-        ].filter(Boolean)
-      : []),
+    ...saidLines(s),
   ]
     .filter(Boolean)
     .join('\n')

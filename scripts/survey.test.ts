@@ -12,7 +12,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import { survey } from '../src/theme/survey'
+import { formatSurvey, projectSlug, survey } from '../src/theme/survey'
 import { readSheet } from '../src/theme/sheet'
 
 function dir(): string {
@@ -249,4 +249,55 @@ test('a column heading does not say which line won; the page does', () => {
     q.some((t) => t.startsWith('two lines written for the same place, neither confirmed here')),
     'where neither is on a surface, no direction is claimed',
   )
+})
+
+/* ---------------- what a harness remembers about this project ---------------- */
+
+test("a harness's memory for this project is read, and reported as being outside the repository", () => {
+  // One portfolio keeps more design reasoning in its harness memory than in
+  // every file it commits: 374 of 606 things it had said about its design were
+  // not in the tree. Reading it is half the point; saying where it is, is the
+  // other half — prose outside the repository is in nobody's history.
+  const root = dir()
+  const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'strata-home-')))
+  const memory = path.join(home, '.claude', 'projects', projectSlug(root), 'memory')
+  fs.mkdirSync(memory, { recursive: true })
+  fs.writeFileSync(
+    path.join(memory, 'copy-voice.md'),
+    'The accent is surgical and red exists only on mechanical states. When everything flashes red it becomes a marketing banner and the colour stops being information.',
+  )
+  put(root, 'src/app.css', '/* the utilities: a quiet strip under the work, not competing with it */')
+
+  const s = survey(root, { home })
+  const outside = s.quoted.filter((q) => q.outside)
+  assert.equal(outside.length, 2, 'both sentences in the memory file are read')
+  assert.ok(outside.some((q) => /marketing banner/.test(q.text)))
+  assert.match(outside[0].file, /\.claude\/projects\/.*\/memory\/copy-voice\.md$/, 'named where it actually is')
+  assert.ok(
+    s.quoted.some((q) => !q.outside && /quiet strip/.test(q.text)),
+    "and the repository's own prose is still read beside it",
+  )
+  assert.match(formatSurvey(s), /2 of them are not in this repository/, 'the report says how much of it is not in the tree')
+})
+
+test('a project with nothing to count still reports what it said', () => {
+  // A portfolio whose stylesheet lives inside a single page has no source files
+  // to count, and six hundred things it said about its design were being thrown
+  // away with the sentence that said there was nothing to survey.
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'strata-survey-')))
+  put(root, 'index.html', '<style>\n/* the live prompt — the one red mark on the page, and the only thing moving */\n</style>')
+  const s = survey(root)
+  assert.equal(s.sources, 0, 'nothing under the configured source')
+  const out = formatSurvey(s)
+  assert.match(out, /nothing to count/)
+  assert.match(out, /already said about its design/, 'and what it said is reported anyway')
+  assert.match(out, /the one red mark on the page/)
+})
+
+test('a harness memory that is not there is not an error', () => {
+  const root = dir()
+  put(root, 'src/app.css', '/* one filled action per surface, and the rest are edges or bare text */')
+  const s = survey(root, { home: path.join(os.tmpdir(), 'strata-no-such-home') })
+  assert.ok(s.quoted.some((q) => /one filled action/.test(q.text)))
+  assert.deepEqual(s.quoted.filter((q) => q.outside), [])
 })
