@@ -24,6 +24,7 @@ import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { registerEvaluator, type Finding } from '@strata/substrate/evidence'
 import { loadConfig } from '@strata/substrate/config'
+import { collapseWheres } from '@strata/substrate/check'
 import { ROLES_AGAINST_PRIMITIVES } from './generateTheme'
 import { readLedger, themePaths } from './emit'
 import { scanFiles } from './evaluators'
@@ -158,12 +159,21 @@ export function registerGrammarEvaluators(home: { root: string }): void {
         if (!file.endsWith('.tsx')) continue
         const text = read(root, file)
         // `variant` defaults to primary, so a <Button> that names no variant is filled.
-        const filled = [...text.matchAll(/<Button(\s[^>]*)?>/g)].filter((m) => !/variant=/.test(m[1] ?? '')).length + [...text.matchAll(/variant="primary"/g)].length
-        if (filled > 1)
+        const hits = [...text.matchAll(/<Button(\s[^>]*)?>/g)].filter((m) => !/variant=/.test(m[1] ?? '')).concat([...text.matchAll(/variant="primary"/g)])
+        const filled = hits.length
+        if (filled > 1) {
+          // The lines, not just the count. "7 filled actions in one file" sends a
+          // reader looking; the lines let them see in a moment that five of them
+          // are a specimen sheet, and decide. The judgement is still theirs.
+          const at = hits.map((m) => text.slice(0, m.index ?? 0).split('\n').length).sort((a, b) => a - b)
           out.push({
             ...policy('layer2.one-filled-action', `${filled} filled actions in one file. Primary is filled, Secondary is an edge, Ghost is bare text; when three calls to action carry the same chrome, the screen has no point.`, file),
-            facts: [{ name: 'filled buttons', value: filled }],
+            facts: [
+              { name: 'filled buttons', value: filled },
+              { name: 'at', value: collapseWheres(at.map((l) => `${file}:${l}`)) },
+            ],
           })
+        }
       }
       return out
     },

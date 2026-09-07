@@ -60,9 +60,11 @@ npm run check
 ```
 
 ```
-INVARIANTS
+  72 decision(s) on the record  ·  every invariant holds  ·  11 finding(s), none of them blocking
+
+INVARIANTS  ·  enforced — the only class a build fails on
 ──────────────
-✓ record.parses — 66 decision(s)
+✓ record.parses — 72 decision(s)
 ✓ projections.match-record
 ✓ fallbacks.total-acyclic
 ✓ css.vars-defined
@@ -70,7 +72,7 @@ INVARIANTS
 every invariant holds; the rest is evaluation, and none of it blocks anything
 ```
 
-Read that last line carefully, because it is the whole governance model. **Only
+Read the first line carefully, because it is the whole governance model. **Only
 the four invariants can fail a build.** Everything below them is reported to
 you and never enforced:
 

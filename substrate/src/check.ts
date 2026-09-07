@@ -96,8 +96,62 @@ export const enforced = (r: CheckReport) => r.invariants.every((i) => i.ok)
 
 const RULE = '──────────────'
 
+/**
+ * What each band obliges of the reader, said where the band is rather than in
+ * documentation they do not have open. A report that names a rule id and a
+ * count, and leaves "is this bad?" to be worked out, is written for a reader
+ * who already knows the system — which is nobody on their first morning, and
+ * was not even this product's owner on a Tuesday.
+ */
+const MEANS: Record<Authority, string> = {
+  invariant: 'enforced — the only class a build fails on',
+  policy: 'reported, never refused — declaring a reason turns one into knowledge',
+  preference: 'carries its number; the number is a preference, not a threshold to pass',
+  knowledge: 'what the record learned — nothing here to answer for',
+  precedent: 'computed from the record — promoting a candidate is a hand’s decision',
+}
+
+const band = (name: string, means: string) => [`${name}  ·  ${means}`, RULE]
+
+/**
+ * Sites, said once. Seven declared deviations on seven consecutive lines of one
+ * stylesheet are one judgement, and printing the same sentence seven times
+ * buries the other findings under a thing the reader already understood.
+ */
+export function collapseWheres(wheres: readonly string[]): string {
+  const files = new Map<string, number[]>()
+  const bare: string[] = []
+  for (const w of wheres) {
+    const m = /^(.*):(\d+)$/.exec(w)
+    if (!m) { if (!bare.includes(w)) bare.push(w); continue }
+    const at = files.get(m[1]) ?? []
+    if (!at.includes(Number(m[2]))) at.push(Number(m[2]))
+    files.set(m[1], at)
+  }
+  const parts = [...files].map(([file, at]) => {
+    at.sort((a, b) => a - b)
+    const runs: string[] = []
+    for (let i = 0; i < at.length; ) {
+      let j = i
+      while (j + 1 < at.length && at[j + 1] === at[j] + 1) j++
+      runs.push(j > i + 1 ? `${at[i]}-${at[j]}` : at.slice(i, j + 1).join(', '))
+      i = j + 1
+    }
+    return `${file}:${runs.join(', ')}`
+  })
+  return [...bare, ...parts].join(' · ')
+}
+
 export function formatCheck(r: CheckReport): string {
-  const out: string[] = ['', 'INVARIANTS', RULE]
+  const blocking = !enforced(r)
+  const n = r.findings.length
+  const out: string[] = [
+    '',
+    `  ${r.decisions} decision(s) on the record  ·  ${blocking ? 'an invariant does not hold' : 'every invariant holds'}  ·  ` +
+      (n === 0 ? 'nothing else to report' : `${n} finding(s)${blocking ? '' : ', none of them blocking'}`),
+    '',
+    ...band('INVARIANTS', MEANS.invariant),
+  ]
   for (const i of r.invariants) {
     out.push(`${i.ok ? '✓' : '✗'} ${i.rule}${i.rule === 'record.parses' && i.ok ? ` — ${r.decisions} decision(s)${r.decisions === 0 ? ' (nothing decided yet)' : ''}` : ''}`)
     for (const f of i.findings) out.push(`    ${f.where ? `${f.where}  ` : ''}${f.message}`)
@@ -106,23 +160,31 @@ export function formatCheck(r: CheckReport): string {
   for (const a of AUTHORITIES.filter((x): x is Exclude<Authority, 'invariant'> => x !== 'invariant')) {
     const fs = r.findings.filter((f) => f.authority === a)
     if (!fs.length) continue
-    out.push(a.toUpperCase(), RULE)
+    out.push(...band(a.toUpperCase(), MEANS[a]))
+    // One entry per judgement: the same rule saying the same sentence in more
+    // than one place is one finding with several sites, not several findings.
+    const groups = new Map<string, Finding[]>()
     for (const f of fs) {
-      out.push(`${f.rule}${f.where ? `  ${f.where}` : ''}`)
-      out.push(`    ${f.message}`)
-      for (const fact of f.facts ?? []) out.push(`      ${fact.name}: ${String(fact.value)}`)
+      const k = `${f.rule} ${f.message}`
+      groups.set(k, [...(groups.get(k) ?? []), f])
+    }
+    for (const g of groups.values()) {
+      const where = collapseWheres(g.map((f) => f.where).filter((w): w is string => !!w))
+      out.push(`${g[0].rule}${where ? `  ${where}` : ''}${g.length > 1 ? `  (${g.length}×)` : ''}`)
+      out.push(`    ${g[0].message}`)
+      for (const f of g) for (const fact of f.facts ?? []) out.push(`      ${fact.name}: ${String(fact.value)}`)
     }
     out.push('')
   }
   if (r.cited.length) {
-    out.push('CITED, NOT EVALUATED', RULE)
+    out.push(...band('CITED, NOT EVALUATED', 'read by a hand, not by a machine — silence here is not a pass'))
     out.push(`${r.cited.length} rule(s) carry no evaluator here. They are cited into skills and read by a hand; silence about them is not a pass.`)
     const product = r.cited.filter((x) => scopeOf(x) === 'product')
     if (product.length) out.push(`${product.length} of them are this product's own taste, not the system's.`)
     for (const x of r.cited) out.push(`    ${x.id}${scopeOf(x) === 'product' ? '  (this product)' : ''}`)
     out.push('')
   }
-  out.push('HANDOFF', RULE, formatHandoff(r.pending, r.ready).trimEnd(), '')
+  out.push(...band('HANDOFF', 'what changed since the last `ready` — and which lines an agent decided'), formatHandoff(r.pending, r.ready).trimEnd(), '')
   out.push(enforced(r) ? 'every invariant holds; the rest is evaluation, and none of it blocks anything' : 'an invariant does not hold — the artifact cannot be produced faithfully from the record', '')
   return out.join('\n')
 }

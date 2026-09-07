@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import { enforced, explain, formatCheck, formatExplanation, runCheck } from '../src/check.ts'
+import { collapseWheres, enforced, explain, formatCheck, formatExplanation, runCheck } from '../src/check.ts'
 import { decide, registerHandler, resetHandlers, type Request } from '../src/decide.ts'
 import { registerEvaluator, resetEvaluators } from '../src/evidence.ts'
 import { RULES_PATH } from '../src/grammar.ts'
@@ -50,9 +50,14 @@ test('check evaluates everything and enforces only invariants; a policy finding 
   assert.deepEqual(r.invariants.map((i) => [i.rule, i.ok]), [['record.parses', true], ['projections.match-record', true], ['floors.exist', true]])
   assert.deepEqual(r.findings.map((f) => [f.authority, f.rule]), [['policy', 'names.semantic'], ['precedent', 'drift.convergence']])
   const text = formatCheck(r)
-  assert.match(text, /INVARIANTS\n──────────────\n✓ record\.parses — 1 decision\(s\)\n✓ projections\.match-record\n✓ floors\.exist/)
-  assert.match(text, /POLICY\n──────────────\nnames\.semantic  a\.css:3\n    #fff — undeclared/)
-  assert.match(text, /PRECEDENT\n──────────────\ndrift\.convergence/)
+  // The verdict is the first line, because a reader who has to reach the last
+  // one to learn whether anything needs them is reading a report written for
+  // something that does not get tired.
+  assert.match(text, /^\n  1 decision\(s\) on the record  ·  every invariant holds  ·  2 finding\(s\), none of them blocking\n/)
+  // Each band says what it obliges, where the band is.
+  assert.match(text, /INVARIANTS  ·  enforced — the only class a build fails on\n──────────────\n✓ record\.parses — 1 decision\(s\)\n✓ projections\.match-record\n✓ floors\.exist/)
+  assert.match(text, /POLICY  ·  reported, never refused[^\n]*\n──────────────\nnames\.semantic  a\.css:3\n    #fff — undeclared/)
+  assert.match(text, /PRECEDENT  ·  computed from the record[^\n]*\n──────────────\ndrift\.convergence/)
   assert.match(text, /HANDOFF[\s\S]*cut --a → --accent · human · one filled action[\s\S]*not yet handed off/)
   assert.match(text, /every invariant holds; the rest is evaluation/)
 })
@@ -115,4 +120,27 @@ test("an evaluator that speaks for a rule is silent where the product's grammar 
   assert.deepEqual(r.findings.filter((f) => f.rule === 'voice.two-radii'), [], 'the grammar here has no such rule, so nothing speaks for it')
   assert.equal(r.findings.filter((f) => f.rule === 'names.semantic').length, 1, 'a rule the grammar does have is evaluated as before')
   assert.equal(r.findings.filter((f) => f.rule === 'drift.convergence').length, 1, 'and an evaluator that names no rule is computed knowledge, always')
+})
+
+test('one judgement said in many places is one entry with its sites, not many entries', () => {
+  // Seven declared deviations on seven consecutive lines of one stylesheet are
+  // one decision a reader already understood; printed seven times they bury
+  // everything under them. The sites collapse, the sentence is said once.
+  assert.equal(collapseWheres(['a.css:868', 'a.css:869', 'a.css:870', 'a.css:874']), 'a.css:868-870, 874')
+  assert.equal(collapseWheres(['b.tsx:98', 'b.tsx:440', 'b.tsx:441', 'b.tsx:442', 'b.tsx:443']), 'b.tsx:98, 440-443')
+  assert.equal(collapseWheres(['x.css:9', 'x.css:9']), 'x.css:9', 'the same site twice is one site')
+  assert.equal(collapseWheres(['--a-token', 'a.css:2']), '--a-token · a.css:2', 'a where that is not file:line is kept as it is')
+  assert.equal(collapseWheres(['a.css:5', 'a.css:6']), 'a.css:5, 6', 'a run of two is listed, not hyphenated — the range would be longer')
+
+  const { dir, ctx } = world()
+  registerEvaluator({
+    id: 'dev',
+    findings: () =>
+      [868, 869, 870].map((n) => ({ rule: 'deviation.declared', authority: 'knowledge' as const, where: `s.css:${n}`, message: 'declared: the wheel is the value' })),
+  })
+  decide({ kind: 'token', token: '--a', action: 'cut' }, ctx())
+  fs.writeFileSync(path.join(dir, 'tokens.txt'), '--a=cut\n')
+  const text = formatCheck(runCheck(dir))
+  assert.match(text, /deviation\.declared  s\.css:868-870  \(3×\)\n    declared: the wheel is the value/)
+  assert.equal(text.match(/declared: the wheel is the value/g)?.length, 1, 'the sentence is said once, not once per site')
 })

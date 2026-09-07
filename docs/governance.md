@@ -48,27 +48,33 @@ and that is what `strata check` runs from:
 ```
 $ npx strata check
 
-INVARIANTS
+  72 decision(s) on the record  ·  every invariant holds  ·  11 finding(s), none of them blocking
+
+INVARIANTS  ·  enforced — the only class a build fails on
 ──────────────
-✓ record.parses — 66 decision(s)
+✓ record.parses — 72 decision(s)
 ✓ projections.match-record
 ✓ fallbacks.total-acyclic
 ✓ css.vars-defined
 
-POLICY
+POLICY  ·  reported, never refused — declaring a reason turns one into knowledge
 ──────────────
-safety.contrast  --ink-faint
-    8 of the 8 grounds it is set against fall under the 4.5:1 this measures text against, from 3.45:1 to 4.17:1. Reported, not refused — move the seeds, or keep the token with the reason it stands (strata keep --ink-faint --why "…") and the reason prints here. Kept by human prometheus-000: The label colour. Every kicker, key and rule-line is faint ink, never the accent — a coloured label is a second voice.
-      dark, on --surface-page: 4.14:1
-      light, on --surface-sunken: 3.45:1
-      … 6 more
+layer2.one-filled-action  src/site/App.tsx
+    7 filled actions in one file. Primary is filled, Secondary is an edge, Ghost is bare text; when three calls to action carry the same chrome, the screen has no point.
+      filled buttons: 7
+      at: src/site/App.tsx:98, 434, 440-443, 529
 
-KNOWLEDGE
+KNOWLEDGE  ·  what the record learned — nothing here to answer for
 ──────────────
-deviation.declared  src/site/site.css:868
+deviation.declared  src/site/site.css:868-874  (7×)
     declared: the hue slider paints the OKLCH wheel itself — a literal spectrum is the control's value, not themable surface
 token.unused  --motion-instant
     never used — a cut candidate, or headroom; only you know which
+
+CITED, NOT EVALUATED  ·  read by a hand, not by a machine — silence here is not a pass
+──────────────
+19 rule(s) carry no evaluator here. They are cited into skills and read by a hand; silence about them is not a pass.
+7 of them are this product's own taste, not the system's.
 
 HANDOFF
 ──────────────
@@ -77,6 +83,9 @@ ready for review — human prometheus-000, …
 
 every invariant holds; the rest is evaluation, and none of it blocks anything
 ```
+
+The first line is the verdict and the last line is the same verdict, because a
+reader should not have to reach the bottom to learn whether anything needs them.
 
 `strata check` exits 0. `strata check --enforce` runs in `npm run build` and
 exits 1 only when an invariant does not hold. This is the distinction the
