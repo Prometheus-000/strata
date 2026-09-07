@@ -10,3 +10,8 @@ explorations/
 # Reference photographs for the sky, downloaded from the web; not a projection, not shipped.
 universe/
 hero-card.png
+# A designer's own voice, and the notes it is written from. Personal, and a
+# different thing from this product's taste: it belongs to the person, travels
+# between their projects, and is carried in with `npx strata init --voice` from
+# wherever they keep it.
+voice/
