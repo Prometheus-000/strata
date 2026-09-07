@@ -19,7 +19,7 @@
  */
 import { targetKey, type Decision } from './decision.ts'
 import { authorityOf, evalContext, evaluate, findings as allFindings, registeredEvaluators, type EvalContext, type Finding } from './evidence.ts'
-import { describe, formatDecision, formatHandoff, type Fact } from './format.ts'
+import { band, describe, formatDecision, formatHandoff, type Fact } from './format.ts'
 import { AUTHORITIES, byAuthority, isCitedOnly, scopeOf, type Authority, type Rule } from './grammar.ts'
 import { byId, collapseReversals, current, history, parseLog, pending, readAll, since, LOG_PATH } from './log.ts'
 import { buildIndex, search, valueText, PROMOTION_CANDIDATE_AT } from './precedent.ts'
@@ -110,8 +110,6 @@ const MEANS: Record<Authority, string> = {
   knowledge: 'what the record learned — nothing here to answer for',
   precedent: 'computed from the record — promoting a candidate is a hand’s decision',
 }
-
-const band = (name: string, means: string) => [`${name}  ·  ${means}`, RULE]
 
 /**
  * Sites, said once. Seven declared deviations on seven consecutive lines of one

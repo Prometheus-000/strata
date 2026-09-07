@@ -43,10 +43,10 @@ hand; the record says so; a person widens it.
 
 ```
 $ strata check
-PRECEDENT
+PRECEDENT  ·  computed from the record — promoting a candidate is a hand’s decision
 ──────────────
 drift.convergence  padding = 12px
-    3 instances independently converged across 2 views · hands unnamed · 3 by hand, 0 by agent — a candidate, which is computed; promoting it is a hand's decision
+    3 instances independently converged across 2 views · hands unnamed · 3 decisions by hand — a candidate, which is computed; promoting it is a hand's decision
 
 $ strata set Card.div.st-card padding 12px --scope view --view gallery --decided-by human --actor prometheus-000 --why "every card here"
   padding = 12px on Card.div.st-card

@@ -116,8 +116,13 @@ $ strata precedent --property padding
   # ILLUSTRATIVE — the shape of the output, not a reading of this record.
   # This product's record holds token decisions and a handful of overlay
   # gestures; no property has converged across enough targets yet. Run it and see.
-  5 instances independently converged on padding = 12px across 2 views · 3 hands: prometheus-000, ada, and 1 decision by an unnamed hand · 4 by hand, 1 by agent — a candidate for promotion, which is a hand's to decide
-  1 instance converged on padding = 16px · hands unnamed · 1 by hand
+
+  6 decision(s) matched  ·  1 candidate(s) for promotion — promoting one is a hand's decision
+
+CONVERGENCE  ·  computed from the record, never declared — a count, not a verdict
+──────────────
+  5 instances independently converged on padding = 12px across 2 views · 3 hands: prometheus-000, ada, and 1 decision by an unnamed hand · 4 decisions by hand, 1 decision by agent — a candidate for promotion, which is a hand's to decide
+  1 instance of padding = 16px · hands unnamed · 1 decision by hand
 ```
 
 `strata precedent` searches every decision by property, value, component,

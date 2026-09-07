@@ -18,14 +18,14 @@ const cut: Decision = {
 
 test('a decision prints as four blocks, and only the blocks it has', () => {
   const bare = formatDecision(cut)
-  assert.match(bare, /^DECISION\n──────────────\nToken: --accent-strong\nAction: cut\nDecided by: human\nWritten by: human\nReason: one filled action per surface\n/)
-  assert.match(bare, /CONSEQUENCE\n──────────────\nfallback → --accent\naffected → 34\nwritten → src\/tokens\/semantic\.css/)
+  assert.match(bare, /^DECISION  ·  on the record[^\n]*\n──────────────\nToken: --accent-strong\nAction: cut\nDecided by: human\nWritten by: human\nReason: one filled action per surface\n/)
+  assert.match(bare, /CONSEQUENCE  ·  [^\n]*\n──────────────\nfallback → --accent\naffected → 34\nwritten → src\/tokens\/semantic\.css/)
   assert.doesNotMatch(bare, /CONTEXT|EVIDENCE/)
   const full = formatDecision(cut, {
     context: [{ name: 'consumers', value: 34 }, { name: 'surfaces', value: 7 }],
     evidence: [{ name: 'contrast', value: 'pass', source: 'contrast' }, { name: 'duplicate visual role', value: true }],
   })
-  assert.match(full, /CONTEXT\n──────────────\nconsumers: 34\nsurfaces: 7\n\nEVIDENCE\n──────────────\ncontrast: pass  \(contrast\)\nduplicate visual role: true/)
+  assert.match(full, /CONTEXT  ·  [^\n]*\n──────────────\nconsumers: 34\nsurfaces: 7\n\nEVIDENCE  ·  [^\n]*\n──────────────\ncontrast: pass  \(contrast\)\nduplicate visual role: true/)
   assert.ok(full.indexOf('DECISION') < full.indexOf('CONTEXT') && full.indexOf('CONTEXT') < full.indexOf('EVIDENCE') && full.indexOf('EVIDENCE') < full.indexOf('CONSEQUENCE'))
 })
 

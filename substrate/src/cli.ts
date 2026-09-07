@@ -6,7 +6,7 @@
 import { decide, type DecideContext } from './decide.ts'
 import { targetKey } from './decision.ts'
 import { authorFrom } from './author.ts'
-import { describe, formatDecision, formatHandoff } from './format.ts'
+import { band, describe, formatDecision, formatHandoff } from './format.ts'
 import { byId, collapseReversals, current, history, pending, readAll, since } from './log.ts'
 import { importAll, rebuild, registeredProjections } from './projection.ts'
 import { buildIndex, search, PROMOTION_CANDIDATE_AT } from './precedent.ts'
@@ -136,15 +136,36 @@ export function runSubstrate(argv: string[], home: { root: string }, env: Record
         unpromoted: has('unpromoted'),
         text: positional.join(' ') || undefined,
       }
-      const r = search(buildIndex(readAll(home.root)), q, { candidateAt: flag('at') ? Number(flag('at')) : PROMOTION_CANDIDATE_AT })
+      const at = flag('at') ? Number(flag('at')) : PROMOTION_CANDIDATE_AT
+      const r = search(buildIndex(readAll(home.root)), q, { candidateAt: at })
       io.out('')
-      if (!r.decisions.length) io.out('  no precedent on the record for that')
-      for (const line of r.lines) io.out(`  ${line}`)
-      if (r.lines.length) io.out('')
+      if (!r.decisions.length) {
+        io.out('  no precedent on the record for that')
+        io.out('')
+        return 0
+      }
+      // The verdict first: whether anything crossed the bar, and where the bar
+      // is. A reader who cannot see the threshold cannot tell a list of single
+      // reaches from a list of findings, and this record is mostly the former.
+      const candidates = r.convergence.filter((c) => c.candidate).length
+      const reached = r.convergence.filter((c) => c.count > 1).length
+      io.out(
+        `  ${r.decisions.length} decision(s) matched  ·  ` +
+          (candidates
+            ? `${candidates} candidate(s) for promotion — promoting one is a hand's decision`
+            : `no candidates yet — ${at} independent reaches is what this grammar prefers${reached ? `, and the most any value has is ${Math.max(...r.convergence.map((c) => c.count))}` : ''}`),
+      )
+      io.out('')
+      if (r.lines.length) {
+        for (const line of band('CONVERGENCE', 'computed from the record, never declared — a count, not a verdict')) io.out(line)
+        for (const line of r.lines) io.out(`  ${line}`)
+        io.out('')
+      }
       const limit = Number(flag('limit') ?? 40)
+      for (const line of band('DECISIONS', 'what the search matched, oldest last')) io.out(line)
       for (const d of r.decisions.slice(-limit)) io.out(`  ${d.id}  ${d.at.slice(0, 10)}  ${describe(d)}`)
       if (r.decisions.length > limit) io.out(`  … ${r.decisions.length - limit} earlier`)
-      io.out(r.decisions.length ? `\n  ${r.decisions.length} decision(s)\n` : '')
+      io.out('')
       return 0
     }
 

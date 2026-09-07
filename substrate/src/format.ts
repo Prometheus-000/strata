@@ -20,6 +20,14 @@ export interface Fact {
 
 const RULE = '──────────────'
 
+/**
+ * A band, and what it obliges of the reader, said where the band is. Every
+ * report here uses it — check, explain, precedent — so a reader learns the
+ * shape once, and it is written once rather than transcribed into three
+ * modules that then disagree.
+ */
+export const band = (name: string, means?: string): string[] => [means ? `${name}  ·  ${means}` : name, RULE]
+
 const valueText = (v: Value | undefined) => (v === undefined ? '' : 'token' in v ? `var(${v.token})` : v.literal)
 const propText = (v: unknown) => (v === null || v === undefined ? '(default)' : String(v))
 
@@ -56,6 +64,10 @@ export function rows(d: Decision): Array<[string, string]> {
       break
   }
   r.push(['Decided by', handText(d.decided)], ['Written by', handText(d.written)])
+  // How both hands were determined, verbatim, directly under the two rows it
+  // is the evidence for. The report asserted who chose and showed nothing for
+  // it; this is the one claim here a reviewer most needs to be able to check.
+  if (d.because) r.push(['Because', d.because])
   if (d.reason) r.push(['Reason', d.reason])
   return r
 }
@@ -73,15 +85,37 @@ const consequenceRows = (d: Decision): Array<[string, string]> => {
   return r
 }
 
-const block = (title: string, lines: string[]) => (lines.length ? [title, RULE, ...lines, ''] : [])
+const block = (title: string, lines: string[], means?: string) => (lines.length ? [...band(title, means), ...lines, ''] : [])
 const factLines = (facts: Fact[]) => facts.map((f) => `${f.name}: ${String(f.value)}${f.source ? `  (${f.source})` : ''}`)
+
+/**
+ * What each block is, said where the block is. These four sentences lived in
+ * the README — which is proof the report needed them and did not have them: a
+ * reader looking at EVIDENCE cannot know from the word alone that it was
+ * computed just now, and never on the write path, and that a drag mid-design
+ * therefore hears nothing.
+ */
+const MEANS = {
+  decision: 'on the record — what was chosen, by whom, and why',
+  context: 'what the record already knew about this target',
+  evidence: 'computed when you asked — never on the write path',
+  consequence: 'what the operation already knew when it ran',
+} as const
 
 export function formatDecision(d: Decision, extras: { context?: Fact[]; evidence?: Fact[] } = {}): string {
   const out = [
-    ...block('DECISION', [...rows(d).map(([k, v]) => `${k}: ${v}`), `Id: ${d.id}${d.supersedes ? ` (supersedes ${d.supersedes})` : ''}`, `At: ${d.at} · via ${d.via}`]),
-    ...block('CONTEXT', factLines(extras.context ?? [])),
-    ...block('EVIDENCE', factLines(extras.evidence ?? [])),
-    ...block('CONSEQUENCE', consequenceRows(d).map(([k, v]) => `${k} → ${v}`)),
+    ...block(
+      'DECISION',
+      [
+        ...rows(d).map(([k, v]) => `${k}: ${v}`),
+        `Id: ${d.id}${d.supersedes ? ` (supersedes ${d.supersedes})` : ''}`,
+        `At: ${d.at} · via ${d.via}`,
+      ],
+      MEANS.decision,
+    ),
+    ...block('CONTEXT', factLines(extras.context ?? []), MEANS.context),
+    ...block('EVIDENCE', factLines(extras.evidence ?? []), MEANS.evidence),
+    ...block('CONSEQUENCE', consequenceRows(d).map(([k, v]) => `${k} → ${v}`), MEANS.consequence),
   ]
   return out.join('\n').trimEnd() + '\n'
 }

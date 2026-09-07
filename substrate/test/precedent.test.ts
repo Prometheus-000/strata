@@ -44,7 +44,9 @@ test('search narrows by every field and reads the reasons; the lines are sentenc
   const index = buildIndex(LOG)
   const padding = search(index, { property: 'padding' })
   assert.equal(padding.decisions.length, 7)
-  assert.match(padding.lines[0], /^5 instances independently converged on padding = 12px across 2 views · hands unnamed · 4 by hand, 1 by agent — a candidate for promotion, which is a hand's to decide$/)
+  // The unit is named, because `1 call site · 2 by hand` counts targets and
+  // decisions in one sentence and reads as a contradiction.
+  assert.match(padding.lines[0], /^5 instances independently converged on padding = 12px across 2 views · hands unnamed · 4 decisions by hand, 1 decision by agent — a candidate for promotion, which is a hand's to decide$/)
   assert.equal(search(index, { property: 'padding', value: '16px' }).decisions.length, 1)
   assert.equal(search(index, { component: 'Badge' }).decisions.length, 3, 'its node, and both call sites')
   assert.equal(search(index, { token: '--radius-pill' }).decisions.length, 1)
