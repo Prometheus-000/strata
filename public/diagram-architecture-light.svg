@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 300" width="880" height="300" role="img" aria-label="The arrangement: one record, every hand through one door, and projections derived from it">
+<rect width="880" height="300" fill="#f6fbfc"/>
+<rect x="110" y="30" width="660" height="46" rx="8" fill="#ebf2f2" stroke="#172122" stroke-opacity="0.14" stroke-width="1"/>
+<text x="130" y="50" font-family="ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace" font-size="10" font-weight="500" fill="#4c5858" text-anchor="start" letter-spacing="1.2">THE RECORD</text>
+<text x="233.33333333333331" y="64" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="13" font-weight="450" fill="#172122" text-anchor="middle">Context</text>
+<text x="440" y="64" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="13" font-weight="450" fill="#172122" text-anchor="middle">Decisions</text>
+<text x="646.6666666666666" y="64" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="13" font-weight="450" fill="#172122" text-anchor="middle">Evidence</text>
+<path d="M440 76L440 98" stroke="#172122" stroke-opacity="0.34" stroke-width="1" fill="none"/><path d="M440 104L436.60 98.00L443.40 98.00Z" fill="#172122" fill-opacity="0.52"/>
+<rect x="110" y="106" width="660" height="46" rx="8" fill="#ebf2f2" stroke="#172122" stroke-opacity="0.14" stroke-width="1"/>
+<text x="130" y="126" font-family="ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace" font-size="10" font-weight="500" fill="#4c5858" text-anchor="start" letter-spacing="1.2">THE HANDS</text>
+<text x="207.5" y="140" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="13" font-weight="450" fill="#172122" text-anchor="middle">human</text>
+<text x="362.5" y="140" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="13" font-weight="450" fill="#172122" text-anchor="middle">agent</text>
+<text x="517.5" y="140" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="13" font-weight="450" fill="#172122" text-anchor="middle">overlay</text>
+<text x="672.5" y="140" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="13" font-weight="450" fill="#172122" text-anchor="middle">mcp</text>
+<path d="M440 152L440 174" stroke="#172122" stroke-opacity="0.34" stroke-width="1" fill="none"/><path d="M440 180L436.60 174.00L443.40 174.00Z" fill="#172122" fill-opacity="0.52"/>
+<rect x="110" y="182" width="660" height="46" rx="8" fill="#ebf2f2" stroke="#172122" stroke-opacity="0.14" stroke-width="1"/>
+<text x="130" y="202" font-family="ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace" font-size="10" font-weight="500" fill="#4c5858" text-anchor="start" letter-spacing="1.2">PROJECTIONS</text>
+<text x="233.33333333333331" y="216" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="13" font-weight="450" fill="#172122" text-anchor="middle">Code</text>
+<text x="440" y="216" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="13" font-weight="450" fill="#172122" text-anchor="middle">Figma</text>
+<text x="646.6666666666666" y="216" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="13" font-weight="450" fill="#172122" text-anchor="middle">Runtime</text>
+<text x="440" y="262" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="12" font-weight="400" fill="#636d6d" text-anchor="middle">Everything below the record is derived from it, and can be produced again.</text>
+</svg>

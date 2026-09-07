@@ -39,6 +39,8 @@
     "dev": "vite",
     "tokens": "tsx scripts/emit-tokens.ts",
     "identity": "tsx scripts/emit-identity.ts",
+    "diagrams": "node scripts/diagrams.mjs",
+    "shots": "node scripts/shots.mjs",
     "ledger": "node bin/strata.mjs",
     "test": "node --import tsx/esm --test scripts/*.test.ts && npm test --prefix substrate && npm test --prefix strata-malleable",
     "build": "npm run tokens && npm run identity && npm run check -- --enforce && tsc -b && vite build",

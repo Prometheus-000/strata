@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 250" width="880" height="250" role="img" aria-label="Report, don’t police: invariants are enforced, everything else is observed, recorded, evaluated and learned from">
+<rect width="880" height="250" fill="#f6fbfc"/>
+<rect x="60" y="40" width="280" height="150" rx="12" fill="#ebf2f2" stroke="#172122" stroke-opacity="0.16" stroke-width="1"/>
+<text x="84" y="70" font-family="ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace" font-size="11" font-weight="500" fill="#172122" text-anchor="start" letter-spacing="1.2">INVARIANT</text>
+<text x="84" y="96" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="20" font-weight="500" fill="#172122" text-anchor="start">enforce</text>
+<text x="84" y="122" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="12" font-weight="400" fill="#4c5858" text-anchor="start">The only class a build fails on.</text>
+<text x="84" y="140" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="12" font-weight="400" fill="#636d6d" text-anchor="start">A mechanical truth about the artifact,</text>
+<text x="84" y="157" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="12" font-weight="400" fill="#636d6d" text-anchor="start">never a design judgement.</text>
+<text x="84" y="176" font-family="ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace" font-size="11" font-weight="500" fill="#636d6d" text-anchor="start">4 of 36 rules</text>
+<path d="M380 34L380 196" stroke="#172122" stroke-opacity="0.18" stroke-width="1" stroke-dasharray="2 5"/>
+<rect x="420" y="40" width="400" height="150" rx="12" fill="#fbfefe" stroke="#172122" stroke-opacity="0.16" stroke-width="1"/>
+<text x="444" y="70" font-family="ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace" font-size="11" font-weight="500" fill="#4c5858" text-anchor="start" letter-spacing="1.2">EVERYTHING ELSE</text>
+<text x="444" y="104" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="13" font-weight="500" fill="#172122" text-anchor="start">observe</text>
+<path d="M500.23 100L512.23 100" stroke="#172122" stroke-opacity="0.3" stroke-width="1" fill="none"/><path d="M518.23 100L512.23 103.40L512.23 96.60Z" fill="#172122" fill-opacity="0.48"/>
+<text x="526.23" y="104" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="13" font-weight="500" fill="#172122" text-anchor="start">record</text>
+<path d="M575.57 100L587.57 100" stroke="#172122" stroke-opacity="0.3" stroke-width="1" fill="none"/><path d="M593.57 100L587.57 103.40L587.57 96.60Z" fill="#172122" fill-opacity="0.48"/>
+<text x="601.57" y="104" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="13" font-weight="500" fill="#172122" text-anchor="start">evaluate</text>
+<path d="M664.69 100L676.69 100" stroke="#172122" stroke-opacity="0.3" stroke-width="1" fill="none"/><path d="M682.69 100L676.69 103.40L676.69 96.60Z" fill="#172122" fill-opacity="0.48"/>
+<text x="690.69" y="104" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="13" font-weight="500" fill="#172122" text-anchor="start">learn / promote</text>
+<text x="444" y="136" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="12" font-weight="400" fill="#4c5858" text-anchor="start">A design that is different is reported, never refused.</text>
+<text x="444" y="157" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="12" font-weight="400" fill="#636d6d" text-anchor="start">Nothing runs while someone is designing.</text>
+<text x="444" y="176" font-family="ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace" font-size="11" font-weight="500" fill="#636d6d" text-anchor="start">32 of 36 rules</text>
+<text x="440" y="224" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif" font-size="13" font-weight="500" fill="#4c5858" text-anchor="middle">Report, don’t police.</text>
+</svg>

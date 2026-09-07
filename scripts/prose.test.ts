@@ -40,17 +40,19 @@ test('every skill cites a rule, a state provider, an example and a kind that exi
   assert.deepEqual(found, [], 'a skill cites something that is not there — renaming a rule silently empties the packet that cited it')
 })
 
-test('the count the README claims about the grammar is the count the grammar has', () => {
-  // The README states how much of the grammar is machine-checked. That number
-  // moved twice today — adding evaluators moves rules out of the cited list —
-  // and the sentence did not follow it either time.
+test('the count the governance page claims about the grammar is the count the grammar has', () => {
+  // The governance page states how much of the grammar is machine-checked. That
+  // number moved twice in one day — adding evaluators moves rules out of the
+  // cited list — and the sentence did not follow it either time. The sentence
+  // moved out of the README when the front door was split from the reference;
+  // this test follows the prose rather than the filename.
   const rules = loadRules(REPO)
   const invariants = rules.filter((r) => r.authority === 'invariant').length
   const rest = rules.length - invariants
   const cited = rules.filter((r) => r.authority !== 'invariant' && (r.check === undefined || r.check === 'none')).length
-  const readme = read('README.md')
-  const m = readme.match(/Of (\d+) rules, (\w+) are invariants and (\d+) are not; (\w+) of those \d+\s*\n?\s*have an evaluator/)
-  assert.ok(m, 'the README sentence that states the counts has been reworded; teach this test its new shape')
+  const doc = read('docs/governance.md')
+  const m = doc.match(/Of (\d+) rules, (\w+) are invariants and (\d+) are not; (\w+) of those \d+\s*\n?\s*have an evaluator/)
+  assert.ok(m, 'the governance sentence that states the counts has been reworded; teach this test its new shape')
   // The sentence spells its numbers, so the test has to read English ones.
   const WORDS = 'zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty'.split(' ')
   const words = Object.fromEntries(WORDS.map((w, i) => [w, i]))
@@ -58,7 +60,7 @@ test('the count the README claims about the grammar is the count the grammar has
   assert.equal(words[m[2]] ?? Number(m[2]), invariants, 'invariants')
   assert.equal(Number(m[3]), rest, 'non-invariant rules')
   assert.equal(words[m[4]] ?? Number(m[4]), rest - cited, 'rules with an evaluator')
-  assert.ok(readme.includes(`the other ${WORDS[cited] ?? cited} say`), 'cited count')
+  assert.ok(doc.includes(`the other ${WORDS[cited] ?? cited} say`), 'cited count')
 
   // And the other sentence of counts, which nothing checked: how much of the
   // cited list is this product's own taste rather than the system's. It said
@@ -67,8 +69,8 @@ test('the count the README claims about the grammar is the count the grammar has
   // in the paragraph that tells an adopter what they inherit.
   const product = byScope(rules, 'product')
   const productCited = product.filter((r) => r.check === undefined || r.check === 'none')
-  const m2 = readme.match(/(\w+) of the (\w+) are marked `"scope": "product"` \((\w+) rules carry that\n\s*mark/)
-  assert.ok(m2, 'the README sentence that states the product-scoped counts has been reworded; teach this test its new shape')
+  const m2 = doc.match(/(\w+) of the (\w+) are marked `"scope": "product"` \((\w+) rules carry that\n\s*mark/)
+  assert.ok(m2, 'the governance sentence that states the product-scoped counts has been reworded; teach this test its new shape')
   const n = (w: string) => words[w.toLowerCase()] ?? Number(w)
   assert.equal(n(m2![1]), productCited.length, "this product's rules in the cited list")
   assert.equal(n(m2![2]), cited, 'the cited list')
