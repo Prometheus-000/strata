@@ -209,6 +209,32 @@ npx strata check && npm run dev
 
 ---
 
+## Carrying a voice between products
+
+A voice here is text. This repository's is nine rules, each with the reason it
+exists, the 19KB of prose those rules cite, and seven numbers:
+
+```json
+{"hue": 250, "chroma": 0, "warmth": 0, "energy": 0.35, "density": 1, "appearance": "light", "lightness": 1}
+```
+
+Every colour, surface, stroke, radius and easing derives from those seven. So a
+designer's taste moves between projects without the components it was expressed
+in, and without a version to keep in step:
+
+```bash
+npx strata init --voice ../my-other-product
+npx strata init --voice https://github.com/you/your-voice
+```
+
+The rules and the prose are frame, so `init` writes them. The seeds are a
+decision, so it makes none — it reports the ones it found and prints the command
+that adopts them. A product started this way holds every invariant, and `strata
+check` reads the carried rules as that product's own taste rather than the
+system's.
+
+---
+
 ## What a decision looks like
 
 Ask the record why something is the way it is, and it answers in four blocks —

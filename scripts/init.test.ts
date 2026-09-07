@@ -21,7 +21,7 @@ import { runCheck, enforced } from '@strata/substrate/check'
 import { loadRules, byScope } from '@strata/substrate/grammar'
 import { readAll, seedsInForce } from '@strata/substrate/log'
 import { loadConfig, CONFIG_PATH } from '@strata/substrate/config'
-import { init, formatInit, ADOPTER_SKILLS, MALLEABLE_SKILLS } from '../src/init'
+import { init, formatInit, readVoice, ADOPTER_SKILLS, MALLEABLE_SKILLS } from '../src/init'
 import { registerTheme } from '../src/theme/handlers'
 import { runTheme } from '../src/theme/cli'
 import { OBSIDIAN } from '../src/theme/generateTheme'
@@ -195,4 +195,49 @@ test('--malleable adds that layer’s skills and commands, and installs nothing 
   const found = runCheck(dir).findings.filter((f) => f.rule === 'skills.cite-what-exists')
   assert.deepEqual(found, [], found.map((f) => f.message).join('; '))
   assert.ok(r.notes.some((n) => /overrides are design decisions/.test(n)))
+})
+
+test('a designer carries a voice into a new product: the rules, the prose they cite, and the seeds as a decision still to make', () => {
+  // The reason this system is worth anything to one designer: taste travels
+  // without the components it was expressed in. A voice is frame — the rules a
+  // product marked as its own and the GRAMMAR.md they cite — so init may carry
+  // it. The seeds are a decision, and init makes none.
+  const voice = readVoice(REPO)
+  assert.ok(voice.rules.length > 0, 'this repository has a voice to lend')
+  assert.ok(
+    voice.rules.every((r) => r.scope === 'product'),
+    'a voice is what a product marked as its own taste, never the system rules an adopter already gets',
+  )
+  assert.ok(voice.grammar && voice.grammar.length > 1000, 'the prose the rules cite travels with them')
+  assert.ok(voice.seeds && typeof voice.seeds.hue === 'number', 'the seeds it has in force are read')
+
+  const dir = fresh()
+  const r = init(dir, REPO, { voice: REPO })
+  const rules = loadRules(dir)
+  const mine = byScope(rules, 'product')
+  assert.equal(mine.length, voice.rules.length, 'every voice rule arrived')
+  assert.ok(rules.length > mine.length, 'and the system rules are still there beside them')
+
+  // A voice rule cites a section of GRAMMAR.md. Carrying one without the other
+  // leaves every citation pointing at nothing.
+  for (const rule of mine) {
+    const file = rule.source.split('›')[0].trim()
+    assert.ok(fs.existsSync(path.join(dir, file)), `${rule.id} cites ${file}, which must have travelled with it`)
+  }
+
+  // init decides nothing, so the theme is not adopted — it is offered.
+  assert.deepEqual(readAll(dir).filter((d) => d.kind === 'seed'), [], 'carrying a voice writes no decision')
+  const text = formatInit(r)
+  assert.match(text, /Your voice is here: \d+ rules from/)
+  assert.match(text, /npx strata retheme --hue \d+/, 'the seeds it arrived with are offered as the command that adopts them')
+  assert.doesNotMatch(text, /Two ways to start/, 'the voice is written, so the message stops offering to write one')
+
+  // And the product it made still holds.
+  registerTheme({ root: dir })
+  assert.ok(enforced(runCheck(dir)), 'a product started from a carried voice holds every invariant')
+})
+
+test('a voice from somewhere that is not a product is refused by name', () => {
+  const empty = fresh()
+  assert.throws(() => readVoice(empty), /no grammar\/rules\.json/, 'says what was missing and where it looked')
 })

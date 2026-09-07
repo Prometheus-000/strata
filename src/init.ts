@@ -13,13 +13,15 @@
  * decides nothing — the first decision is the person's, and the message says
  * what it usually is.
  */
+import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { stdin, stdout } from 'node:process'
 import { createInterface } from 'node:readline/promises'
 import { CONFIG_PATH, DEFAULT_CONFIG, loadConfig, writeConfig, type ProductConfig } from '@strata/substrate/config'
 import { RULES_PATH, type Layer, type Rule } from '@strata/substrate/grammar'
-import { fold, hang } from '@strata/substrate/format'
+import { COLUMNS, fold, hang } from '@strata/substrate/format'
 import { LOG_PATH } from '@strata/substrate/log'
 import { registerTheme } from './theme/handlers'
 import { initTheme } from './theme/init'
@@ -37,6 +39,8 @@ export const TEMPLATE_GRAMMAR = 'templates/GRAMMAR.md'
 
 export interface InitOptions {
   source?: string[]
+  /** Another product to take a voice from: a path, or a git URL. */
+  voice?: string
   /** null: the product keeps its own tokens. */
   tokens?: string | null
   skills?: boolean
@@ -59,6 +63,8 @@ export interface InitReport {
   config: ProductConfig
   skills: string[]
   survey: string
+  /** The voice carried in, when one was. */
+  voice?: Voice
   /** No stylesheet, no component: a product that starts from nothing. */
   fresh: boolean
 }
@@ -82,6 +88,70 @@ export function sourceInPackage(source: string, name: string): string {
   const mapped = file.startsWith('substrate/') ? `node_modules/${name}/node_modules/@strata/${file}` : `node_modules/${name}/${file}`
   return [mapped, ...rest].join(' › ')
 }
+
+/** A voice carried in from another product: its own rules, and the prose they cite. */
+export interface Voice {
+  /** The source, as it was given. */
+  from: string
+  rules: Rule[]
+  grammar: string | null
+  /** The seeds that product has in force, if its record holds any. */
+  seeds: Record<string, number | string> | null
+}
+
+const isRemote = (s: string) => /^(https?:\/\/|git@|ssh:\/\/|git:\/\/)/.test(s)
+
+/**
+ * Read another product's voice.
+ *
+ * A voice is frame, not decisions: the rules a product marked as its own taste,
+ * and the GRAMMAR.md those rules cite. Every voice rule's source points at a
+ * section of that file, so the two travel together or neither resolves.
+ *
+ * The seeds are read but not applied. A seed change is a decision, and `init`
+ * makes none — they are reported with the one command that adopts them.
+ */
+export function readVoice(source: string): Voice {
+  let dir = source
+  let clone: string | null = null
+  try {
+    if (isRemote(source)) {
+      clone = fs.mkdtempSync(path.join(os.tmpdir(), 'strata-voice-'))
+      execFileSync('git', ['clone', '--depth', '1', '--quiet', source, clone], { stdio: ['ignore', 'ignore', 'pipe'] })
+      dir = clone
+    }
+    const rulesAt = path.join(dir, RULES_PATH)
+    if (!fs.existsSync(rulesAt)) throw new Error(`no ${RULES_PATH} in ${source} — a voice comes from a product that has one`)
+    const theirs = JSON.parse(fs.readFileSync(rulesAt, 'utf8')) as { rules: Rule[] }
+    const rules = (theirs.rules ?? []).filter((r) => r.scope === 'product')
+    const grammarAt = path.join(dir, 'GRAMMAR.md')
+    const grammar = fs.existsSync(grammarAt) ? fs.readFileSync(grammarAt, 'utf8') : null
+
+    // The last seed decision on their record is the theme they have in force.
+    let seeds: Voice['seeds'] = null
+    const logAt = path.join(dir, LOG_PATH)
+    if (fs.existsSync(logAt))
+      for (const line of fs.readFileSync(logAt, 'utf8').split('\n')) {
+        if (!line.trim()) continue
+        try {
+          const d = JSON.parse(line) as { kind?: string; seeds?: Voice['seeds'] }
+          if (d.kind === 'seed' && d.seeds) seeds = d.seeds
+        } catch {
+          // A line this product cannot parse is its own problem, not the voice's.
+        }
+      }
+    return { from: source, rules, grammar, seeds }
+  } finally {
+    if (clone) fs.rmSync(clone, { recursive: true, force: true })
+  }
+}
+
+/** The command that adopts a set of seeds, printed rather than run. */
+const rethemeFrom = (seeds: NonNullable<Voice['seeds']>): string =>
+  'npx strata retheme ' +
+  Object.entries(seeds)
+    .map(([k, v]) => `--${k} ${v}`)
+    .join(' ')
 
 export function init(root: string, pkg: string, opts: InitOptions = {}): InitReport {
   if (root.split(path.sep).includes('node_modules')) throw new Error('refusing to start a product inside node_modules — run this in the product’s own directory')
@@ -126,15 +196,22 @@ export function init(root: string, pkg: string, opts: InitOptions = {}): InitRep
   /* ---- the grammar: the system's rules, and a place for the voice ---- */
   const canon = JSON.parse(fs.readFileSync(path.join(pkg, RULES_PATH), 'utf8')) as { $description?: string; $layers?: string; layers: Layer[]; rules: Rule[] }
   const system = canon.rules.filter((r) => (r.scope ?? 'system') === 'system').map((r) => ({ ...r, source: sourceInPackage(r.source, name) }))
+  // A voice is frame, so init carries it the way it carries the system's rules.
+  // The seeds it finds are a decision, and are reported rather than applied.
+  const voice = opts.voice ? readVoice(opts.voice) : undefined
   const grammar = {
     $description: `The rules this product works under, as data. The ${system.length} rules here are the system's — they arrive with Strata, and their prose lives in the package each source names. Rules this product adds carry "scope": "product" and sit beside them; every rule says which evaluator speaks for it, or "check": "none". npx strata check reads every one.`,
     ...(canon.$layers ? { $layers: canon.$layers } : {}),
     layers: canon.layers,
-    rules: system,
+    rules: [...system, ...(voice?.rules ?? [])],
   }
-  put(RULES_PATH, JSON.stringify(grammar, null, 2) + '\n', `the system's ${system.length} rules; none of them is your taste yet`)
+  put(
+    RULES_PATH,
+    JSON.stringify(grammar, null, 2) + '\n',
+    voice?.rules.length ? `the system's ${system.length} rules, and ${voice.rules.length} of your own from ${voice.from}` : `the system's ${system.length} rules; none of them is your taste yet`,
+  )
   const template = fs.readFileSync(path.join(pkg, TEMPLATE_GRAMMAR), 'utf8').replaceAll('{{package}}', `node_modules/${name}`).replaceAll('{{product}}', path.basename(root))
-  put('GRAMMAR.md', template, 'your voice — nothing written yet')
+  put('GRAMMAR.md', voice?.grammar ?? template, voice?.grammar ? `your voice, carried from ${voice.from}` : 'your voice — nothing written yet')
 
   /* ---- the skills ---- */
   const skills: string[] = []
@@ -200,8 +277,10 @@ export function init(root: string, pkg: string, opts: InitOptions = {}): InitRep
 
   // No backticks: this prints in a terminal, not in a README.
   notes.push('commit .strata/decisions.jsonl — it is the record. Everything the tokens directory holds besides primitives.css is projected from it, and strata rebuild writes it again.')
+  // The theme that product has in force. Applying it here would be this
+  // product's first decision, and init does not make it.
   const s = survey(root)
-  return { lines, wrote, skipped, notes, config, skills, survey: formatSurvey(s), fresh: s.sources === 0 }
+  return { lines, wrote, skipped, notes, config, skills, survey: formatSurvey(s), fresh: s.sources === 0, ...(voice ? { voice } : {}) }
 }
 
 /** A config that is not on disk yet, with the defaults filled in the same way. */
@@ -215,11 +294,19 @@ function loadConfigFrom(partial: Partial<ProductConfig>): ProductConfig {
   }
 }
 
-/** A step: what to call it, the command to run, and what it does under both. */
-const step = (name: string, command: string, note: string, at: number) => [
-  `  ${name.padEnd(at - 2)}${command}`,
-  ...fold(note, at).map((l) => ' '.repeat(at) + l),
-]
+/**
+ * A step: what to call it, the command to run, and what it does under both.
+ *
+ * A command is one line or it cannot be pasted, so one too long for the column
+ * takes the margin instead — the note sits beside the label and the command
+ * runs beneath it, where the terminal soft-wraps it at a space rather than
+ * through the middle of a flag.
+ */
+function step(name: string, command: string, note: string, at: number): string[] {
+  const said = fold(note, at)
+  if (command.length <= COLUMNS - at) return [`  ${name.padEnd(at - 2)}${command}`, ...said.map((l) => ' '.repeat(at) + l)]
+  return [`  ${name.padEnd(at - 2)}${said[0] ?? ''}`, ...said.slice(1).map((l) => ' '.repeat(at) + l), '', `  ${command}`]
+}
 
 /** The message: what is here now, and the one or two things to do next. */
 export function formatInit(r: InitReport, opts: { dry?: boolean } = {}): string {
@@ -229,7 +316,23 @@ export function formatInit(r: InitReport, opts: { dry?: boolean } = {}): string 
   for (const l of r.lines) out.push(`  ${l.mark} ${l.file.padEnd(width)}  ${hang(l.note, at).join('\n')}`)
   if (opts.dry) out.push('', '  (dry run — nothing written)')
   out.push('')
-  if (r.fresh) {
+  // A voice that came in is already written, so the message stops offering to
+  // write one. What remains is the theme, which is a decision and stays the
+  // person's to make — with the seeds it arrived with, when it had them.
+  const carried = r.voice?.rules.length ? r.voice : undefined
+  if (carried) {
+    out.push(...fold(`Your voice is here: ${carried.rules.length} rules from ${carried.from}, and the prose they cite.`, 0), '')
+    out.push(...fold('Nothing has been decided yet. The theme is a decision, so it is yours to make:', 0), '')
+    out.push(
+      ...step(
+        'the theme',
+        carried.seeds ? `${rethemeFrom(carried.seeds)} --why "…"` : 'npx strata retheme --hue 20 --chroma 0.12 --why "…"',
+        carried.seeds ? `the seeds ${carried.from} has in force. Change any of them and every projection follows.` : 'seven numbers, on the record. The Theme Lab picks them by eye; pass the link with --link.',
+        14,
+      ),
+      '',
+    )
+  } else if (r.fresh) {
     out.push('Nothing here has been decided yet. Two ways to start:', '')
     out.push(...step('the theme', 'npx strata retheme --hue 20 --chroma 0.12 --why "…"', 'seven numbers, on the record. The Theme Lab picks them by eye; pass the link with --link.', 14), '')
     out.push(
@@ -275,6 +378,7 @@ export async function runInit(argv: string[], home: { root: string; package: str
     ...(has('no-skills') ? { skills: false } : {}),
     ...(has('no-theme') ? { tokens: null } : flag('tokens') ? { tokens: flag('tokens') } : {}),
     ...(flag('source') ? { source: flag('source')!.split(',').map((s) => s.trim()).filter(Boolean) } : {}),
+    ...(flag('voice') ? { voice: flag('voice') } : {}),
   }
   const already = fs.existsSync(path.join(home.root, CONFIG_PATH))
   const interactive = !has('yes') && !opts.dry && !already && stdin.isTTY && stdout.isTTY && env.CI === undefined
@@ -284,6 +388,11 @@ export async function runInit(argv: string[], home: { root: string; package: str
       io.out('')
       const src = (await rl.question(`  where does your source live? (${opts.source?.join(', ') ?? DEFAULT_CONFIG.source.join(', ')}) `)).trim()
       if (src) opts.source = src.split(',').map((s) => s.trim()).filter(Boolean)
+      if (!opts.voice) {
+        for (const l of fold('a voice is the rules a product wrote for itself and the prose they cite; another product can lend you its', 2)) io.out(`  ${l}`)
+        const from = (await rl.question('  take a voice from a path or git URL? (none) ')).trim()
+        if (from && from !== 'none') opts.voice = from
+      }
       if (opts.tokens !== null) {
         // The explanation above the ask, rather than a ninety-three character
         // question that wraps in the middle of itself.

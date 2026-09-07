@@ -8,8 +8,9 @@ One interface. Every write is a decision on the record and states two hands:
 
 ```
 starting
-  init [--yes] [--source d] [--tokens d | --no-theme] [--no-skills] [--mcp] [--dry]
+  init [--yes] [--voice p] [--source d] [--tokens d | --no-theme] [--no-skills] [--mcp] [--dry]
                               the record, the grammar, the skills, the tokens — in an empty repo or a full one
+                              --voice takes another product's rules and the prose they cite, from a path or a git URL
 
 the record
   check [--enforce] [--json]  here is what happened: invariants, then policy, preference, knowledge, precedent, handoff

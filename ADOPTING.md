@@ -18,9 +18,9 @@ npm install --save-dev strata-design
 npx strata init
 ```
 
-`init` asks three questions — where your source is, whether to write the
-semantic tokens and where, whether to install the skills — and every answer has
-a default. `--yes` takes the defaults, `--dry` shows what it would write and
+`init` asks four questions — where your source is, whether to take a voice
+from another product, whether to write the semantic tokens and where, whether to
+install the skills — and every answer has a default. `--yes` takes the defaults, `--dry` shows what it would write and
 writes nothing, and running it twice writes nothing the second time. It never
 overwrites a file you have.
 
