@@ -12,7 +12,7 @@
  * team's house style are voices too, belonging to other people, and a name is
  * how they are told apart.
  *
- * `~/.strata/voices/<name>/` — a GRAMMAR.md and a grammar/rules.json, which is
+ * `~/.strata/voices/<name>/` — a DESIGN.md and a grammar/rules.json, which is
  * exactly what `--voice` reads from a path. A voice in the store and a voice in
  * a directory are the same thing; the store only says where to look.
  */
@@ -20,6 +20,15 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { RULES_PATH, type Rule } from '@strata/substrate/grammar'
+
+/**
+ * A person's design document, and the name is the point.
+ *
+ * `GRAMMAR.md` is a product's own rules. A designer's voice is a different
+ * document with a different owner, and a product that carries one needs both:
+ * a place for what it decided, and the taste it works under.
+ */
+export const VOICE_PROSE = 'DESIGN.md'
 
 export const VOICE_COMMANDS = ['voice'] as const
 
@@ -55,7 +64,7 @@ export function voices(home = os.homedir()): StoredVoice[] {
     } catch {
       // A directory in the store that is not a voice is listed with nothing in it.
     }
-    out.push({ name, dir, rules, grammar: fs.existsSync(path.join(dir, 'GRAMMAR.md')) })
+    out.push({ name, dir, rules, grammar: fs.existsSync(path.join(dir, VOICE_PROSE)) })
   }
   return out
 }
@@ -96,9 +105,10 @@ export function saveVoice(from: string, name: string, home = os.homedir()): Stor
     path.join(dir, RULES_PATH),
     JSON.stringify({ $description: `The voice "${name}", saved from ${from}. Its rules belong to a person; a product works under them and does not come to own them.`, rules }, null, 2) + '\n',
   )
-  const grammar = path.join(from, 'GRAMMAR.md')
-  if (fs.existsSync(grammar)) fs.copyFileSync(grammar, path.join(dir, 'GRAMMAR.md'))
-  return { name, dir, rules: rules.length, grammar: fs.existsSync(path.join(dir, 'GRAMMAR.md')) }
+  // Saved from a product, the prose is whichever file the rules cite.
+  const prose = [VOICE_PROSE, 'GRAMMAR.md'].map((f) => path.join(from, f)).find((f) => fs.existsSync(f))
+  if (prose) fs.copyFileSync(prose, path.join(dir, VOICE_PROSE))
+  return { name, dir, rules: rules.length, grammar: fs.existsSync(path.join(dir, VOICE_PROSE)) }
 }
 
 export interface VoiceIo {
@@ -115,7 +125,7 @@ export function runVoice(argv: string[], here: string, io: VoiceIo = { out: cons
       return 1
     }
     const saved = saveVoice(here, name, home)
-    io.out(`\n  saved "${saved.name}" — ${saved.rules} rule(s)${saved.grammar ? ' and the prose they cite' : ', with no GRAMMAR.md beside them'}`)
+    io.out(`\n  saved "${saved.name}" — ${saved.rules} rule(s)${saved.grammar ? ' and the prose they cite' : `, with no ${VOICE_PROSE} beside them`}`)
     io.out(`  ${saved.dir}`)
     io.out(`\n  npx strata init --voice ${saved.name}   in any project, from here on\n`)
     return 0
@@ -132,7 +142,7 @@ export function runVoice(argv: string[], here: string, io: VoiceIo = { out: cons
     return 0
   }
   const width = Math.max(...found.map((v) => v.name.length), 8)
-  for (const v of found) io.out(`  ${v.name.padEnd(width)}  ${v.rules} rule(s)${v.grammar ? '' : '  (no GRAMMAR.md)'}`)
+  for (const v of found) io.out(`  ${v.name.padEnd(width)}  ${v.rules} rule(s)${v.grammar ? '' : `  (no ${VOICE_PROSE})`}`)
   io.out(`\n  ${voicesDir(home)}`)
   io.out('  npx strata init --voice <name>   carries one into a product\n')
   return 0

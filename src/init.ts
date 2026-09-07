@@ -26,7 +26,7 @@ import { LOG_PATH } from '@strata/substrate/log'
 import { registerTheme } from './theme/handlers'
 import { initTheme } from './theme/init'
 import { formatSurvey, survey } from './theme/survey'
-import { resolveVoice } from './voices'
+import { resolveVoice, VOICE_PROSE } from './voices'
 import { init as initMalleable } from '../strata-malleable/src/init'
 
 export const INIT_COMMANDS = ['init'] as const
@@ -120,7 +120,7 @@ const isRemote = (s: string) => /^(https?:\/\/|git@|ssh:\/\/|git:\/\/)/.test(s)
  * Read a voice.
  *
  * A voice is frame, not decisions: the rules marked `personal` and the
- * GRAMMAR.md they cite. Every voice rule's source points at a section of that
+ * DESIGN.md they cite. Every voice rule's source points at a section of that
  * file, so the two travel together or neither resolves.
  *
  * `product` rules are deliberately not taken. They are the taste of the thing
@@ -145,8 +145,10 @@ export function readVoice(source: string, home?: string): Voice {
     if (!fs.existsSync(rulesAt)) throw new Error(`no ${RULES_PATH} in ${source} — a voice comes from a product that has one`)
     const theirs = JSON.parse(fs.readFileSync(rulesAt, 'utf8')) as { rules: Rule[] }
     const rules = (theirs.rules ?? []).filter((r) => r.scope === 'personal')
-    const grammarAt = path.join(dir, 'GRAMMAR.md')
-    const grammar = fs.existsSync(grammarAt) ? fs.readFileSync(grammarAt, 'utf8') : null
+    // A voice kept in the store writes DESIGN.md; one read straight from a
+    // product may still have its prose in GRAMMAR.md.
+    const proseAt = [VOICE_PROSE, 'GRAMMAR.md'].map((f) => path.join(dir, f)).find((f) => fs.existsSync(f))
+    const grammar = proseAt ? fs.readFileSync(proseAt, 'utf8') : null
 
     // The last seed decision on their record is the theme they have in force.
     let seeds: Voice['seeds'] = null
@@ -237,7 +239,11 @@ export function init(root: string, pkg: string, opts: InitOptions = {}): InitRep
       : `the system's ${system.length} rules; none of them is your taste yet`,
   )
   const template = fs.readFileSync(path.join(pkg, TEMPLATE_GRAMMAR), 'utf8').replaceAll('{{package}}', `node_modules/${name}`).replaceAll('{{product}}', path.basename(root))
-  put('GRAMMAR.md', voice?.grammar ?? template, voice?.grammar ? `your voice, carried from ${voice.from}` : 'your voice — nothing written yet')
+  // Two documents, because there are two voices. GRAMMAR.md is this product's
+  // own rules and stays a blank page for them; DESIGN.md is the person's, and
+  // a carried voice landing in GRAMMAR.md left the product nowhere to write.
+  put('GRAMMAR.md', template, 'this product’s own rules — nothing written yet')
+  if (voice?.grammar) put(VOICE_PROSE, voice.grammar, `your voice, carried from ${voice.from}`)
 
   /* ---- the skills ---- */
   const skills: string[] = []

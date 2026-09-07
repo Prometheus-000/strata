@@ -15,6 +15,7 @@ starting
 
 a voice
   voice [list]                the voices in ~/.strata/voices, kept once and outside every repository
+                              each is a DESIGN.md and the rules that cite it
   voice save <name>           put this product's personal rules and the prose they cite there, under a name
 
 the record

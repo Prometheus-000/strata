@@ -31,7 +31,8 @@ overwrites a file you have.
 | `.strata/decisions.jsonl` | **The record.** Empty. Every decision from now on is a line in it. Commit it. |
 | `.strata/config.json` | Where your source and tokens live. Frame, not a decision: edit it by hand. |
 | `grammar/rules.json` | The system's 27 rules. Their prose stays in the package; nothing is copied twice. |
-| `GRAMMAR.md` | Your voice. Empty, with the shape of a rule and how to write one. |
+| `GRAMMAR.md` | This product's own rules. Empty, with the shape of a rule and how to write one. |
+| `DESIGN.md` | A person's voice, when one was carried in with `--voice`. Theirs, not this product's. |
 | `.claude/skills/` | What an agent performs here: `cut-token`, `retheme`, `write-grammar`. |
 | `<tokens>/primitives.css` | Tier 1: raw scales. Yours from here — copied once, never rewritten. |
 | `<tokens>/semantic.css`, `tokens.json`, `ledger.json` | Projections of the record. Never edit them; `npx strata rebuild` writes them again. |

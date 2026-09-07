@@ -130,3 +130,37 @@ test('a verb the store does not have is refused by name', () => {
   assert.equal(runVoice(['voice', 'save'], process.cwd(), nameless.io, home), 1)
   assert.match(nameless.text(), /voice save <name>/, 'and says what it needed')
 })
+
+test('a voice keeps its prose in DESIGN.md, and a product gets both documents', () => {
+  // Two voices, two documents. A carried voice used to land in GRAMMAR.md,
+  // which is the product's own — so a product that adopted someone's taste had
+  // nowhere left to write its own, and the two owners were one file.
+  resetHandlers()
+  resetProjections()
+  resetEvaluators()
+  resetState()
+  const home = tmp('home')
+  const from = aProduct()
+  saveVoice(from, 'kenan', home)
+  assert.ok(fs.existsSync(path.join(voicesDir(home), 'kenan', 'DESIGN.md')), 'the store keeps it as DESIGN.md')
+
+  const dir = tmp('adopt')
+  init(dir, REPO, { voice: 'kenan', voiceHome: home })
+  const design = fs.readFileSync(path.join(dir, 'DESIGN.md'), 'utf8')
+  const grammar = fs.readFileSync(path.join(dir, 'GRAMMAR.md'), 'utf8')
+  assert.match(design, /The accent is surgical/, "the person's document is the voice")
+  assert.doesNotMatch(grammar, /The accent is surgical/, "and the product's own is still a blank page for its own rules")
+  assert.notEqual(design, grammar)
+})
+
+test('a voice whose prose is still GRAMMAR.md is read, and stored as DESIGN.md', () => {
+  // A voice saved before the rename, or read straight out of a product that
+  // keeps its rules and prose together.
+  const home = tmp('home')
+  const from = aProduct() // writes GRAMMAR.md
+  assert.ok(fs.existsSync(path.join(from, 'GRAMMAR.md')))
+  const saved = saveVoice(from, 'older', home)
+  assert.ok(saved.grammar, 'the prose came across')
+  assert.ok(fs.existsSync(path.join(saved.dir, 'DESIGN.md')), 'under the name it has now')
+  assert.deepEqual(readVoice('older', home).rules.map((r) => r.id), ['voice.surgical-accent', 'voice.no-slogans'])
+})
