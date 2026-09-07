@@ -22,6 +22,7 @@
     "skills",
     "grammar",
     "src/init.ts",
+    "src/voices.ts",
     "src/theme/*.ts",
     "src/identity/handler.ts",
     "src/identity/palette.ts",
