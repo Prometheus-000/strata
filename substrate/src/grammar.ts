@@ -20,13 +20,29 @@ export type Authority = 'invariant' | 'policy' | 'preference' | 'knowledge' | 'p
 export const AUTHORITIES: readonly Authority[] = ['invariant', 'policy', 'preference', 'knowledge', 'precedent']
 
 /**
- * Whose rule it is. `system` rules are Strata's own — the layers, the record,
- * the way evaluation works — and an adopter inherits them. `product` rules are
- * one product's taste, shipped here as a worked example and expected to be
- * replaced. The distinction is not decoration: a reader who cannot tell them
- * apart reads this product's preference for two radii as the system's law.
+ * Whose rule it is, and the three answers are three different owners.
+ *
+ * `system` rules are Strata's own — the layers, the record, the way evaluation
+ * works — and every adopter inherits them.
+ *
+ * `product` rules are one product's taste. Nobody inherits them: they are
+ * shipped here as a worked example and expected to be replaced.
+ *
+ * `personal` rules belong to a person rather than to anything they built. A
+ * designer's voice outlives the product it was first written for and travels
+ * to the next one, which is what `strata init --voice` carries and why it is
+ * not the same field as `product`. A voice adopted by a product stays
+ * `personal`: the product works under it, and does not come to own it.
+ *
+ * The distinction is not decoration. A reader who cannot tell the first two
+ * apart reads one product's preference for two radii as the system's law, and
+ * a tool that cannot tell the last two apart hands a designer's next project
+ * the taste of the last product they happened to point it at.
  */
-export type RuleScope = 'system' | 'product'
+export type RuleScope = 'system' | 'product' | 'personal'
+
+/** The three owners, in the order a report reads them: the system, the product, the person. */
+export const RULE_SCOPES: readonly RuleScope[] = ['system', 'product', 'personal']
 
 export interface Rule {
   id: string
@@ -141,7 +157,7 @@ export function problemsWithRule(r: unknown): string[] {
   if (!['invariant', 'policy', 'preference', 'knowledge'].includes(String(x.authority))) p.push(`${id}: authority must be invariant, policy, preference or knowledge`)
   for (const k of ['statement', 'reason', 'source']) if (typeof x[k] !== 'string' || !x[k]) p.push(`${id}: ${k} is missing`)
   if (x.authority === 'preference' && x.value === undefined) p.push(`${id}: a preference carries its value`)
-  if (x.scope !== undefined && x.scope !== 'system' && x.scope !== 'product') p.push(`${id}: scope is system or product`)
+  if (x.scope !== undefined && !RULE_SCOPES.includes(x.scope as RuleScope)) p.push(`${id}: scope is ${RULE_SCOPES.join(', ')}`)
   if (x.authority !== 'invariant' && x.check === undefined)
     p.push(`${id}: say which evaluator speaks for this rule, or "check": "none" — a rule nothing evaluates is cited, and check says so`)
   return p

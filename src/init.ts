@@ -39,8 +39,18 @@ export const TEMPLATE_GRAMMAR = 'templates/GRAMMAR.md'
 
 export interface InitOptions {
   source?: string[]
-  /** Another product to take a voice from: a path, or a git URL. */
+  /** Where to take a voice from: a path, or a git URL. */
   voice?: string
+  /**
+   * Take the voice in as this product's house rules rather than as a person's.
+   *
+   * Two real cases, and the tool should not pick. A designer starting their own
+   * next project keeps the rules `personal`, and a voice carried on from here
+   * carries them further. A team adopting someone's voice as the house style
+   * makes them `product`: the product works under them after that person has
+   * gone, and they stop travelling.
+   */
+  house?: boolean
   /** null: the product keeps its own tokens. */
   tokens?: string | null
   skills?: boolean
@@ -65,6 +75,8 @@ export interface InitReport {
   survey: string
   /** The voice carried in, when one was. */
   voice?: Voice
+  /** Whether that voice was taken in as this product's own rather than a person's. */
+  house?: boolean
   /** No stylesheet, no component: a product that starts from nothing. */
   fresh: boolean
 }
@@ -89,7 +101,7 @@ export function sourceInPackage(source: string, name: string): string {
   return [mapped, ...rest].join(' › ')
 }
 
-/** A voice carried in from another product: its own rules, and the prose they cite. */
+/** A voice carried in: a person's own rules, and the prose they cite. */
 export interface Voice {
   /** The source, as it was given. */
   from: string
@@ -102,11 +114,15 @@ export interface Voice {
 const isRemote = (s: string) => /^(https?:\/\/|git@|ssh:\/\/|git:\/\/)/.test(s)
 
 /**
- * Read another product's voice.
+ * Read a voice.
  *
- * A voice is frame, not decisions: the rules a product marked as its own taste,
- * and the GRAMMAR.md those rules cite. Every voice rule's source points at a
- * section of that file, so the two travel together or neither resolves.
+ * A voice is frame, not decisions: the rules marked `personal` and the
+ * GRAMMAR.md they cite. Every voice rule's source points at a section of that
+ * file, so the two travel together or neither resolves.
+ *
+ * `product` rules are deliberately not taken. They are the taste of the thing
+ * that was built, not of the person who built it, and carrying them would hand
+ * a designer's next project whatever the last one happened to prefer.
  *
  * The seeds are read but not applied. A seed change is a decision, and `init`
  * makes none — they are reported with the one command that adopts them.
@@ -123,7 +139,7 @@ export function readVoice(source: string): Voice {
     const rulesAt = path.join(dir, RULES_PATH)
     if (!fs.existsSync(rulesAt)) throw new Error(`no ${RULES_PATH} in ${source} — a voice comes from a product that has one`)
     const theirs = JSON.parse(fs.readFileSync(rulesAt, 'utf8')) as { rules: Rule[] }
-    const rules = (theirs.rules ?? []).filter((r) => r.scope === 'product')
+    const rules = (theirs.rules ?? []).filter((r) => r.scope === 'personal')
     const grammarAt = path.join(dir, 'GRAMMAR.md')
     const grammar = fs.existsSync(grammarAt) ? fs.readFileSync(grammarAt, 'utf8') : null
 
@@ -199,16 +215,21 @@ export function init(root: string, pkg: string, opts: InitOptions = {}): InitRep
   // A voice is frame, so init carries it the way it carries the system's rules.
   // The seeds it finds are a decision, and are reported rather than applied.
   const voice = opts.voice ? readVoice(opts.voice) : undefined
+  // Whose the carried rules are once they are here. `personal` by default: a
+  // product works under a voice and does not come to own it.
+  const carriedRules = voice ? (opts.house ? voice.rules.map((r) => ({ ...r, scope: 'product' as const })) : voice.rules) : []
   const grammar = {
     $description: `The rules this product works under, as data. The ${system.length} rules here are the system's — they arrive with Strata, and their prose lives in the package each source names. Rules this product adds carry "scope": "product" and sit beside them; every rule says which evaluator speaks for it, or "check": "none". npx strata check reads every one.`,
     ...(canon.$layers ? { $layers: canon.$layers } : {}),
     layers: canon.layers,
-    rules: [...system, ...(voice?.rules ?? [])],
+    rules: [...system, ...carriedRules],
   }
   put(
     RULES_PATH,
     JSON.stringify(grammar, null, 2) + '\n',
-    voice?.rules.length ? `the system's ${system.length} rules, and ${voice.rules.length} of your own from ${voice.from}` : `the system's ${system.length} rules; none of them is your taste yet`,
+    voice?.rules.length
+      ? `the system's ${system.length} rules, and ${voice.rules.length} ${opts.house ? "carried in as this product's own" : 'from your voice'}`
+      : `the system's ${system.length} rules; none of them is your taste yet`,
   )
   const template = fs.readFileSync(path.join(pkg, TEMPLATE_GRAMMAR), 'utf8').replaceAll('{{package}}', `node_modules/${name}`).replaceAll('{{product}}', path.basename(root))
   put('GRAMMAR.md', voice?.grammar ?? template, voice?.grammar ? `your voice, carried from ${voice.from}` : 'your voice — nothing written yet')
@@ -280,7 +301,7 @@ export function init(root: string, pkg: string, opts: InitOptions = {}): InitRep
   // The theme that product has in force. Applying it here would be this
   // product's first decision, and init does not make it.
   const s = survey(root)
-  return { lines, wrote, skipped, notes, config, skills, survey: formatSurvey(s), fresh: s.sources === 0, ...(voice ? { voice } : {}) }
+  return { lines, wrote, skipped, notes, config, skills, survey: formatSurvey(s), fresh: s.sources === 0, ...(voice ? { voice, house: !!opts.house } : {}) }
 }
 
 /** A config that is not on disk yet, with the defaults filled in the same way. */
@@ -321,7 +342,16 @@ export function formatInit(r: InitReport, opts: { dry?: boolean } = {}): string 
   // person's to make — with the seeds it arrived with, when it had them.
   const carried = r.voice?.rules.length ? r.voice : undefined
   if (carried) {
-    out.push(...fold(`Your voice is here: ${carried.rules.length} rules from ${carried.from}, and the prose they cite.`, 0), '')
+    out.push(
+      ...fold(
+        `Your voice is here: ${carried.rules.length} rules from ${carried.from}, and the prose they cite. ` +
+          (r.house
+            ? 'They are this product’s house rules now, so a voice carried on from here will not take them further.'
+            : 'They stay yours — a product works under a voice and does not come to own it.'),
+        0,
+      ),
+      '',
+    )
     out.push(...fold('Nothing has been decided yet. The theme is a decision, so it is yours to make:', 0), '')
     out.push(
       ...step(
@@ -379,6 +409,7 @@ export async function runInit(argv: string[], home: { root: string; package: str
     ...(has('no-theme') ? { tokens: null } : flag('tokens') ? { tokens: flag('tokens') } : {}),
     ...(flag('source') ? { source: flag('source')!.split(',').map((s) => s.trim()).filter(Boolean) } : {}),
     ...(flag('voice') ? { voice: flag('voice') } : {}),
+    ...(has('house') ? { house: true } : {}),
   }
   const already = fs.existsSync(path.join(home.root, CONFIG_PATH))
   const interactive = !has('yes') && !opts.dry && !already && stdin.isTTY && stdout.isTTY && env.CI === undefined

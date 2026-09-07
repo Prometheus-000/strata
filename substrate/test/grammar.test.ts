@@ -27,7 +27,7 @@ test("the product's grammar loads, every rule carries its authority, and only me
 test('a malformed grammar is refused by name', () => {
   assert.deepEqual(problemsWithRule({ id: 'x', authority: 'law', statement: 's', reason: 'r', source: 'g', check: 'none' }), ['x: authority must be invariant, policy, preference or knowledge'])
   assert.deepEqual(problemsWithRule({ id: 'p', authority: 'preference', statement: 's', reason: 'r', source: 'g', check: 'none' }), ['p: a preference carries its value'])
-  assert.deepEqual(problemsWithRule({ id: 's', authority: 'policy', statement: 's', reason: 'r', source: 'g', scope: 'house', check: 'none' }), ['s: scope is system or product'])
+  assert.deepEqual(problemsWithRule({ id: 's', authority: 'policy', statement: 's', reason: 'r', source: 'g', scope: 'house', check: 'none' }), ['s: scope is system, product, personal'])
   assert.deepEqual(problemsWithRule({ id: 'q', authority: 'policy', statement: 's', reason: 'r', source: 'g' }), ['q: say which evaluator speaks for this rule, or "check": "none" — a rule nothing evaluates is cited, and check says so'])
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'strata-grammar-'))
   assert.deepEqual(loadRules(dir), [])

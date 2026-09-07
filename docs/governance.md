@@ -30,6 +30,15 @@ person who knows what is true. Both report under **policy** rather than
 failing a build, because prose is not the artifact. This repository chooses to
 fail its own build on them anyway, which is what `scripts/prose.test.ts` is.
 
+A rule says whose it is, and there are three answers. `system` rules are
+Strata's own and every adopter inherits them. `product` rules are one product's
+taste and nobody inherits them. `personal` rules belong to a person rather than
+to anything they built: a designer's voice outlives the product it was first
+written for, and `strata init --voice` carries it to the next one. A voice
+adopted by a product stays `personal` — the product works under it and does not
+come to own it — unless `--house` is passed, which is a decision to make it the
+product's and stop it travelling.
+
 Seven of the nineteen are marked `"scope": "product"` (nine rules carry that
 mark; two of them gained evaluators and left the cited list): they are this
 product's taste — one family, two radii, lines not shadows — not the system's

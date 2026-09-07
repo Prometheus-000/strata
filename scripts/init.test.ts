@@ -197,44 +197,79 @@ test('--malleable adds that layer’s skills and commands, and installs nothing 
   assert.ok(r.notes.some((n) => /overrides are design decisions/.test(n)))
 })
 
-test('a designer carries a voice into a new product: the rules, the prose they cite, and the seeds as a decision still to make', () => {
-  // The reason this system is worth anything to one designer: taste travels
-  // without the components it was expressed in. A voice is frame — the rules a
-  // product marked as its own and the GRAMMAR.md they cite — so init may carry
-  // it. The seeds are a decision, and init makes none.
-  const voice = readVoice(REPO)
-  assert.ok(voice.rules.length > 0, 'this repository has a voice to lend')
-  assert.ok(
-    voice.rules.every((r) => r.scope === 'product'),
-    'a voice is what a product marked as its own taste, never the system rules an adopter already gets',
+/** A voice on disk: a person's rules, and the prose they cite. */
+function aVoice(): string {
+  const at = fresh()
+  fs.mkdirSync(path.join(at, 'grammar'), { recursive: true })
+  fs.writeFileSync(
+    path.join(at, 'grammar/rules.json'),
+    JSON.stringify({
+      rules: [
+        { id: 'voice.surgical-accent', authority: 'policy', scope: 'personal', statement: 'The accent is surgical.', reason: 'When everything flashes red, it becomes a marketing banner.', source: 'GRAMMAR.md › The voice › The accent is surgical', check: 'none' },
+        { id: 'voice.no-slogans', authority: 'policy', scope: 'personal', statement: 'A headline states a fact or it does not exist.', reason: 'A designer making a Statement About Design is the genus.', source: 'GRAMMAR.md › The voice › No slogans', check: 'none' },
+        { id: 'not.mine', authority: 'policy', scope: 'product', statement: "The product's own taste, which is not a person's.", reason: 'Kept here to prove it does not travel.', source: 'GRAMMAR.md › x', check: 'none' },
+      ],
+    }),
   )
-  assert.ok(voice.grammar && voice.grammar.length > 1000, 'the prose the rules cite travels with them')
-  assert.ok(voice.seeds && typeof voice.seeds.hue === 'number', 'the seeds it has in force are read')
+  fs.writeFileSync(path.join(at, 'GRAMMAR.md'), '# Voice\n\n## The voice\n\n### The accent is surgical\n\nColour is information.\n\n### No slogans\n\nA headline states a fact.\n')
+  return at
+}
 
+test('a voice is what a person marked as their own, and a product\'s taste is not offered as one', () => {
+  // The reason this system is worth anything to one designer: taste travels
+  // without the components it was expressed in. Which taste travels is the
+  // whole question — `product` rules are what a thing was built to be, and
+  // carrying those would hand the next project whatever the last one preferred.
+  const voice = readVoice(aVoice())
+  assert.deepEqual(voice.rules.map((r) => r.id), ['voice.surgical-accent', 'voice.no-slogans'])
+  assert.ok(voice.grammar?.includes('The accent is surgical'), 'the prose the rules cite travels with them')
+
+  // This repository has taste, and none of it is a person's.
+  assert.deepEqual(readVoice(REPO).rules, [], "a product's own taste is not a voice to lend")
+  assert.ok(byScope(loadRules(REPO), 'product').length > 0, 'though it has plenty of it')
+})
+
+test('a carried voice stays the person\'s, and every rule it cites still resolves', () => {
+  const at = aVoice()
   const dir = fresh()
-  const r = init(dir, REPO, { voice: REPO })
+  const r = init(dir, REPO, { voice: at })
   const rules = loadRules(dir)
-  const mine = byScope(rules, 'product')
-  assert.equal(mine.length, voice.rules.length, 'every voice rule arrived')
-  assert.ok(rules.length > mine.length, 'and the system rules are still there beside them')
+  const mine = byScope(rules, 'personal')
+  assert.equal(mine.length, 2, 'both voice rules arrived')
+  assert.deepEqual(byScope(rules, 'product'), [], "and the source product's own taste did not come with them")
+  assert.ok(rules.length > mine.length, 'the system rules are still there beside them')
 
   // A voice rule cites a section of GRAMMAR.md. Carrying one without the other
   // leaves every citation pointing at nothing.
-  for (const rule of mine) {
-    const file = rule.source.split('›')[0].trim()
-    assert.ok(fs.existsSync(path.join(dir, file)), `${rule.id} cites ${file}, which must have travelled with it`)
-  }
+  for (const rule of mine) assert.ok(fs.existsSync(path.join(dir, rule.source.split('›')[0].trim())), `${rule.id} cites prose that travelled with it`)
 
   // init decides nothing, so the theme is not adopted — it is offered.
   assert.deepEqual(readAll(dir).filter((d) => d.kind === 'seed'), [], 'carrying a voice writes no decision')
   const text = formatInit(r)
-  assert.match(text, /Your voice is here: \d+ rules from/)
-  assert.match(text, /npx strata retheme --hue \d+/, 'the seeds it arrived with are offered as the command that adopts them')
+  assert.match(text.replace(/\s+/g, ' '), /Your voice is here: 2 rules from/)
+  assert.match(text.replace(/\s+/g, ' '), /They stay yours — a product works under a voice and does not come to own it/)
   assert.doesNotMatch(text, /Two ways to start/, 'the voice is written, so the message stops offering to write one')
 
-  // And the product it made still holds.
   registerTheme({ root: dir })
   assert.ok(enforced(runCheck(dir)), 'a product started from a carried voice holds every invariant')
+
+  // And it carries on: the person's voice is still theirs to take further.
+  assert.equal(readVoice(dir).rules.length, 2, 'a voice kept personal travels to the next product')
+})
+
+test('--house takes a voice in as the house rules, and it stops travelling', () => {
+  // The other real case: a team adopting someone's voice as the product's own.
+  // The product works under it after that person has gone, so the rules become
+  // the product's — which is a decision, not something the tool should assume.
+  const at = aVoice()
+  const dir = fresh()
+  const r = init(dir, REPO, { voice: at, house: true })
+  const rules = loadRules(dir)
+  assert.equal(byScope(rules, 'product').length, 2, "the rules are the product's now")
+  assert.deepEqual(byScope(rules, 'personal'), [], 'and nobody\'s voice is on the record here')
+  // The message is wrapped for a terminal, so the assertion reads it unwrapped.
+  assert.match(formatInit(r).replace(/\s+/g, ' '), /house rules now, so a voice carried on from here will not take them further/)
+  assert.deepEqual(readVoice(dir).rules, [], 'a voice taken as house rules does not travel on')
 })
 
 test('a voice from somewhere that is not a product is refused by name', () => {
