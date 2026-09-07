@@ -19,6 +19,7 @@ import { stdin, stdout } from 'node:process'
 import { createInterface } from 'node:readline/promises'
 import { CONFIG_PATH, DEFAULT_CONFIG, loadConfig, writeConfig, type ProductConfig } from '@strata/substrate/config'
 import { RULES_PATH, type Layer, type Rule } from '@strata/substrate/grammar'
+import { fold, hang } from '@strata/substrate/format'
 import { LOG_PATH } from '@strata/substrate/log'
 import { registerTheme } from './theme/handlers'
 import { initTheme } from './theme/init'
@@ -197,7 +198,8 @@ export function init(root: string, pkg: string, opts: InitOptions = {}): InitRep
     }
   }
 
-  notes.push('commit .strata/decisions.jsonl — it is the record; everything the tokens directory holds besides primitives.css is a projection of it, and `strata rebuild` writes it again')
+  // No backticks: this prints in a terminal, not in a README.
+  notes.push('commit .strata/decisions.jsonl — it is the record. Everything the tokens directory holds besides primitives.css is projected from it, and strata rebuild writes it again.')
   const s = survey(root)
   return { lines, wrote, skipped, notes, config, skills, survey: formatSurvey(s), fresh: s.sources === 0 }
 }
@@ -213,26 +215,43 @@ function loadConfigFrom(partial: Partial<ProductConfig>): ProductConfig {
   }
 }
 
+/** A step: what to call it, the command to run, and what it does under both. */
+const step = (name: string, command: string, note: string, at: number) => [
+  `  ${name.padEnd(at - 2)}${command}`,
+  ...fold(note, at).map((l) => ' '.repeat(at) + l),
+]
+
 /** The message: what is here now, and the one or two things to do next. */
 export function formatInit(r: InitReport, opts: { dry?: boolean } = {}): string {
   const width = Math.max(...r.lines.map((l) => l.file.length), 24)
+  const at = 2 + 2 + width + 2
   const out = [r.wrote.length ? 'Strata is here.' : 'Strata was already here; nothing changed.', '']
-  for (const l of r.lines) out.push(`  ${l.mark} ${l.file.padEnd(width)}  ${l.note}`)
+  for (const l of r.lines) out.push(`  ${l.mark} ${l.file.padEnd(width)}  ${hang(l.note, at).join('\n')}`)
   if (opts.dry) out.push('', '  (dry run — nothing written)')
   out.push('')
   if (r.fresh) {
+    out.push('Nothing here has been decided yet. Two ways to start:', '')
+    out.push(...step('the theme', 'npx strata retheme --hue 20 --chroma 0.12 --why "…"', 'seven numbers, on the record — or pick them by eye in the Theme Lab and pass the link with --link', 14), '')
     out.push(
-      'Nothing here has been decided yet. Two ways to start:',
-      '  the theme   npx strata retheme --hue 20 --chroma 0.12 --why "…"      seven numbers, on the record — or pick them by eye in the Theme Lab and pass the link with --link',
-      r.skills.includes('write-grammar')
-        ? '  the voice   /write-grammar in Claude Code                             your rules, each with its reason — or npx strata skill write-grammar, for any harness'
-        : '  the voice   npx strata skill write-grammar                            your rules, each with its reason',
+      ...(r.skills.includes('write-grammar')
+        ? step('the voice', '/write-grammar in Claude Code', 'your rules, each with its reason — or npx strata skill write-grammar, for any harness', 14)
+        : step('the voice', 'npx strata skill write-grammar', 'your rules, each with its reason', 14)),
+      '',
     )
   } else {
-    out.push(r.survey, '', 'What the stylesheets already decided is where the voice starts:', r.skills.includes('write-grammar') ? '  /write-grammar in Claude Code reads the survey and asks which of these were decided; npx strata skill write-grammar assembles the same packet for any harness' : '  npx strata skill write-grammar reads the survey and asks which of these were decided')
+    out.push(r.survey, '', 'What the stylesheets already decided is where the voice starts:', '')
+    out.push(
+      ...fold(
+        r.skills.includes('write-grammar')
+          ? '/write-grammar in Claude Code reads the survey and asks which of these were decided; npx strata skill write-grammar assembles the same packet for any harness'
+          : 'npx strata skill write-grammar reads the survey and asks which of these were decided',
+        2,
+      ).map((l) => `  ${l}`),
+      '',
+    )
   }
   out.push('npx strata check says what happened, and never refuses a design.')
-  for (const n of r.notes) out.push(`note: ${n}`)
+  for (const n of r.notes) out.push('', ...hang(`note: ${n}`, 6))
   return out.join('\n')
 }
 
@@ -266,7 +285,10 @@ export async function runInit(argv: string[], home: { root: string; package: str
       const src = (await rl.question(`  where does your source live? (${opts.source?.join(', ') ?? DEFAULT_CONFIG.source.join(', ')}) `)).trim()
       if (src) opts.source = src.split(',').map((s) => s.trim()).filter(Boolean)
       if (opts.tokens !== null) {
-        const yes = (await rl.question('  write the semantic tokens — primitives, semantic.css, tokens.json — from the record? (Y/n) ')).trim().toLowerCase()
+        // The explanation above the ask, rather than a ninety-three character
+        // question that wraps in the middle of itself.
+        for (const l of fold('the semantic tokens — primitives, semantic.css and tokens.json — are projected from the record', 2)) io.out(`  ${l}`)
+        const yes = (await rl.question('  write them? (Y/n) ')).trim().toLowerCase()
         if (yes === 'n' || yes === 'no') opts.tokens = null
         else {
           const where = (await rl.question(`  where? (${opts.tokens ?? DEFAULT_CONFIG.tokens}) `)).trim()

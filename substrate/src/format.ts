@@ -27,6 +27,37 @@ const RULE = '──────────────'
  */
 export const band = (name: string, means?: string): string[] => [means ? `${name}  ·  ${means}` : name, RULE]
 
+/** The width these reports lay out for: the narrow terminal, not the wide one. */
+export const COLUMNS = 78
+
+/**
+ * Lines no wider than the room left beside an indent, broken on spaces.
+ *
+ * A lone separator rides with the word before it, so no line opens on a `·` or
+ * a dash — the mark that joins two things should not begin one.
+ */
+export function fold(text: string, indent: number, width = COLUMNS): string[] {
+  const room = Math.max(24, width - indent)
+  const words: string[] = []
+  for (const w of text.split(' ')) {
+    if (words.length && /^[·—–-]$/.test(w)) words[words.length - 1] += ` ${w}`
+    else words.push(w)
+  }
+  const out: string[] = []
+  let line = ''
+  for (const word of words) {
+    if (line && line.length + 1 + word.length > room) {
+      out.push(line)
+      line = word
+    } else line = line ? `${line} ${word}` : word
+  }
+  if (line) out.push(line)
+  return out
+}
+
+/** A paragraph whose first line follows a prefix already `indent` wide. */
+export const hang = (text: string, indent: number): string[] => fold(text, indent).map((l, i) => (i ? ' '.repeat(indent) + l : l))
+
 const valueText = (v: Value | undefined) => (v === undefined ? '' : 'token' in v ? `var(${v.token})` : v.literal)
 const propText = (v: unknown) => (v === null || v === undefined ? '(default)' : String(v))
 

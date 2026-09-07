@@ -10,6 +10,7 @@
  * product with no stylesheet yet it says so, because the voice of a new
  * product starts from references and rejections rather than from evidence.
  */
+import { COLUMNS, fold } from '@strata/substrate/format'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { COLOR_LITERAL } from './handlers'
@@ -57,23 +58,43 @@ export function survey(root: string): Survey {
   }
 }
 
+/**
+ * A `·`-joined list, packed into lines that fit — broken between facts, never
+ * inside one. Plain word-wrapping split "3 radii" across two lines, which
+ * leaves a number stranded from its unit.
+ */
+function packFacts(facts: string[], indent: number, width = COLUMNS): string[] {
+  const room = Math.max(24, width - indent)
+  const out: string[] = []
+  let line = ''
+  for (const f of facts) {
+    const next = line ? `${line} · ${f}` : f
+    if (line && next.length > room) {
+      out.push(`${line} ·`)
+      line = f
+    } else line = next
+  }
+  if (line) out.push(line)
+  return out
+}
+
 export function formatSurvey(s: Survey): string {
   if (s.sources === 0) return '  no stylesheets or components under the source yet — nothing to survey; the voice starts from references and rejections'
-  const line = [
+  const facts = [
     `${s.stylesheets} stylesheet(s) in ${s.sources} file(s)`,
     `${s.colours.count} raw colour(s)${s.colours.declared ? ` (${s.colours.declared} declared)` : ''}`,
     `${s.fonts.length} font famil${s.fonts.length === 1 ? 'y' : 'ies'}`,
     `${s.radii.length} radi${s.radii.length === 1 ? 'us' : 'i'}`,
     `${s.shadows} shadow(s)`,
-  ].join(' · ')
+  ]
   const rows = (name: string, xs: Array<[string, number]>) => (xs.length ? [`  ${name}`, ...xs.map(([k, n]) => `    ${String(n).padStart(3)} × ${k}`)] : [])
   return [
-    `  found ${line}`,
+    ...packFacts([`found ${facts[0]}`, ...facts.slice(1)], 2).map((l) => `  ${l}`),
     ...rows('fonts', s.fonts),
     ...rows('radii', s.radii),
     ...rows('colours reached for most', s.colours.top),
     ...rows('durations', s.durations),
-    s.colours.count ? '  npx strata check lists every raw colour with the way to declare it; /write-grammar asks which of these were decided' : '',
+    s.colours.count ? fold('npx strata check lists every raw colour with the way to declare it; /write-grammar asks which of these were decided', 2).map((l) => `  ${l}`).join('\n') : '',
   ]
     .filter(Boolean)
     .join('\n')
