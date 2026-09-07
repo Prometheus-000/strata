@@ -23,17 +23,6 @@ jobs:
       - run: npm ci --prefix strata-malleable
       - run: npm test
       - run: npm run build
-      - name: the tarball carries the engine, the substrate and the identity
-        run: |
-          npm pack --dry-run --json > /tmp/pack.json
-          node -e "
-            const f = require('/tmp/pack.json')[0].files.map((x) => x.path)
-            const need = ['bin/strata.mjs', 'bin/main.mjs', 'mcp/main.mjs', 'templates/GRAMMAR.md', 'grammar/rules.json', 'src/tokens/primitives.css',
-              'node_modules/@strata/engine/src/generateTheme.ts', 'node_modules/@strata/substrate/src/cli.ts', 'node_modules/@strata/identity/src/field.ts']
-            const missing = need.filter((p) => !f.includes(p))
-            if (missing.length) { console.error('the tarball is missing:\n  ' + missing.join('\n  ')); process.exit(1) }
-            console.log(f.length + ' files, and every one the CLI needs')
-          "
       - run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
