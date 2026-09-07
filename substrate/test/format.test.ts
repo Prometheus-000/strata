@@ -62,18 +62,52 @@ test('the handoff asks for eyes on an agent-decided line, and stops once a perso
       action: 'keep',
     }) as Decision
 
+  // The report is wrapped for a terminal, so these read it unwrapped.
+  const flat = (s: string) => s.replace(/\s+/g, ' ')
   const proposed = keep({ kind: 'agent', actor: 'claude-code' }, t(1))
-  const one = formatHandoff([proposed], null)
+  const one = flat(formatHandoff([proposed], null))
   assert.match(one, /decided by an agent, not merely written by one/)
+  assert.match(one, /→ .*keep --font-display/, 'and the line that needs a person is marked where it is, not listed again')
+  assert.equal(one.match(/keep --font-display/g)?.length, 1, 'once, not twice — it was printed in full in two places')
 
   // The confirmation is the review. A reviewer sent to look at something
   // already answered learns to stop reading the list.
   const confirmed = keep({ kind: 'human', actor: 'prometheus-000' }, t(2))
-  const both = formatHandoff([proposed, confirmed], null)
+  const both = flat(formatHandoff([proposed, confirmed], null))
   assert.doesNotMatch(both, /decided by an agent, not merely written by one/)
   assert.match(both, /human prometheus-000/, 'both lines still show: the record is the history, not the verdict')
 
   // A different target is not settled by an unrelated ruling.
   const other = { ...confirmed, token: '--font-mono' } as Decision
-  assert.match(formatHandoff([proposed, other], null), /decided by an agent/)
+  assert.match(flat(formatHandoff([proposed, other], null)), /decided by an agent/)
+})
+
+test('the handoff fits the terminal it is read in, however long a decision is', () => {
+  // What a reviewer meets, and the surface they read most carefully. A
+  // declared deviation carries its value, and a font stack is two hundred
+  // characters — printed straight it wrapped into rubble, and it was printed
+  // twice because the lines needing a person were listed a second time.
+  const long =
+    "--strata-font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif; and more besides, at length"
+  const d = {
+    id: 'd1',
+    at: '2026-09-07T00:00:00.000Z',
+    decided: { kind: 'agent', actor: 'claude-code' },
+    written: { kind: 'agent', actor: 'claude-code' },
+    via: 'cli',
+    consequence: {},
+    kind: 'deviation',
+    file: 'src/tokens/primitives.css',
+    line: 15,
+    value: long,
+    reason: 'the system stack is the value',
+  } as Decision
+
+  const text = formatHandoff([d], null)
+  const over = text.split('\n').filter((l) => l.length > 80)
+  assert.deepEqual(over, [], 'no line is wider than the narrow terminal it is read in')
+  assert.equal(text.match(/system-ui, sans-serif/g)?.length, 1, 'and the decision is printed once')
+  assert.match(text, /→ /, 'the line a person must rule on is marked in place')
+  assert.match(text, /d1/, 'with the id that reaches it')
+  assert.match(text, /npx strata ready/, 'and an un-handed-off record says what hands it off')
 })

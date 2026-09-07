@@ -183,25 +183,48 @@ export function describe(d: Decision): string {
  */
 export function formatHandoff(changes: readonly Decision[], ready: Decision | null): string {
   const out: string[] = ['']
-  if (!changes.length) out.push('  nothing changed since the last review')
-  for (const d of changes) out.push(`  ${describe(d)}`)
-  out.push('')
+  if (!changes.length) {
+    out.push('  nothing changed since the last review', '')
+    out.push(ready ? `ready for review — ${handText(ready.decided)}, ${ready.at}` : 'not yet handed off', '')
+    return out.join('\n')
+  }
+
   // An agent-decided line that a person has since ruled on is settled: the
   // later decision *is* the review. Listing it anyway would send a reviewer to
   // look at something already answered, which is the fastest way to teach them
   // to stop reading this list.
-  const chosen = changes.filter(
-    (d, i) =>
-      d.decided.kind === 'agent' &&
-      !changes.slice(i + 1).some((later) => later.decided.kind === 'human' && targetKey(later) === targetKey(d)),
+  const chosen = new Set(
+    changes
+      .filter((d, i) => d.decided.kind === 'agent' && !changes.slice(i + 1).some((later) => later.decided.kind === 'human' && targetKey(later) === targetKey(d)))
+      .map((d) => d.id),
   )
-  if (chosen.length) {
-    out.push(`${chosen.length} ${chosen.length === 1 ? 'line was' : 'lines were'} decided by an agent, not merely written by one — a person reviews ${chosen.length === 1 ? 'it' : 'these'} before ${chosen.length === 1 ? 'it is' : 'they are'} committed:`)
-    for (const d of chosen) out.push(`  ${d.id}  ${describe(d)}`)
-    out.push('')
+
+  out.push(
+    ...fold(
+      `${changes.length} change(s) since the last review` +
+        (chosen.size ? ` · ${chosen.size} decided by an agent, not merely written by one, and a person rules on ${chosen.size === 1 ? 'it' : 'those'}` : ''),
+      2,
+    ).map((l) => `  ${l}`),
+    '',
+  )
+  if (chosen.size) out.push('  → decided by an agent', '')
+
+  // Marked in place, with its id, rather than listed a second time. The lines
+  // that need a person were printed twice in full — one of them two hundred
+  // characters of font stack — and matching the second list to the first by
+  // eye is work a reader should not be doing.
+  for (const d of changes) {
+    const mark = chosen.has(d.id) ? '  → ' : '    '
+    // A move describes itself on two lines: what moved, and what it left
+    // needing wiring. Folding that into one loses the second as a sentence.
+    const [head, ...tail] = describe(d).split('\n')
+    const said = head + (chosen.has(d.id) ? `   ${d.id}` : '')
+    const [first, ...rest] = fold(said, 6)
+    out.push(mark + first, ...rest.map((l) => '      ' + l))
+    for (const more of tail) out.push(...fold(more.trim(), 6).map((l) => '      ' + l))
   }
-  out.push(ready ? `ready for review — ${handText(ready.decided)}, ${ready.at}` : 'not yet handed off')
   out.push('')
+  out.push(ready ? `ready for review — ${handText(ready.decided)}, ${ready.at}` : 'not yet handed off — npx strata ready hands it off', '')
   return out.join('\n')
 }
 

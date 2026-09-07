@@ -281,7 +281,8 @@ so an unnamed hand is visible rather than assumed.
 
 At review, `written` changes nothing and `decided` changes everything: an agent typing a
 person's decision is the ordinary case and needs no second look; an agent that *chose* is a
-line a person has not seen yet, and `strata handoff` lists those separately.
+line a person has not seen yet, and `strata handoff` marks those with an arrow and the
+id that reaches them.
 
 ### Use is not a decision
 

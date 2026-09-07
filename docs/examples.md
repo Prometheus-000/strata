@@ -69,16 +69,23 @@ since the last one, with a reversal collapsed away.
 ```
 $ strata handoff
 
-  <Badge tone>  accent → positive   fixtures/app/views/Gallery.tsx:14 · human prometheus-000
-  <Filters />  Page.main.page__main → TopBar.nav.topbar__nav   fixtures/app/views/TopBar.tsx:18 · agent claude-code
-      needs wiring: open
+  2 change(s) since the last review · 1 decided by an agent, not merely
+  written by one, and a person rules on it
 
-1 line was decided by an agent, not merely written by one — a person reviews it before it is committed:
-  d0mtm5z44t-ifap  <Filters />  Page.main.page__main → TopBar.nav.topbar__nav   fixtures/app/views/TopBar.tsx:18 · agent claude-code
+  → decided by an agent
+
+    <Badge tone>  accent → positive   fixtures/app/views/Gallery.tsx:14 ·
+      human prometheus-000
+  → <Filters />  Page.main.page__main → TopBar.nav.topbar__nav
+      fixtures/app/views/TopBar.tsx:18 · agent claude-code
+      d0mtm5z44t-ifap
+      needs wiring: open
 
 ready for review — human prometheus-000, 2026-09-03T18:02:11.000Z
 ```
 
 The split is the point. An agent that typed a person's decision needs no
 second look; an agent that *chose* is a line nobody has seen, and the handoff
-names those rather than leaving a reviewer to work out which is which.
+marks those where they are rather than leaving a reviewer to work out which is
+which. The mark carries the decision's id, so the line that needs a person is
+also the line that reaches it.
